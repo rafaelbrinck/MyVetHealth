@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import { Auth } from '../../../core/services/auth';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -12,24 +11,21 @@ import { CommonModule } from '@angular/common';
   styleUrl: './login.css',
 })
 export class Login {
-  // Injeções de dependência modernas do Angular 17
   private fb = inject(FormBuilder);
   private authService = inject(Auth);
   private router = inject(Router);
 
-  // Configuração do formulário com validações
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
-  // Controle de estado da tela
   isLoading = false;
   errorMessage = '';
 
   async onSubmit() {
     if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched(); // Destaca os campos com erro
+      this.loginForm.markAllAsTouched();
       return;
     }
 
@@ -39,27 +35,34 @@ export class Login {
     const { email, password } = this.loginForm.value;
 
     try {
-      // Chama o Supabase através do nosso serviço
+      // Como o service agora faz o fetch da role por dentro e tem o 'await',
+      // quando essa linha terminar, a role já estará em memória.
       await this.authService.login(email!, password!);
 
-      const role = await firstValueFrom(this.authService.getUserRole());
+      // Buscamos o valor síncrono já pronto, sem dor de cabeça com RxJS
+      const role = this.authService.getUserRoleValue();
 
-      // Roteamento inteligente B2B vs B2C
       if (role === 'tutor') {
-        this.router.navigate(['/meus-pets']);
+        this.router.navigate(['/tutor/meus-pets']); // Atenção: Ajuste para bater com sua rota
+      } else if (
+        role === 'admin_clinica' ||
+        role === 'veterinario' ||
+        role === 'recepcionista' ||
+        role === 'admin_plataforma'
+      ) {
+        this.router.navigate(['/clinica/dashboard']); // Atenção: Ajuste para bater com sua rota
       } else {
-        this.router.navigate(['/clinica/admin']);
+        // Fallback caso o usuário exista mas não tenha role definida
+        this.errorMessage = 'Perfil não configurado no sistema. Contate o suporte.';
+        this.authService.logout();
       }
     } catch (error: any) {
-      // O Supabase retorna erros amigáveis, mas podemos padronizar a mensagem
       this.errorMessage = 'E-mail ou senha inválidos. Tente novamente.';
-      console.error('Erro no login:', error.message);
     } finally {
       this.isLoading = false;
     }
   }
 
-  // Helpers para o HTML verificar erros de forma mais limpa
   get emailError() {
     const control = this.loginForm.get('email');
     return control?.invalid && control?.touched;

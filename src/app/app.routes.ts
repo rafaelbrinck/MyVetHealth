@@ -61,13 +61,13 @@ export const routes: Routes = [
   // ==========================================
   // 4. ROTA DE ERRO / ACESSO NEGADO
   // ==========================================
-  //   {
-  //     path: 'acesso-negado',
-  //     loadComponent: () =>
-  //       import('./shared/components/access-denied/access-denied.component').then(
-  //         (m) => m.AccessDeniedComponent,
-  //       ),
-  //   },
+  {
+    path: 'error-page',
+    loadComponent: () =>
+      import('./shared/components/error-page/error-page.component').then(
+        (m) => m.ErrorPageComponent,
+      ),
+  },
   {
     path: '**',
     redirectTo: 'login',

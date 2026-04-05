@@ -8,7 +8,6 @@ import { User } from '@supabase/supabase-js';
 })
 export class Auth {
   private supabaseService = inject(SupabaseService);
-
   private supabase = this.supabaseService.client;
 
   private currentUser = new BehaviorSubject<User | null>(null);
@@ -22,25 +21,26 @@ export class Auth {
     const {
       data: { session },
     } = await this.supabase.auth.getSession();
-    if (session) {
+    if (session?.user) {
       this.currentUser.next(session.user);
-      this.carregarRole(session.user.id);
+      await this.carregarRole(session.user.id);
     }
   }
 
   private async carregarRole(userId: string) {
     const { data, error } = await this.supabase
-      .from('profiles')
-      .select('role')
+      .from('perfis') // Ajustado para o nome da tabela que criamos no SQL
+      .select('papel')
       .eq('id', userId)
       .single();
 
     if (error) {
       console.error('Erro ao carregar role:', error);
+      this.userRole.next(null);
       return;
     }
 
-    this.userRole.next(data?.role || null);
+    this.userRole.next(data?.papel || null);
   }
 
   getCurrentUser() {
@@ -51,10 +51,22 @@ export class Auth {
     return this.userRole.asObservable();
   }
 
+  // Novo método para pegar o valor atual instantaneamente sem Observables
+  getUserRoleValue(): string | null {
+    return this.userRole.value;
+  }
+
   async login(email: string, password: string) {
-    const { error } = await this.supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
+
     if (error) {
-      console.error('Erro ao fazer login:', error);
+      throw error; // Joga o erro para o catch() do login.ts interceptar
+    }
+
+    // Se logou com sucesso, já atualiza as variáveis e busca a role aguardando terminar
+    if (data.session?.user) {
+      this.currentUser.next(data.session.user);
+      await this.carregarRole(data.session.user.id);
     }
   }
 
