@@ -47,13 +47,33 @@ export const routes: Routes = [
     // canActivate: [authGuard],
     data: { roles: ['admin_clinica', 'veterinario', 'recepcionista'] },
     children: [
-      //   {
-      //     path: 'dashboard',
-      //     loadComponent: () =>
-      //       import('./features/admin/dashboard/dashboard.component').then(
-      //         (m) => m.DashboardComponent,
-      //       ),
-      //   },
+        // {
+        //   path: 'dashboard',
+        //   loadComponent: () =>
+        //     import('./features/admin/dashboard/dashboard.component').then(
+        //       (m) => m.DashboardComponent,
+        //     ),
+        // },
+        {
+        path: 'recepcao',
+        loadComponent: () => 
+          import('./features/admin/reception/reception').then((m) => m.ReceptionComponent),
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => 
+          import('./features/admin/dashboard/dashboard').then((m) => m.DashboardComponent),
+      },
+      {
+        path: 'prontuarios',
+        loadComponent: () => 
+          import('./features/admin/prontuario/prontuario').then((m) => m.ProntuarioComponent),
+      },
+      {
+        path: 'pacientes',
+        loadComponent: () => 
+          import('./features/admin/pacientes/pacientes').then((m) => m.PacientesComponent),
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

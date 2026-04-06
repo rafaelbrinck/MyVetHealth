@@ -1,0 +1,65 @@
+<div class="p-8 max-w-7xl mx-auto min-h-screen">
+  
+  <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div>
+      <h1 class="text-3xl font-extrabold text-[#0da193]">Pacientes 🐾</h1>
+      <p class="text-neutral-500 mt-2 font-medium">Gerencie o histórico e os pets vinculados à sua clínica.</p>
+    </div>
+    
+    <div class="relative w-full md:w-96">
+      <span class="absolute inset-y-0 left-0 pl-5 flex items-center text-neutral-400 text-lg">🔍</span>
+      <input 
+        type="text" 
+        (input)="aoDigitar($event)"
+        placeholder="Buscar por pet, tutor ou CPF..." 
+        class="w-full bg-white border border-neutral-200 text-neutral-700 rounded-full px-5 py-3.5 pl-12 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all font-medium placeholder:font-normal shadow-sm"
+      >
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    
+    <div *ngFor="let pet of pacientesFiltrados()" class="bg-white rounded-3xl shadow-sm p-6 border border-neutral-100 hover:shadow-md transition-shadow duration-300">
+      
+      <div class="flex items-center gap-4 mb-5 border-b border-neutral-100 pb-5">
+        <div class="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center text-3xl">
+          {{ pet.especie === 'Cachorro' ? '🐕' : (pet.especie === 'Gato' ? '🐈' : '🦜') }}
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-neutral-800">{{ pet.nome }}</h3>
+          <p class="text-sm text-neutral-500 font-medium">{{ pet.raca }}</p>
+        </div>
+      </div>
+      
+      <div class="space-y-3 mb-6 text-sm">
+        <div class="flex justify-between items-center">
+          <span class="text-neutral-500 font-medium">Tutor:</span>
+          <span class="text-neutral-800 font-bold truncate max-w-[150px]">{{ pet.tutor }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-neutral-500 font-medium">Última Consulta:</span>
+          <span class="text-neutral-800 font-bold" [ngClass]="{'text-[#e62b4c]': pet.ultimaConsulta === 'Nunca'}">
+            {{ pet.ultimaConsulta }}
+          </span>
+        </div>
+      </div>
+      
+      <div class="flex gap-3 mt-auto">
+        <button class="flex-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-3 rounded-2xl transition-colors text-sm">
+          Histórico
+        </button>
+        <button class="flex-1 bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 rounded-2xl transition-colors text-sm shadow-sm">
+          Atender
+        </button>
+      </div>
+      
+    </div>
+
+    <div *ngIf="pacientesFiltrados().length === 0" class="col-span-full text-center py-20">
+      <span class="text-6xl mb-4 block">🐶❓</span>
+      <h3 class="text-xl font-bold text-[#0da193]">Nenhum paciente encontrado</h3>
+      <p class="text-neutral-500 font-medium">Não achamos ninguém com o termo "{{ termoBusca() }}".</p>
+    </div>
+
+  </div>
+</div>

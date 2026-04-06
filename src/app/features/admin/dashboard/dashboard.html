@@ -1,0 +1,98 @@
+<div class="p-8 max-w-7xl mx-auto min-h-screen">
+  
+  <div class="mb-10 flex justify-between items-end">
+    <div>
+      <h1 class="text-3xl font-extrabold text-[#0da193]">Visão Geral 📊</h1>
+      <p class="text-neutral-500 mt-2 font-medium">Acompanhe o movimento da clínica hoje.</p>
+    </div>
+    <p class="text-neutral-400 font-semibold hidden sm:block">
+      Hoje, {{ metricas().consultasHoje }} consultas programadas
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    
+    <div class="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100 flex items-center gap-5 transition-transform hover:-translate-y-1">
+      <div class="bg-teal-50 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl text-[#0da193]">
+        🩺
+      </div>
+      <div>
+        <p class="text-neutral-500 font-semibold text-sm">Consultas Hoje</p>
+        <h3 class="text-3xl font-bold text-neutral-800">{{ metricas().consultasHoje }}</h3>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100 flex items-center gap-5 transition-transform hover:-translate-y-1">
+      <div class="bg-emerald-50 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl text-emerald-600">
+        💰
+      </div>
+      <div>
+        <p class="text-neutral-500 font-semibold text-sm">Faturamento</p>
+        <h3 class="text-3xl font-bold text-neutral-800">{{ metricas().faturamentoDia }}</h3>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm p-8 border border-[#ffb7b9] flex items-center gap-5 transition-transform hover:-translate-y-1 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-2 h-full bg-[#e62b4c]"></div>
+      <div class="bg-[#ffebef] w-16 h-16 rounded-2xl flex items-center justify-center text-3xl text-[#e62b4c]">
+        📦
+      </div>
+      <div>
+        <p class="text-[#e62b4c] font-semibold text-sm">Estoque Baixo</p>
+        <h3 class="text-3xl font-bold text-neutral-800">{{ metricas().alertasEstoque }} Itens</h3>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 overflow-hidden">
+    <div class="p-8 border-b border-neutral-100 flex justify-between items-center">
+      <h2 class="text-xl font-bold text-[#0da193]">Fila de Atendimento</h2>
+      <button class="text-sm font-bold text-[#0da193] hover:underline">Ver Agenda Completa</button>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-neutral-50 text-neutral-500 text-sm">
+            <th class="py-4 px-8 font-semibold">Horário</th>
+            <th class="py-4 px-8 font-semibold">Paciente</th>
+            <th class="py-4 px-8 font-semibold">Tutor</th>
+            <th class="py-4 px-8 font-semibold">Status</th>
+            <th class="py-4 px-8 font-semibold text-right">Ação</th>
+          </tr>
+        </thead>
+        <tbody class="text-neutral-700">
+          
+          <tr *ngFor="let item of filaHoje()" class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
+            <td class="py-5 px-8 font-bold text-neutral-800">{{ item.horario }}</td>
+            <td class="py-5 px-8">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">{{ item.especie === 'Cachorro' ? '🐕' : '🐈' }}</span>
+                <span class="font-bold">{{ item.pet }}</span>
+              </div>
+            </td>
+            <td class="py-5 px-8 font-medium">{{ item.tutor }}</td>
+            <td class="py-5 px-8">
+              <span class="px-4 py-1.5 rounded-full text-xs font-bold"
+                [ngClass]="{
+                  'bg-teal-100 text-[#0da193]': item.status === 'Em Atendimento',
+                  'bg-orange-100 text-orange-600': item.status === 'Aguardando',
+                  'bg-neutral-100 text-neutral-500': item.status === 'Agendado'
+                }">
+                {{ item.status }}
+              </span>
+            </td>
+            <td class="py-5 px-8 text-right">
+              <button class="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors">
+                Abrir Ficha
+              </button>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
