@@ -47,9 +47,11 @@
 
   <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 overflow-hidden">
     <div class="p-8 border-b border-neutral-100 flex justify-between items-center">
-      <h2 class="text-xl font-bold text-[#0da193]">Fila de Atendimento</h2>
-      <button class="text-sm font-bold text-[#0da193] hover:underline">Ver Agenda Completa</button>
-    </div>
+    <h2 class="text-xl font-bold text-[#0da193]">Fila de Atendimento</h2>
+    <button (click)="verAgendaCompleta()" class="text-sm font-bold text-[#0da193] hover:underline focus:outline-none">
+    Ver Agenda Completa
+    </button>
+  </div>
     
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
@@ -82,10 +84,9 @@
                 }">
                 {{ item.status }}
               </span>
-            </td>
             <td class="py-5 px-8 text-right">
-              <button class="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors">
-                Abrir Ficha
+              <button (click)="abrirFicha(item.pet)" class="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors shadow-sm">
+              Abrir Ficha
               </button>
             </td>
           </tr>
