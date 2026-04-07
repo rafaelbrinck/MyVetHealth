@@ -1,0 +1,148 @@
+<div class="p-8 max-w-7xl mx-auto min-h-screen">
+  
+  <div class="mb-10 flex flex-col xl:flex-row xl:items-end justify-between gap-6">
+    <div>
+      <h1 class="text-3xl font-extrabold text-[#0da193]">Controle Vacinal 💉</h1>
+      <p class="text-neutral-500 mt-2 font-medium">Acompanhe as aplicações e notifique tutores sobre doses pendentes.</p>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
+      
+      <select 
+        (change)="aoMudarStatus($event)"
+        class="bg-white border border-neutral-200 text-neutral-700 rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all font-medium shadow-sm cursor-pointer appearance-none">
+        <option value="Todos">Todos os Status</option>
+        <option value="Atrasada">🔴 Atrasadas</option>
+        <option value="Vence em breve">🟡 Vencem em breve</option>
+        <option value="Em dia">🟢 Em dia</option>
+      </select>
+
+      <div class="relative w-full sm:w-72">
+        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-neutral-400">🔍</span>
+        <input 
+          type="text" 
+          (input)="aoDigitar($event)"
+          placeholder="Buscar pet ou vacina..." 
+          class="w-full bg-white border border-neutral-200 text-neutral-700 rounded-full px-5 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all font-medium placeholder:font-normal shadow-sm"
+        >
+      </div>
+      
+      <button (click)="abrirModal()" class="bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 px-6 rounded-full transition-all shadow-md transform hover:-translate-y-0.5 whitespace-nowrap">
+        + Nova Aplicação
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-neutral-50 text-neutral-500 text-sm border-b border-neutral-100">
+            <th class="py-5 px-8 font-semibold">Paciente & Tutor</th>
+            <th class="py-5 px-8 font-semibold">Vacina</th>
+            <th class="py-5 px-8 font-semibold">Data da Aplicação</th>
+            <th class="py-5 px-8 font-semibold">Próxima Dose</th>
+            <th class="py-5 px-8 font-semibold">Status</th>
+            <th class="py-5 px-8 font-semibold text-right">Ação</th>
+          </tr>
+        </thead>
+        <tbody class="text-neutral-700">
+          
+          <tr *ngFor="let item of vacinasFiltradas()" class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
+            
+            <td class="py-4 px-8">
+              <p class="font-bold text-neutral-800 text-base">{{ item.pet }}</p>
+              <p class="text-xs text-neutral-500 font-medium">Tutor: {{ item.tutor }}</p>
+            </td>
+            
+            <td class="py-4 px-8 font-bold text-neutral-700">
+              {{ item.vacina }}
+            </td>
+
+            <td class="py-4 px-8 font-medium text-neutral-500">{{ item.dataAplicacao }}</td>
+            <td class="py-4 px-8 font-bold text-neutral-800">{{ item.proximaDose }}</td>
+
+            <td class="py-4 px-8">
+              <span class="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+                [ngClass]="{
+                  'bg-red-100 text-red-700': item.status === 'Atrasada',
+                  'bg-orange-100 text-orange-700': item.status === 'Vence em breve',
+                  'bg-emerald-100 text-emerald-700': item.status === 'Em dia'
+                }">
+                {{ item.status }}
+              </span>
+            </td>
+
+            <td class="py-4 px-8 text-right">
+              <button 
+                *ngIf="item.status !== 'Em dia'"
+                (click)="notificarTutor(item.tutor)" 
+                class="bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 font-bold py-2 px-4 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 ml-auto">
+                <span>📱</span> Notificar
+              </button>
+              <span *ngIf="item.status === 'Em dia'" class="text-neutral-400 text-sm font-medium">
+                Tudo certo ✓
+              </span>
+            </td>
+
+          </tr>
+
+        </tbody>
+      </table>
+
+      <div *ngIf="vacinasFiltradas().length === 0" class="text-center py-12">
+        <p class="text-neutral-500 font-medium">Nenhum registro encontrado para "{{ termoBusca() }}".</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div *ngIf="isModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 backdrop-blur-md transition-opacity duration-300 p-4">
+  
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all duration-300">
+    
+    <div class="bg-[#0da193] p-6 text-white flex justify-between items-center rounded-t-3xl">
+      <h3 class="text-xl font-extrabold">Registrar Vacina 💉</h3>
+      <button (click)="fecharModal()" class="text-teal-50 hover:text-white text-4xl font-bold leading-none focus:outline-none">&times;</button>
+    </div>
+
+    <div class="p-8 space-y-5">
+      <div>
+        <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Nome do Pet</label>
+        <input #inputPet type="text" placeholder="Ex: Thor" class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Nome da Vacina</label>
+        <select #inputVacina class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 bg-white font-medium text-base">
+          <option value="" disabled selected>Selecione uma vacina...</option>
+          <option value="V10">V10 (Múltipla Canina)</option>
+          <option value="V4 Felina">V4 Felina</option>
+          <option value="Raiva">Antirrábica</option>
+          <option value="Gripe Canina">Gripe Canina</option>
+          <option value="Giárdia">Giárdia</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Data da Aplicação</label>
+          <input #inputData type="date" class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium text-base">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Próxima Dose</label>
+          <input #inputProxima type="date" class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium text-base">
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-neutral-50 p-6 flex justify-end gap-3 border-t border-neutral-100 rounded-b-3xl">
+      <button (click)="fecharModal()" class="px-6 py-3 text-neutral-600 font-bold hover:bg-neutral-200 rounded-full transition-all text-sm">Cancelar</button>
+      
+      <button (click)="salvarVacina(inputPet.value, inputVacina.value, inputData.value, inputProxima.value)" class="bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 px-6 rounded-full transition-all shadow-md transform hover:-translate-y-0.5 text-sm">
+        Salvar Registro
+      </button>
+    </div>
+
+  </div>
+</div>

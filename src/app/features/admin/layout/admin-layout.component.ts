@@ -18,3 +18,5 @@ export class AdminLayoutComponent {
     this.isMobileMenuOpen.set(false);
   }
 }
+
+

@@ -74,6 +74,16 @@ export const routes: Routes = [
         loadComponent: () => 
           import('./features/admin/pacientes/pacientes').then((m) => m.PacientesComponent),
       },
+      {
+        path: 'equipe',
+        loadComponent: () => 
+          import('./features/admin/equipe/equipe').then((m) => m.EquipeComponent),
+      },
+      {
+        path: 'vacinas',
+        loadComponent: () => 
+          import('./features/admin/vacinas/vacinas').then((m) => m.VacinasComponent),
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

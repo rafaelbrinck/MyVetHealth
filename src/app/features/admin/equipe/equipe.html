@@ -1,0 +1,79 @@
+<div class="p-8 max-w-7xl mx-auto min-h-screen">
+  
+  <div class="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-extrabold text-[#0da193]">Gestão de Equipe 👥</h1>
+      <p class="text-neutral-500 mt-2 font-medium">Gerencie o acesso de veterinários e recepcionistas da clínica.</p>
+    </div>
+    
+    <button (click)="abrirModalConvite()" class="bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 px-8 rounded-full transition-all shadow-md transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+      + Convidar Membro
+    </button>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-neutral-50 text-neutral-500 text-sm border-b border-neutral-100">
+            <th class="py-5 px-8 font-semibold">Usuário</th>
+            <th class="py-5 px-8 font-semibold">Papel (Role)</th>
+            <th class="py-5 px-8 font-semibold">CRMV</th>
+            <th class="py-5 px-8 font-semibold">Status</th>
+            <th class="py-5 px-8 font-semibold text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="text-neutral-700">
+          
+          <tr *ngFor="let membro of membrosEquipe()" class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors" [ngClass]="{'opacity-60': !membro.ativo}">
+            
+            <td class="py-5 px-8">
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm"
+                     [ngClass]="membro.papel === 'veterinario' ? 'bg-teal-500' : (membro.papel === 'admin_clinica' ? 'bg-indigo-500' : 'bg-orange-400')">
+                  {{ membro.nome.charAt(0) }}
+                </div>
+                <div>
+                  <p class="font-bold text-neutral-800">{{ membro.nome }}</p>
+                  <p class="text-xs text-neutral-500">{{ membro.email }}</p>
+                </div>
+              </div>
+            </td>
+            
+            <td class="py-5 px-8">
+              <span class="px-3 py-1 rounded-full text-xs font-bold"
+                [ngClass]="{
+                  'bg-indigo-100 text-indigo-700': membro.papel === 'admin_clinica',
+                  'bg-teal-100 text-teal-700': membro.papel === 'veterinario',
+                  'bg-orange-100 text-orange-700': membro.papel === 'recepcionista'
+                }">
+                {{ membro.papel | uppercase }}
+              </span>
+            </td>
+
+            <td class="py-5 px-8 font-medium text-neutral-600">
+              {{ membro.crmv ? membro.crmv : '---' }}
+            </td>
+
+            <td class="py-5 px-8">
+              <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full" [ngClass]="membro.ativo ? 'bg-emerald-500' : 'bg-red-500'"></div>
+                <span class="text-sm font-semibold" [ngClass]="membro.ativo ? 'text-emerald-700' : 'text-red-700'">
+                  {{ membro.ativo ? 'Ativo' : 'Inativo' }}
+                </span>
+              </div>
+            </td>
+
+            <td class="py-5 px-8 text-right">
+              <button class="text-neutral-400 hover:text-[#0da193] font-bold p-2 transition-colors">
+                Editar
+              </button>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
