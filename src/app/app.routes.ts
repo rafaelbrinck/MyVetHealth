@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
+import { guestGuard } from './core/guards/guest.guard';
 
 export const routes: Routes = [
   // ==========================================
@@ -12,6 +14,15 @@ export const routes: Routes = [
       {
         path: 'login',
         loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
+        canActivate: [guestGuard],
+      },
+      {
+        path: 'hub',
+        loadComponent: () =>
+          import('./features/auth/workspace-clinicas/workspace-clinicas').then(
+            (m) => m.WorkspaceClinicas,
+          ),
+        canActivate: [authGuard],
       },
       // Redireciona a raiz para o login
       { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -47,41 +58,41 @@ export const routes: Routes = [
     // canActivate: [authGuard],
     data: { roles: ['admin_clinica', 'veterinario', 'recepcionista'] },
     children: [
-        // {
-        //   path: 'dashboard',
-        //   loadComponent: () =>
-        //     import('./features/admin/dashboard/dashboard.component').then(
-        //       (m) => m.DashboardComponent,
-        //     ),
-        // },
-        {
+      // {
+      //   path: 'dashboard',
+      //   loadComponent: () =>
+      //     import('./features/admin/dashboard/dashboard.component').then(
+      //       (m) => m.DashboardComponent,
+      //     ),
+      // },
+      {
         path: 'recepcao',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./features/admin/reception/reception').then((m) => m.ReceptionComponent),
       },
       {
         path: 'dashboard',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./features/admin/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
       {
         path: 'prontuarios',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./features/admin/prontuario/prontuario').then((m) => m.ProntuarioComponent),
       },
       {
         path: 'pacientes',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./features/admin/pacientes/pacientes').then((m) => m.PacientesComponent),
       },
       {
         path: 'equipe',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./features/admin/equipe/equipe').then((m) => m.EquipeComponent),
       },
       {
         path: 'vacinas',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./features/admin/vacinas/vacinas').then((m) => m.VacinasComponent),
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
