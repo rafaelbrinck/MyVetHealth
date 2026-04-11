@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { Auth } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-admin-layout',
@@ -8,6 +9,8 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
   templateUrl: './admin-layout.component.html',
 })
 export class AdminLayoutComponent {
+  private authService = inject(Auth);
+  private router = inject(Router);
   isMobileMenuOpen = signal(false);
 
   toggleMenu() {
@@ -17,6 +20,11 @@ export class AdminLayoutComponent {
   closeMenu() {
     this.isMobileMenuOpen.set(false);
   }
+
+  logout() {
+    this.authService.logout();
+    this.closeMenu();
+    // Redirecionar para a página de login
+    this.router.navigate(['/login']);
+  }
 }
-
-

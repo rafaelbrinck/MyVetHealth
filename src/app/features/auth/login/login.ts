@@ -35,24 +35,20 @@ export class Login {
     const { email, password } = this.loginForm.value;
 
     try {
-      // Como o service agora faz o fetch da role por dentro e tem o 'await',
-      // quando essa linha terminar, a role já estará em memória.
       await this.authService.login(email!, password!);
 
-      // Buscamos o valor síncrono já pronto, sem dor de cabeça com RxJS
       const role = this.authService.getUserRoleValue();
 
       if (role === 'tutor') {
-        this.router.navigate(['/tutor/meus-pets']); // Atenção: Ajuste para bater com sua rota
+        this.router.navigate(['/tutor/meus-pets']);
       } else if (
         role === 'admin_clinica' ||
         role === 'veterinario' ||
         role === 'recepcionista' ||
         role === 'admin_plataforma'
       ) {
-        this.router.navigate(['/clinica/dashboard']); // Atenção: Ajuste para bater com sua rota
+        this.router.navigate(['/hub']);
       } else {
-        // Fallback caso o usuário exista mas não tenha role definida
         this.errorMessage = 'Perfil não configurado no sistema. Contate o suporte.';
         this.authService.logout();
       }

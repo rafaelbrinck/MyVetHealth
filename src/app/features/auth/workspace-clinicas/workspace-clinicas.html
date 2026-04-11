@@ -1,0 +1,174 @@
+<div class="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+  
+  <div class="w-full max-w-4xl">
+    
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-extrabold text-[#0da193] tracking-tight mb-2">My Pet Health</h1>
+      <p class="text-neutral-500 font-medium">Selecione seu ambiente de trabalho para continuar.</p>
+    </div>
+
+    <div *ngIf="isLoading()" class="flex justify-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0da193]"></div>
+    </div>
+
+    <div *ngIf="!isLoading()">
+
+      <div *ngIf="clinicas().length > 0 && modoAcao() === 'nenhum'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <button 
+          *ngFor="let clinica of clinicas()" 
+          (click)="acessarClinica(clinica.id)"
+          class="bg-white p-8 rounded-3xl shadow-sm border border-neutral-100 hover:border-teal-300 hover:shadow-md transition-all text-left group flex items-center gap-5">
+          
+          <div class="w-14 h-14 bg-teal-50 text-[#0da193] rounded-2xl flex items-center justify-center text-2xl font-bold group-hover:bg-[#0da193] group-hover:text-white transition-colors">
+            {{ clinica.nome.charAt(0) }}
+          </div>
+          
+          <div>
+            <h2 class="text-xl font-bold text-neutral-800">{{ clinica.nome }}</h2>
+            <p class="text-sm text-neutral-500 font-medium capitalize">Acesso: {{ clinica.papel.replace('_', ' ') }}</p>
+          </div>
+        </button>
+
+        <button 
+          (click)="abrirModo('convite')"
+          class="bg-transparent p-8 rounded-3xl border-2 border-dashed border-neutral-200 hover:border-[#0da193] hover:bg-teal-50 transition-all text-center flex flex-col items-center justify-center gap-3">
+          <span class="text-3xl text-neutral-400">🎟️</span>
+          <span class="font-bold text-neutral-600">Recebeu um novo convite?</span>
+        </button>
+      </div>
+
+
+      <div *ngIf="clinicas().length === 0 && modoAcao() === 'nenhum'" class="bg-white rounded-3xl shadow-lg border border-neutral-100 p-10 text-center">
+        
+        <div class="w-20 h-20 bg-neutral-50 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+          👋
+        </div>
+        <h2 class="text-2xl font-bold text-neutral-800 mb-2">Bem-vindo ao sistema!</h2>
+        <p class="text-neutral-500 font-medium mb-10 max-w-md mx-auto">Parece que você ainda não está vinculado a nenhuma clínica. Como deseja começar?</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          
+          <button (click)="abrirModo('nova_clinica')" class="border border-neutral-200 rounded-2xl p-6 hover:border-[#0da193] hover:bg-teal-50 transition-all group text-left">
+            <span class="text-3xl mb-4 block">🏥</span>
+            <h3 class="font-bold text-neutral-800 text-lg">Sou dono(a) de Clínica</h3>
+            <p class="text-sm text-neutral-500 mt-1">Quero cadastrar minha empresa e começar a gerenciar.</p>
+          </button>
+
+          <button (click)="abrirModo('convite')" class="border border-neutral-200 rounded-2xl p-6 hover:border-[#0da193] hover:bg-teal-50 transition-all group text-left">
+            <span class="text-3xl mb-4 block">📩</span>
+            <h3 class="font-bold text-neutral-800 text-lg">Fui Convidado(a)</h3>
+            <p class="text-sm text-neutral-500 mt-1">Tenho um código de acesso passado pela minha clínica.</p>
+          </button>
+
+        </div>
+      </div>
+
+
+      <div *ngIf="modoAcao() === 'convite'" class="bg-white rounded-3xl shadow-lg border border-neutral-100 p-10 max-w-lg mx-auto">
+        <button (click)="voltar()" class="text-neutral-400 hover:text-[#0da193] font-bold mb-6 flex items-center gap-2">
+          &larr; Voltar
+        </button>
+        <h2 class="text-2xl font-bold text-neutral-800 mb-2">Código de Convite</h2>
+        <p class="text-neutral-500 font-medium mb-8">Digite o token de 6 dígitos que o administrador da clínica te enviou.</p>
+        
+        <div *ngIf="errorMessage()" class="p-4 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 flex items-center gap-3 font-medium mb-6 text-left">
+          <span>⚠️</span> {{ errorMessage() }}
+        </div>
+
+        <input #inputToken type="text" placeholder="Ex: A7X9P2" class="w-full border border-neutral-200 text-center text-2xl tracking-[0.5em] uppercase rounded-2xl px-6 py-4 focus:ring-2 focus:ring-teal-200 outline-none font-bold text-neutral-700 mb-6">
+        
+        <button 
+          (click)="validarConvite(inputToken.value)" 
+          [disabled]="isSubmitting()"
+          class="w-full bg-[#0da193] hover:bg-[#006064] text-white font-bold py-4 rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2">
+          
+          <svg *ngIf="isSubmitting()" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          
+          {{ isSubmitting() ? 'Validando...' : 'Validar Acesso' }}
+        </button>
+      </div>
+
+      <div *ngIf="modoAcao() === 'nova_clinica'" class="bg-white rounded-3xl shadow-lg border border-neutral-100 p-10">
+        <button (click)="voltar()" class="text-neutral-400 hover:text-[#0da193] font-bold mb-6 flex items-center gap-2">
+          &larr; Voltar
+        </button>
+        <h2 class="text-2xl font-bold text-neutral-800 mb-2">Cadastrar Clínica</h2>
+        <p class="text-neutral-500 font-medium mb-8">Preencha os dados básicos para configurar seu novo ambiente.</p>
+        
+        <form [formGroup]="novaClinicaForm" (ngSubmit)="salvarNovaClinica()" class="space-y-6 text-left">
+          
+          <div *ngIf="errorMessage()" class="p-4 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 flex items-center gap-3 font-medium">
+            <span>⚠️</span> {{ errorMessage() }}
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Nome Fantasia <span class="text-red-500">*</span></label>
+              <input type="text" formControlName="nomeFantasia" placeholder="Ex: Vida Animal Centro Vet" 
+                class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium"
+                [ngClass]="{'border-red-400 focus:ring-red-200': isFieldInvalid('nomeFantasia')}">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Razão Social <span class="text-red-500">*</span></label>
+              <input type="text" formControlName="razaoSocial" placeholder="Ex: Vida Animal LTDA" 
+                class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium"
+                [ngClass]="{'border-red-400 focus:ring-red-200': isFieldInvalid('razaoSocial')}">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">CNPJ <span class="text-red-500">*</span></label>
+              <input type="text" formControlName="cnpj" placeholder="00.000.000/0001-00" 
+                class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium"
+                [ngClass]="{'border-red-400 focus:ring-red-200': isFieldInvalid('cnpj')}">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Telefone da Clínica <span class="text-red-500">*</span></label>
+              <input type="text" formControlName="telefone" placeholder="(00) 00000-0000" 
+                class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium"
+                [ngClass]="{'border-red-400 focus:ring-red-200': isFieldInvalid('telefone')}">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-6 gap-5 pt-2 border-t border-neutral-100">
+            <div class="col-span-6 md:col-span-2">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">CEP</label>
+              <input type="text" formControlName="cep" placeholder="00000-000" 
+                class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium">
+            </div>
+            <div class="col-span-4 md:col-span-3">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Cidade</label>
+              <input type="text" formControlName="cidade" placeholder="Sua Cidade" 
+                class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium">
+            </div>
+            <div class="col-span-2 md:col-span-1">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">UF</label>
+              <input type="text" formControlName="uf" placeholder="RS" maxlength="2"
+                class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium uppercase text-center">
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            [disabled]="isSubmitting()"
+            class="w-full mt-4 bg-[#0da193] hover:bg-[#006064] text-white font-bold py-4 rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            
+            <svg *ngIf="isSubmitting()" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            
+            {{ isSubmitting() ? 'Criando ambiente...' : 'Finalizar Cadastro' }}
+          </button>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>

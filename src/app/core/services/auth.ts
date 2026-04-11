@@ -28,19 +28,29 @@ export class Auth {
   }
 
   private async carregarRole(userId: string) {
+    // Agora o papel não fica mais no perfil.
+    // Vamos buscar se esse usuário faz parte de alguma clínica.
     const { data, error } = await this.supabase
-      .from('perfis') // Ajustado para o nome da tabela que criamos no SQL
+      .from('equipe_clinica')
       .select('papel')
-      .eq('id', userId)
-      .single();
+      .eq('perfil_id', userId)
+      .eq('ativo', true)
+      .limit(1)
+      .maybeSingle(); // maybeSingle é perfeito aqui: se não achar nada, ele retorna null em vez de dar erro.
 
     if (error) {
-      console.error('Erro ao carregar role:', error);
+      console.error('Erro ao carregar role da equipe:', error);
       this.userRole.next(null);
       return;
     }
 
-    this.userRole.next(data?.papel || null);
+    if (data) {
+      // Se achou, o usuário já está vinculado a uma clínica (é admin, vet ou recepcionista)
+      this.userRole.next(data.papel);
+    } else {
+      // Se não achou na equipe, ele é um usuário recém-cadastrado (sem clínica) ou um Tutor
+      this.userRole.next('sem_vinculo');
+    }
   }
 
   getCurrentUser() {
