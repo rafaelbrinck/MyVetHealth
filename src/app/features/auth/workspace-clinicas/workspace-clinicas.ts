@@ -4,6 +4,7 @@ import { SupabaseService } from '../../../core/services/supabase';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClinicaService } from '../../../core/services/clinica.service';
+import { CriarClinicaDTO } from '../../../core/models/clinica.model';
 
 @Component({
   selector: 'app-workspace-clinicas',
@@ -64,8 +65,10 @@ export class WorkspaceClinicas implements OnInit {
     }
   }
 
-  acessarClinica(clinicaId: string) {
+  async acessarClinica(clinicaId: string) {
     localStorage.setItem('clinica_ativa', clinicaId);
+    await this.clinicaService.setarClinicaAtiva(clinicaId);
+    console.log(this.clinicaService.clinica());
     this.router.navigate(['/clinica/dashboard']);
   }
 
@@ -87,7 +90,7 @@ export class WorkspaceClinicas implements OnInit {
     this.errorMessage.set('');
 
     try {
-      const valores = this.novaClinicaForm.value;
+      const valores = this.novaClinicaForm.value as CriarClinicaDTO;
 
       // Toda a lógica suja de banco de dados foi delegada para o Service
       const novaClinicaId = await this.clinicaService.criarClinicaEVincular(this.userId!, valores);

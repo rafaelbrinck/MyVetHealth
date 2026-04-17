@@ -1,13 +1,31 @@
-import { Injectable, inject } from '@angular/core';
-import { SupabaseService } from './supabase'; // Ajuste o caminho conforme seu projeto
+import { Injectable, inject, signal } from '@angular/core';
+import { SupabaseService } from './supabase';
+import { WorkspaceClinica, CriarClinicaDTO, Clinica } from '../models/clinica.model'; // Ajuste o caminho
+
 @Injectable({
   providedIn: 'root',
 })
 export class ClinicaService {
   private supabase = inject(SupabaseService).client;
 
-  // Busca as clínicas que o usuário logado tem acesso
-  async getClinicasDoUsuario(userId: string) {
+  private _clinica = signal<Clinica>({} as Clinica);
+  public clinica = this._clinica.asReadonly();
+
+  async setarClinicaAtiva(clinicaId: string) {
+    const { data, error } = await this.supabase
+      .from('clinicas')
+      .select('*')
+      .eq('id', clinicaId)
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar clínica:', error);
+      throw new Error('Não foi possível carregar os dados da clínica. Tente novamente.');
+    }
+    this._clinica.set(data);
+  }
+
+  async getClinicasDoUsuario(userId: string): Promise<WorkspaceClinica[]> {
     const { data, error } = await this.supabase
       .from('equipe_clinica')
       .select(
@@ -21,17 +39,17 @@ export class ClinicaService {
 
     if (error) throw error;
 
-    // Mapeia o retorno para um formato mais limpo para o front-end
-    return data.map((item: any) => ({
+    const clinicasFormatadas: WorkspaceClinica[] = data.map((item: any) => ({
       id: item.clinicas.id,
       nome: item.clinicas.nome_fantasia,
       razao_social: item.clinicas.razao_social,
-      papel: item.papel,
+      papel: item.papel as WorkspaceClinica['papel'],
     }));
+
+    return clinicasFormatadas;
   }
 
-  async criarClinicaEVincular(userId: string, valoresFormulario: any) {
-    // 1. Cria a Clínica na tabela 'clinicas'
+  async criarClinicaEVincular(userId: string, valoresFormulario: CriarClinicaDTO): Promise<string> {
     const { data: clinica, error: clinicaError } = await this.supabase
       .from('clinicas')
       .insert({
@@ -48,40 +66,34 @@ export class ClinicaService {
 
     if (clinicaError) throw clinicaError;
 
-    // 2. Tenta vincular o usuário atual como dono ('admin_clinica')
     const { error: equipeError } = await this.supabase.from('equipe_clinica').insert({
       clinica_id: clinica.id,
       perfil_id: userId,
       papel: 'admin_clinica',
     });
 
-    // 3. O Tratamento Sênior (Rollback Manual)
     if (equipeError) {
       console.warn('Erro ao vincular dono. Iniciando rollback da clínica...', equipeError);
 
-      // Deleta a clínica que acabou de ser criada para não deixar lixo no banco
       const { error: rollbackError } = await this.supabase
         .from('clinicas')
         .delete()
         .eq('id', clinica.id);
 
       if (rollbackError) {
-        // Se até o rollback falhar (ex: internet caiu de vez), logamos isso criticamente.
         console.error('Falha CRÍTICA no rollback. Clínica fantasma gerada:', clinica.id);
       }
 
-      // Agora sim, jogamos o erro para a tela avisando o usuário
       throw new Error(
         'Ocorreu um problema ao criar seu acesso. O processo foi cancelado por segurança. Tente novamente.',
       );
     }
 
-    return clinica.id; // Retorna o ID recém-criado
+    return clinica.id;
   }
 
-  // Valida o token e vincula o usuário à clínica convidada
-  async aceitarConvite(userId: string, tokenFormatado: string) {
-    // 1. Busca o convite pendente
+  // 5. Retorna uma string (o ID da clínica)
+  async aceitarConvite(userId: string, tokenFormatado: string): Promise<string> {
     const { data: convite, error: buscaError } = await this.supabase
       .from('convites_clinica')
       .select('*')
@@ -93,10 +105,8 @@ export class ClinicaService {
       throw new Error('Convite inválido, expirado ou já utilizado.');
     }
 
-    // Opcional: Verificar se o token expirou por data
     const dataExpiracao = new Date(convite.expira_em);
     if (new Date() > dataExpiracao) {
-      // Atualiza para expirado no banco para limpar a sujeira
       await this.supabase
         .from('convites_clinica')
         .update({ status: 'expirado' })
@@ -104,7 +114,6 @@ export class ClinicaService {
       throw new Error('Este convite já expirou.');
     }
 
-    // 2. Cria o vínculo do usuário com a clínica usando o papel definido no convite
     const { error: vinculoError } = await this.supabase.from('equipe_clinica').insert({
       clinica_id: convite.clinica_id,
       perfil_id: userId,
@@ -112,14 +121,12 @@ export class ClinicaService {
     });
 
     if (vinculoError) {
-      // Código 23505 no Postgres é violação de Unique Constraint (usuário já está na clínica)
       if (vinculoError.code === '23505') {
         throw new Error('Você já faz parte desta clínica.');
       }
       throw vinculoError;
     }
 
-    // 3. Atualiza o status do convite para 'aceito' para que não possa ser usado de novo
     const { error: updateError } = await this.supabase
       .from('convites_clinica')
       .update({ status: 'aceito' })
@@ -127,7 +134,6 @@ export class ClinicaService {
 
     if (updateError) throw updateError;
 
-    // Retorna o ID da clínica para o componente saber para onde redirecionar
     return convite.clinica_id;
   }
 }
