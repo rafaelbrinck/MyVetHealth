@@ -1,65 +1,151 @@
 <div class="p-8 max-w-7xl mx-auto min-h-screen">
   
-  <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-    <div>
-      <h1 class="text-3xl font-extrabold text-[#0da193]">Pacientes 🐾</h1>
-      <p class="text-neutral-500 mt-2 font-medium">Gerencie o histórico e os pets vinculados à sua clínica.</p>
+  <div *ngIf="telaAtual() === 'lista_tutores'" class="animate-fade-in">
+    <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div>
+        <h1 class="text-3xl font-extrabold text-[#0da193]">Pacientes da Clínica 🐾</h1>
+        <p class="text-neutral-500 mt-2 font-medium">Busque pelo nome do Tutor, CPF ou até mesmo pelo nome do Pet.</p>
+      </div>
+      
+      <div class="relative w-full md:w-96">
+        <span class="absolute inset-y-0 left-0 pl-5 flex items-center text-neutral-400 text-lg">🔍</span>
+        <input 
+          type="text" 
+          [value]="termoBusca()"
+          (input)="aoDigitar($event)"
+          placeholder="Buscar pacientes..." 
+          class="w-full bg-white border border-neutral-200 text-neutral-700 rounded-full px-5 py-3.5 pl-12 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all font-medium placeholder:font-normal shadow-sm"
+        >
+      </div>
     </div>
-    
-    <div class="relative w-full md:w-96">
-      <span class="absolute inset-y-0 left-0 pl-5 flex items-center text-neutral-400 text-lg">🔍</span>
-      <input 
-        type="text" 
-        (input)="aoDigitar($event)"
-        placeholder="Buscar por pet, tutor ou CPF..." 
-        class="w-full bg-white border border-neutral-200 text-neutral-700 rounded-full px-5 py-3.5 pl-12 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all font-medium placeholder:font-normal shadow-sm"
-      >
+
+    <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-neutral-50 text-neutral-500 text-sm border-b border-neutral-100">
+              <th class="py-5 px-8 font-semibold">Tutor Responsável</th>
+              <th class="py-5 px-8 font-semibold">Contato</th>
+              <th class="py-5 px-8 font-semibold text-center">Qtd. Pets</th>
+              <th class="py-5 px-8 font-semibold text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="text-neutral-700">
+            
+            <tr *ngFor="let tutor of tutoresFiltrados()" class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
+              <td class="py-5 px-8">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-lg uppercase shadow-sm">
+                    {{ tutor.nome.charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="font-bold text-neutral-800">{{ tutor.nome }}</p>
+                    <p class="text-xs text-neutral-500">CPF: {{ tutor.cpf || 'Não informado' }}</p>
+                  </div>
+                </div>
+              </td>
+              
+              <td class="py-5 px-8">
+                <p class="font-medium text-sm">{{ tutor.email || '---' }}</p>
+                <p class="text-xs text-neutral-500">{{ tutor.telefone || '---' }}</p>
+              </td>
+
+              <td class="py-5 px-8 text-center font-bold text-[#0da193]">
+                <span class="bg-teal-50 px-3 py-1 rounded-full border border-teal-100">
+                  {{ tutor.pets.length || 0 }}
+                </span>
+              </td>
+
+              <td class="py-5 px-8 text-right">
+                <button 
+                  (click)="abrirPetsDoTutor(tutor)"
+                  class="text-white bg-neutral-800 hover:bg-black font-bold py-2 px-5 rounded-xl transition-all shadow-sm text-sm">
+                  Ver Pets &rarr;
+                </button>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="tutoresFiltrados().length === 0" class="p-16 text-center">
+        <span class="text-5xl mb-4 block">🐶❓</span>
+        <h3 class="text-xl font-bold text-[#0da193]">Nenhum registro encontrado</h3>
+        <p class="text-neutral-500 font-medium">Não achamos ninguém com o termo "{{ termoBusca() }}".</p>
+      </div>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-    
-    <div *ngFor="let pet of pacientesFiltrados()" class="bg-white rounded-3xl shadow-sm p-6 border border-neutral-100 hover:shadow-md transition-shadow duration-300 flex flex-col">
-      
-      <div class="flex items-center gap-4 mb-5 border-b border-neutral-100 pb-5">
-        <div class="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center text-3xl">
-          {{ pet.especie === 'Cachorro' ? '🐕' : (pet.especie === 'Gato' ? '🐈' : '🦜') }}
-        </div>
-        <div>
-          <h3 class="text-xl font-bold text-neutral-800">{{ pet.nome }}</h3>
-          <p class="text-sm text-neutral-500 font-medium">{{ pet.raca }}</p>
-        </div>
+  <div *ngIf="telaAtual() === 'lista_pets'" class="animate-fade-in">
+    <button (click)="voltarParaTutores()" class="text-neutral-400 hover:text-[#0da193] font-bold mb-6 flex items-center gap-2 transition-colors">
+      &larr; Voltar para a lista principal
+    </button>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 p-8 mb-8 flex justify-between items-center">
+      <div>
+        <h2 class="text-2xl font-extrabold text-neutral-800">Família de {{ tutorSelecionado()?.nome }}</h2>
+        <p class="text-neutral-500 font-medium">Estes são os pacientes registrados neste CPF.</p>
       </div>
-      
-      <div class="space-y-3 mb-6 text-sm">
-        <div class="flex justify-between items-center">
-          <span class="text-neutral-500 font-medium">Tutor:</span>
-          <span class="text-neutral-800 font-bold truncate max-w-[150px]">{{ pet.tutor }}</span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span class="text-neutral-500 font-medium">Última Consulta:</span>
-          <span class="text-neutral-800 font-bold" [ngClass]="{'text-[#e62b4c]': pet.ultimaConsulta === 'Nunca'}">
-            {{ pet.ultimaConsulta }}
-          </span>
-        </div>
-      </div>
-      
-      <div class="flex gap-3 mt-auto pt-2">
-        <button (click)="verHistorico(pet.nome)" class="flex-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-3 rounded-2xl transition-colors text-sm">
-          Histórico
-        </button>
-        <button (click)="iniciarAtendimento(pet.nome)" class="flex-1 bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 rounded-2xl transition-colors text-sm shadow-sm">
-          Atender
-        </button>
-      </div>
-      
+      <button class="text-sm bg-teal-50 hover:bg-teal-100 text-[#0da193] font-bold py-2 px-5 rounded-full transition-colors border border-teal-100">
+        + Adicionar Novo Pet
+      </button>
     </div>
 
-    <div *ngIf="pacientesFiltrados().length === 0" class="col-span-full text-center py-20">
-      <span class="text-6xl mb-4 block">🐶❓</span>
-      <h3 class="text-xl font-bold text-[#0da193]">Nenhum paciente encontrado</h3>
-      <p class="text-neutral-500 font-medium">Não achamos ninguém com o termo "{{ termoBusca() }}".</p>
-    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      
+      <div *ngFor="let pet of tutorSelecionado()?.pets" class="bg-white rounded-3xl shadow-sm p-6 border border-neutral-100 hover:shadow-md transition-shadow duration-300 flex flex-col">
+        
+        <div class="flex items-center gap-4 mb-5 border-b border-neutral-100 pb-5">
+          <div class="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center text-3xl">
+            {{ pet.especie.toLowerCase() === 'cachorro' ? '🐕' : (pet.especie.toLowerCase() === 'gato' ? '🐈' : '🦜') }}
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-neutral-800">{{ pet.nome }}</h3>
+            <p class="text-sm text-neutral-500 font-medium">{{ pet.raca || 'S/R' }}</p>
+          </div>
+        </div>
+        
+        <div class="space-y-3 mb-6 text-sm">
+          <div class="flex justify-between items-center">
+            <span class="text-neutral-500 font-medium">Nascimento:</span>
+            <span class="text-neutral-800 font-bold truncate">
+              {{ pet.data_nascimento ? (pet.data_nascimento | date:'dd/MM/yyyy') : 'Não informado' }}
+            </span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-neutral-500 font-medium">Coloração:</span>
+            <span class="text-neutral-800 font-bold">
+              {{ pet.cor || '---' }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="flex gap-3 mt-auto pt-2">
+          <button (click)="verHistorico(pet)" class="flex-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-3 rounded-2xl transition-colors text-sm">
+            Histórico
+          </button>
+          <button (click)="iniciarAtendimento(pet)" class="flex-1 bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 rounded-2xl transition-colors text-sm shadow-sm flex items-center justify-center gap-2">
+            <span>🩺</span> Atender
+          </button>
+        </div>
+      </div>
 
+      <div *ngIf="!tutorSelecionado()?.pets || tutorSelecionado()?.pets?.length === 0" class="col-span-full text-center py-10 bg-neutral-50 rounded-3xl border border-dashed border-neutral-200">
+        <p class="text-neutral-500 font-medium">Este tutor ainda não possui pets cadastrados.</p>
+      </div>
+
+    </div>
   </div>
+
 </div>
+
+<style>
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>

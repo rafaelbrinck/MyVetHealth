@@ -1,39 +1,55 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { TutorService } from '../../../core/services/tutor.service'; // Ajuste o caminho se necessário
+import { Tutor } from '../../../core/models/tutor.model';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './pacientes.html',
-  styleUrl: './pacientes.css'
+  styleUrl: './pacientes.css',
 })
-export class PacientesComponent {
-  
-  // O Angular "injeta" o roteador para podermos trocar de tela via código
+export class PacientesComponent implements OnInit {
   private router = inject(Router);
+  public tutorService = inject(TutorService);
 
-  public listaPacientes = signal([
-    { id: 1, nome: 'Max', especie: 'Cachorro', raca: 'Golden Retriever', tutor: 'João da Silva', cpf: '111.111.111-11', ultimaConsulta: 'Hoje' },
-    { id: 2, nome: 'Mia', especie: 'Gato', raca: 'Siamês', tutor: 'Ana Clara', cpf: '222.222.222-22', ultimaConsulta: '12/03/2026' },
-    { id: 3, nome: 'Bolinha', especie: 'Cachorro', raca: 'Beagle', tutor: 'Carlos Eduardo', cpf: '333.333.333-33', ultimaConsulta: '05/01/2026' },
-    { id: 4, nome: 'Luna', especie: 'Gato', raca: 'Persa', tutor: 'Mariana', cpf: '444.444.444-44', ultimaConsulta: '28/02/2026' },
-    { id: 5, nome: 'Thor', especie: 'Cachorro', raca: 'Bulldog Francês', tutor: 'Pedro Brum', cpf: '555.555.555-55', ultimaConsulta: '15/03/2026' },
-    { id: 6, nome: 'Fred', especie: 'Outro', raca: 'Papagaio', tutor: 'Roberto Alves', cpf: '666.666.666-66', ultimaConsulta: 'Nunca' }
-  ]);
-
+  // ==========================================
+  // ESTADOS DA TELA (View Switcher)
+  // ==========================================
+  public telaAtual = signal<'lista_tutores' | 'lista_pets'>('lista_tutores');
+  public tutorSelecionado = signal<Tutor | null>(null);
   public termoBusca = signal('');
 
-  public pacientesFiltrados = computed(() => {
-    const termo = this.termoBusca().toLowerCase().trim();
-    if (!termo) return this.listaPacientes();
+  // ==========================================
+  // INICIALIZAÇÃO COM CACHE
+  // ==========================================
+  ngOnInit() {
+    // Busca os tutores usando o cache inteligente (não sobrecarrega o banco)
+    this.tutorService.getTutoresComPets().catch((error) => {
+      if (error.message && error.message.includes('no longer runnable')) return;
+      console.error('Erro ao carregar pacientes:', error);
+    });
+  }
 
-    return this.listaPacientes().filter(pet => 
-      pet.nome.toLowerCase().includes(termo) ||
-      pet.tutor.toLowerCase().includes(termo) ||
-      pet.raca.toLowerCase().includes(termo) ||
-      (pet.cpf && pet.cpf.includes(termo))
+  // ==========================================
+  // BUSCA INTELIGENTE
+  // ==========================================
+  public tutoresFiltrados = computed(() => {
+    const termo = this.termoBusca().toLowerCase().trim();
+    const lista = this.tutorService.tutores(); // Lê do Signal do Serviço
+
+    if (!termo) return lista;
+
+    return lista.filter(
+      (tutor) =>
+        // Busca pelo nome do tutor
+        tutor.nome.toLowerCase().includes(termo) ||
+        // Busca pelo CPF (ignorando pontos e traços)
+        tutor.cpf.replace(/\D/g, '').includes(termo.replace(/\D/g, '')) ||
+        // MÁGICA: Se o nome de algum pet bater, mostra o tutor dono dele!
+        tutor.pets?.some((pet) => pet.nome.toLowerCase().includes(termo)),
     );
   });
 
@@ -43,18 +59,28 @@ export class PacientesComponent {
   }
 
   // ==========================================
-  // FUNÇÕES DE AÇÃO DOS BOTÕES
+  // NAVEGAÇÃO INTERNA
   // ==========================================
+  public abrirPetsDoTutor(tutor: Tutor): void {
+    this.tutorSelecionado.set(tutor);
+    this.termoBusca.set(''); // Limpa a busca ao entrar
+    this.telaAtual.set('lista_pets');
+  }
 
-  public iniciarAtendimento(nomePet: string): void {
-    console.log('Navegando para prontuários... Paciente:', nomePet);
-    // Redireciona o usuário para a rota de prontuários
+  public voltarParaTutores(): void {
+    this.tutorSelecionado.set(null);
+    this.telaAtual.set('lista_tutores');
+  }
+
+  // ==========================================
+  // AÇÕES
+  // ==========================================
+  public iniciarAtendimento(pet: any): void {
+    console.log('Navegando para prontuários... Paciente:', pet.nome);
     this.router.navigate(['/clinica/prontuarios']);
   }
 
-  public verHistorico(nomePet: string): void {
-    // Exibe um alerta na tela do navegador
-    alert(`Preparando o histórico médico do paciente: ${nomePet} 🐾`);
+  public verHistorico(pet: any): void {
+    alert(`Preparando o histórico médico do paciente: ${pet.nome} 🐾`);
   }
-
 }
