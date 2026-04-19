@@ -11,6 +11,35 @@ export class ClinicaService {
   private _clinica = signal<Clinica>({} as Clinica);
   public clinica = this._clinica.asReadonly();
 
+  constructor() {
+    // 1. AUTO-HIDRATAÇÃO
+    // Toda vez que o serviço é construído (ex: usuário deu F5), 
+    // ele tenta recuperar a clínica silenciosamente.
+    this.recuperarClinicaDoCache();
+  }
+
+  // ==========================================
+  // 2. O GETTER SEGURO DE ID
+  // ==========================================
+  // Ele tenta ler do Signal. Se estiver vazio (porque o Supabase ainda está carregando), 
+  // ele lê instantaneamente do cache do navegador.
+  get clinicaAtivaId(): string | null {
+    return this._clinica().id || localStorage.getItem('clinica_ativa');
+  }
+
+  private async recuperarClinicaDoCache() {
+    const clinicaIdSalva = localStorage.getItem('clinica_ativa');
+    
+    // Só busca no banco se tiver ID no cache e o Signal estiver vazio
+    if (clinicaIdSalva && !this._clinica().id) {
+      try {
+        await this.setarClinicaAtiva(clinicaIdSalva);
+      } catch (error) {
+        console.error('Falha ao restaurar a clínica da sessão:', error);
+      }
+    }
+  }
+
   async setarClinicaAtiva(clinicaId: string) {
     const { data, error } = await this.supabase
       .from('clinicas')
@@ -22,7 +51,17 @@ export class ClinicaService {
       console.error('Erro ao buscar clínica:', error);
       throw new Error('Não foi possível carregar os dados da clínica. Tente novamente.');
     }
+    
     this._clinica.set(data);
+    
+    // 3. SALVA NO CACHE SEMPRE QUE SETAR
+    localStorage.setItem('clinica_ativa', clinicaId);
+  }
+
+  // 4. LIMPEZA (Chame isso no método de Logout do seu sistema)
+  limparClinicaAtiva() {
+    this._clinica.set({} as Clinica);
+    localStorage.removeItem('clinica_ativa');
   }
 
   async getClinicasDoUsuario(userId: string): Promise<WorkspaceClinica[]> {
@@ -92,7 +131,6 @@ export class ClinicaService {
     return clinica.id;
   }
 
-  // 5. Retorna uma string (o ID da clínica)
   async aceitarConvite(userId: string, tokenFormatado: string): Promise<string> {
     const { data: convite, error: buscaError } = await this.supabase
       .from('convites_clinica')

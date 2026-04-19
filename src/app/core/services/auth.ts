@@ -2,11 +2,17 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase';
 import { BehaviorSubject } from 'rxjs';
 import { User } from '@supabase/supabase-js';
+import { Tutor } from '../models/tutor.model';
+import { Pet } from '../models/pet.model';
+import { PetService } from './pet.service';
+import { ClinicaService } from './clinica.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Auth {
+  private clinicaService = inject(ClinicaService);
+  private PetService = inject(PetService);
   private supabaseService = inject(SupabaseService);
   private supabase = this.supabaseService.client;
 
@@ -15,6 +21,44 @@ export class Auth {
 
   constructor() {
     this.carregarSessao();
+  }
+
+  async criarCadastroExpresso(dados: any): Promise<void> {
+    const clinicaId = this.clinicaService.clinicaAtivaId;
+    if (!clinicaId) throw new Error('Nenhuma clínica ativa no sistema.');
+
+    // Preparamos o pacote de dados (Payload)
+    const payload = {
+      clinicaId: clinicaId,
+      email: dados.email,
+      cpf: dados.cpf,
+      nomeTutor: dados.nomeTutor,
+      nomePet: dados.nomePet,
+      especie: dados.especie,
+      raca: dados.raca,
+      cor: dados.cor,
+      dataNascimento: dados.dataNascimento
+    };
+
+    // Chamamos a Edge Function que está rodando segura na nuvem do Supabase
+    const { data, error } = await this.supabase.functions.invoke('cadastrar-tutor', {
+      body: payload
+    });
+
+    // Tratamento de erros vindo da Function
+    if (error) {
+      console.error('Erro na Edge Function:', error);
+      throw new Error('Falha de comunicação com o servidor seguro.');
+    }
+
+    if (data?.error) {
+      if (data.error.includes('already registered')) {
+        throw new Error('Este e-mail já possui uma conta no sistema.');
+      }
+      throw new Error(data.error);
+    }
+    
+    // Sucesso! O usuário foi criado, a sessão da recepcionista continua ativa e o banco foi atualizado.
   }
 
   private async carregarSessao() {
