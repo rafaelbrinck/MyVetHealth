@@ -1,25 +1,93 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ClinicaService } from '../../../core/services/clinica.service';
 
 @Component({
   selector: 'app-equipe',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './equipe.html',
-  styleUrl: './equipe.css'
+  styleUrl: './equipe.css',
 })
-export class EquipeComponent {
-  
-  // Mock simulando o join entre 'equipe_clinica' e 'perfis'
-  public membrosEquipe = signal([
-    { id: 1, nome: 'Rafael (Tech Lead)', papel: 'admin_clinica', crmv: null, email: 'rafael@myvethealth.com', ativo: true },
-    { id: 2, nome: "Dra. Juliana D'avila", papel: 'veterinario', crmv: 'CRMV-RS 12345', email: 'juliana@myvethealth.com', ativo: true },
-    { id: 3, nome: 'Dr. Pedro Brum', papel: 'veterinario', crmv: 'CRMV-RS 67890', email: 'pedro@myvethealth.com', ativo: true },
-    { id: 4, nome: 'Bárbara Brunetto', papel: 'recepcionista', crmv: null, email: 'barbara@myvethealth.com', ativo: true },
-    { id: 5, nome: 'Dr. Francisco Ghisio', papel: 'veterinario', crmv: 'CRMV-RS 54321', email: 'francisco@myvethealth.com', ativo: false } // Membro inativo
-  ]);
+export class EquipeComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  public clinicaService = inject(ClinicaService);
 
-  public abrirModalConvite(): void {
-    alert('Aqui abriremos o modal para disparar o e-mail de convite via Supabase Auth!');
+  // 1. ATUALIZE A TIPAGEM DO SINAL
+  public telaAtual = signal<'lista' | 'cadastro' | 'convite_gerado'>('lista'); // <--- NOVO ESTADO AQUI
+
+  // 2. ADICIONE ESSA VARIÁVEL PARA GUARDAR O LINK
+  public linkConviteGerado = signal<string>('');
+  public isSubmitting = signal(false);
+
+  public cadastroForm: FormGroup;
+
+  constructor() {
+    this.cadastroForm = this.fb.group({
+      nome: ['', [Validators.required, Validators.minLength(3)]],
+      cpf: ['', [Validators.required, Validators.minLength(11)]],
+      email: ['', [Validators.required, Validators.email]],
+      telefone: ['', Validators.required],
+      papel: ['veterinario', Validators.required],
+      crmv: [''], // CRMV é opcional porque recepcionista não tem
+    });
+  }
+
+  async ngOnInit() {
+    try {
+      await this.clinicaService.carregarMembrosEquipe();
+    } catch (error) {
+      console.error('Erro ao carregar equipe:', error);
+    }
+  }
+
+  public abrirFormulario(): void {
+    this.cadastroForm.reset({ papel: 'veterinario' }); // Reseta o form com valor padrão
+    this.telaAtual.set('cadastro');
+  }
+
+  public voltarParaLista(): void {
+    this.telaAtual.set('lista');
+  }
+
+  public async salvarMembro() {
+    if (this.cadastroForm.invalid) {
+      this.cadastroForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSubmitting.set(true);
+
+    try {
+      const valores = this.cadastroForm.value;
+      const resposta = await this.clinicaService.cadastrarMembroEquipe(valores);
+
+      // Avalia a resposta da Edge Function para saber o que mostrar pro usuário
+      if (resposta.acao === 'convite_gerado') {
+        // Monta o link completo com o token
+        const link = `${resposta.token}`;
+        this.linkConviteGerado.set(link);
+
+        // Troca para a nova tela de sucesso
+        this.telaAtual.set('convite_gerado');
+      } else {
+        alert(`${resposta.mensagem}\n\nO acesso é o e-mail cadastrado e a senha padrão é o CPF.`);
+        this.voltarParaLista();
+      }
+
+      // Recarrega a lista do banco para o novo membro aparecer na tabela
+      await this.clinicaService.carregarMembrosEquipe(true); // Força recarga ignorando cache
+    } catch (error: any) {
+      console.error('Erro ao cadastrar membro:', error);
+      alert('Erro: ' + (error.message || 'Falha ao processar o cadastro.'));
+    } finally {
+      this.isSubmitting.set(false);
+    }
+  }
+
+  public copiarLink() {
+    navigator.clipboard.writeText(this.linkConviteGerado());
+    alert('✅ Link copiado para a área de transferência!');
   }
 }

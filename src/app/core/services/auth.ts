@@ -12,7 +12,6 @@ import { ClinicaService } from './clinica.service';
 })
 export class Auth {
   private clinicaService = inject(ClinicaService);
-  private PetService = inject(PetService);
   private supabaseService = inject(SupabaseService);
   private supabase = this.supabaseService.client;
 
@@ -37,12 +36,12 @@ export class Auth {
       especie: dados.especie,
       raca: dados.raca,
       cor: dados.cor,
-      dataNascimento: dados.dataNascimento
+      dataNascimento: dados.dataNascimento,
     };
 
     // Chamamos a Edge Function que está rodando segura na nuvem do Supabase
     const { data, error } = await this.supabase.functions.invoke('cadastrar-tutor', {
-      body: payload
+      body: payload,
     });
 
     // Tratamento de erros vindo da Function
@@ -57,7 +56,7 @@ export class Auth {
       }
       throw new Error(data.error);
     }
-    
+
     // Sucesso! O usuário foi criado, a sessão da recepcionista continua ativa e o banco foi atualizado.
   }
 
@@ -129,6 +128,7 @@ export class Auth {
     if (error) {
       console.error('Erro ao fazer logout:', error);
     } else {
+      this.clinicaService.limparClinicaAtiva(); // Limpa a clínica ativa e equipe da memória
       this.currentUser.next(null);
       this.userRole.next(null);
     }

@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { SupabaseService } from './supabase';
-import { WorkspaceClinica, CriarClinicaDTO, Clinica } from '../models/clinica.model'; // Ajuste o caminho
+import { WorkspaceClinica, CriarClinicaDTO, Clinica } from '../models/clinica.model'; // Ajuste o caminho se necessário
 
 @Injectable({
   providedIn: 'root',
@@ -8,20 +8,24 @@ import { WorkspaceClinica, CriarClinicaDTO, Clinica } from '../models/clinica.mo
 export class ClinicaService {
   private supabase = inject(SupabaseService).client;
 
+  // Estado da Clínica
   private _clinica = signal<Clinica>({} as Clinica);
   public clinica = this._clinica.asReadonly();
 
+  // NOVO: Signal para guardar a lista da equipe em memória (Alta Performance)
+  public membrosEquipe = signal<any[]>([]);
+
   constructor() {
     // 1. AUTO-HIDRATAÇÃO
-    // Toda vez que o serviço é construído (ex: usuário deu F5), 
+    // Toda vez que o serviço é construído (ex: usuário deu F5),
     // ele tenta recuperar a clínica silenciosamente.
     this.recuperarClinicaDoCache();
   }
 
   // ==========================================
-  // 2. O GETTER SEGURO DE ID
+  // O GETTER SEGURO DE ID
   // ==========================================
-  // Ele tenta ler do Signal. Se estiver vazio (porque o Supabase ainda está carregando), 
+  // Ele tenta ler do Signal. Se estiver vazio (porque o Supabase ainda está carregando),
   // ele lê instantaneamente do cache do navegador.
   get clinicaAtivaId(): string | null {
     return this._clinica().id || localStorage.getItem('clinica_ativa');
@@ -29,7 +33,7 @@ export class ClinicaService {
 
   private async recuperarClinicaDoCache() {
     const clinicaIdSalva = localStorage.getItem('clinica_ativa');
-    
+
     // Só busca no banco se tiver ID no cache e o Signal estiver vazio
     if (clinicaIdSalva && !this._clinica().id) {
       try {
@@ -51,18 +55,99 @@ export class ClinicaService {
       console.error('Erro ao buscar clínica:', error);
       throw new Error('Não foi possível carregar os dados da clínica. Tente novamente.');
     }
-    
+
     this._clinica.set(data);
-    
-    // 3. SALVA NO CACHE SEMPRE QUE SETAR
+
+    // SALVA NO CACHE SEMPRE QUE SETAR
     localStorage.setItem('clinica_ativa', clinicaId);
   }
 
-  // 4. LIMPEZA (Chame isso no método de Logout do seu sistema)
+  // LIMPEZA (Chame isso no método de Logout do seu sistema)
   limparClinicaAtiva() {
     this._clinica.set({} as Clinica);
     localStorage.removeItem('clinica_ativa');
+    this.membrosEquipe.set([]); // NOVO: Limpa a equipe da memória ao deslogar
   }
+
+  // ==========================================
+  // NOVOS MÉTODOS: GESTÃO DE EQUIPE
+  // ==========================================
+
+  // 1. Carrega a lista real do banco fazendo JOIN
+  async carregarMembrosEquipe(forceReload = false): Promise<void> {
+    // A TRAVA DE CACHE: Se não for forçado e já tiver gente na lista, nem vai no banco!
+    if (!forceReload && this.membrosEquipe().length > 0) {
+      return;
+    }
+    const clinicaId = this.clinicaAtivaId;
+    if (!clinicaId) return;
+
+    const { data, error } = await this.supabase
+      .from('equipe_clinica')
+      .select(
+        `
+        id,
+        papel,
+        crmv,
+        ativo,
+        perfis ( id, nome_completo, email, cpf, telefone )
+      `,
+      )
+      .eq('clinica_id', clinicaId)
+      .order('criado_em', { ascending: false });
+
+    if (error) throw error;
+
+    // Mapeamento (Anti-Corruption Layer)
+    const equipeFormatada = data.map((item: any) => ({
+      id: item.id,
+      perfil_id: item.perfis?.id,
+      nome: item.perfis?.nome_completo || 'Sem Nome',
+      email: item.perfis?.email || '',
+      telefone: item.perfis?.telefone || '',
+      papel: item.papel,
+      crmv: item.crmv,
+      ativo: item.ativo,
+    }));
+
+    this.membrosEquipe.set(equipeFormatada);
+  }
+
+  // 2. Envia os dados para a Edge Function de cadastro/convite
+  async cadastrarMembroEquipe(
+    dadosMembro: any,
+  ): Promise<{ acao: string; mensagem: string; token?: string }> {
+    const clinicaId = this.clinicaAtivaId;
+    if (!clinicaId) throw new Error('Nenhuma clínica ativa selecionada.');
+
+    const { data: userData } = await this.supabase.auth.getUser();
+    const adminId = userData.user?.id;
+
+    const payload = {
+      clinicaId,
+      adminId,
+      email: dadosMembro.email,
+      cpf: dadosMembro.cpf,
+      nome: dadosMembro.nome,
+      telefone: dadosMembro.telefone,
+      papelEquipe: dadosMembro.papel,
+      crmv: dadosMembro.crmv,
+    };
+
+    // Invoca a função segura na nuvem
+    const { data, error } = await this.supabase.functions.invoke('cadastrar-membro', {
+      body: payload,
+    });
+
+    if (error) throw new Error('Falha de comunicação com o servidor.');
+    if (data?.error) throw new Error(data.error);
+
+    return data;
+  }
+
+  // ==========================================
+  // MÉTODOS ANTIGOS DE WORKSPACE
+  // ==========================================
 
   async getClinicasDoUsuario(userId: string): Promise<WorkspaceClinica[]> {
     const { data, error } = await this.supabase
@@ -141,6 +226,10 @@ export class ClinicaService {
 
     if (buscaError || !convite) {
       throw new Error('Convite inválido, expirado ou já utilizado.');
+    }
+
+    if (convite.perfil_id !== userId) {
+      throw new Error('Acesso Negado: Este convite pertence a outro usuário.');
     }
 
     const dataExpiracao = new Date(convite.expira_em);

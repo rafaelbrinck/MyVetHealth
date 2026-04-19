@@ -1,79 +1,198 @@
 <div class="p-8 max-w-7xl mx-auto min-h-screen">
   
-  <div class="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-    <div>
-      <h1 class="text-3xl font-extrabold text-[#0da193]">Gestão de Equipe 👥</h1>
-      <p class="text-neutral-500 mt-2 font-medium">Gerencie o acesso de veterinários e recepcionistas da clínica.</p>
+  <div *ngIf="telaAtual() === 'lista'" class="animate-fade-in">
+    <div class="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-[#0da193]">Gestão de Equipe 👥</h1>
+        <p class="text-neutral-500 mt-2 font-medium">Gerencie o acesso de veterinários e recepcionistas da clínica.</p>
+      </div>
+      
+      <button (click)="abrirFormulario()" class="bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 px-8 rounded-full transition-all shadow-md transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+        + Convidar Membro
+      </button>
     </div>
-    
-    <button (click)="abrirModalConvite()" class="bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 px-8 rounded-full transition-all shadow-md transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-      + Convidar Membro
-    </button>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-neutral-50 text-neutral-500 text-sm border-b border-neutral-100">
+              <th class="py-5 px-8 font-semibold">Usuário</th>
+              <th class="py-5 px-8 font-semibold">Papel (Role)</th>
+              <th class="py-5 px-8 font-semibold">CRMV</th>
+              <th class="py-5 px-8 font-semibold">Status</th>
+              <th class="py-5 px-8 font-semibold text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="text-neutral-700">
+            
+            <tr *ngFor="let membro of clinicaService.membrosEquipe()" class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors" [ngClass]="{'opacity-60': !membro.ativo}">
+              
+              <td class="py-5 px-8">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm"
+                       [ngClass]="membro.papel === 'veterinario' ? 'bg-teal-500' : (membro.papel === 'admin_clinica' ? 'bg-indigo-500' : 'bg-orange-400')">
+                    {{ membro.nome.charAt(0) | uppercase }}
+                  </div>
+                  <div>
+                    <p class="font-bold text-neutral-800">{{ membro.nome }}</p>
+                    <p class="text-xs text-neutral-500">{{ membro.email }}</p>
+                  </div>
+                </div>
+              </td>
+              
+              <td class="py-5 px-8">
+                <span class="px-3 py-1 rounded-full text-xs font-bold"
+                  [ngClass]="{
+                    'bg-indigo-100 text-indigo-700': membro.papel === 'admin_clinica',
+                    'bg-teal-100 text-teal-700': membro.papel === 'veterinario',
+                    'bg-orange-100 text-orange-700': membro.papel === 'recepcionista'
+                  }">
+                  {{ membro.papel | uppercase }}
+                </span>
+              </td>
+
+              <td class="py-5 px-8 font-medium text-neutral-600">
+                {{ membro.crmv ? membro.crmv : '---' }}
+              </td>
+
+              <td class="py-5 px-8">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full" [ngClass]="membro.ativo ? 'bg-emerald-500' : 'bg-red-500'"></div>
+                  <span class="text-sm font-semibold" [ngClass]="membro.ativo ? 'text-emerald-700' : 'text-red-700'">
+                    {{ membro.ativo ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </div>
+              </td>
+
+              <td class="py-5 px-8 text-right">
+                <button class="text-neutral-400 hover:text-[#0da193] font-bold p-2 transition-colors">
+                  Editar
+                </button>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+      
+      <div *ngIf="clinicaService.membrosEquipe().length === 0" class="p-10 text-center text-neutral-500 font-medium">
+        Nenhum membro cadastrado nesta clínica.
+      </div>
+    </div>
   </div>
 
-  <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="bg-neutral-50 text-neutral-500 text-sm border-b border-neutral-100">
-            <th class="py-5 px-8 font-semibold">Usuário</th>
-            <th class="py-5 px-8 font-semibold">Papel (Role)</th>
-            <th class="py-5 px-8 font-semibold">CRMV</th>
-            <th class="py-5 px-8 font-semibold">Status</th>
-            <th class="py-5 px-8 font-semibold text-right">Ações</th>
-          </tr>
-        </thead>
-        <tbody class="text-neutral-700">
+  <div *ngIf="telaAtual() === 'cadastro'" class="animate-fade-in max-w-4xl mx-auto">
+    <button (click)="voltarParaLista()" class="text-neutral-400 hover:text-[#0da193] font-bold mb-6 flex items-center gap-2 transition-colors">
+      &larr; Voltar para Equipe
+    </button>
+
+    <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-neutral-100">
+      <div class="bg-[#0da193] p-8 text-white">
+        <h3 class="text-2xl font-extrabold">Adicionar Membro 🩺</h3>
+        <p class="text-teal-50 text-base mt-1 font-medium">Preencha os dados do profissional. Se ele já tiver conta, geraremos um convite.</p>
+      </div>
+
+      <form [formGroup]="cadastroForm" (ngSubmit)="salvarMembro()">
+        <div class="p-10">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+            
+            <div class="space-y-6">
+              <h4 class="font-bold text-lg text-[#0da193] border-b pb-3">👤 Dados Pessoais</h4>
+              <div>
+                <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Nome Completo *</label>
+                <input formControlName="nome" type="text" placeholder="Ex: Dra. Juliana" class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50" [ngClass]="{'border-red-400': cadastroForm.get('nome')?.invalid && cadastroForm.get('nome')?.touched}">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-neutral-800 mb-1.5">CPF *</label>
+                <input formControlName="cpf" type="text" placeholder="000.000.000-00" class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50" [ngClass]="{'border-red-400': cadastroForm.get('cpf')?.invalid && cadastroForm.get('cpf')?.touched}">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Telefone / WhatsApp *</label>
+                <input formControlName="telefone" type="text" placeholder="(00) 00000-0000" class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50" [ngClass]="{'border-red-400': cadastroForm.get('telefone')?.invalid && cadastroForm.get('telefone')?.touched}">
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              <h4 class="font-bold text-lg text-[#0da193] border-b pb-3">🏥 Acesso ao Sistema</h4>
+              <div>
+                <label class="text-sm font-semibold text-neutral-800 mb-1.5 flex justify-between">
+                  E-mail Profissional *
+                  <span class="text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded font-bold">Login</span>
+                </label>
+                <input formControlName="email" type="email" placeholder="juliana@clinica.com" class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50" [ngClass]="{'border-red-400': cadastroForm.get('email')?.invalid && cadastroForm.get('email')?.touched}">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Cargo / Papel *</label>
+                <select formControlName="papel" class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 bg-neutral-50 font-medium text-base appearance-none cursor-pointer">
+                  <option value="veterinario">Veterinário(a)</option>
+                  <option value="recepcionista">Recepcionista</option>
+                  <option value="admin_clinica">Administrador</option>
+                </select>
+              </div>
+
+              <div *ngIf="cadastroForm.get('papel')?.value === 'veterinario'">
+                <label class="block text-sm font-semibold text-neutral-800 mb-1.5">CRMV</label>
+                <input formControlName="crmv" type="text" placeholder="Ex: CRMV-RS 12345" class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="bg-neutral-50 p-8 flex justify-end gap-4 border-t border-neutral-100">
+          <button type="button" (click)="voltarParaLista()" class="px-6 py-3 text-neutral-600 font-bold hover:bg-neutral-200 rounded-xl transition-all text-base">Cancelar</button>
           
-          <tr *ngFor="let membro of membrosEquipe()" class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors" [ngClass]="{'opacity-60': !membro.ativo}">
+          <button 
+            type="submit" 
+            [disabled]="isSubmitting()"
+            class="bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2 text-base disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
             
-            <td class="py-5 px-8">
-              <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm"
-                     [ngClass]="membro.papel === 'veterinario' ? 'bg-teal-500' : (membro.papel === 'admin_clinica' ? 'bg-indigo-500' : 'bg-orange-400')">
-                  {{ membro.nome.charAt(0) }}
-                </div>
-                <div>
-                  <p class="font-bold text-neutral-800">{{ membro.nome }}</p>
-                  <p class="text-xs text-neutral-500">{{ membro.email }}</p>
-                </div>
-              </div>
-            </td>
+            <svg *ngIf="isSubmitting()" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             
-            <td class="py-5 px-8">
-              <span class="px-3 py-1 rounded-full text-xs font-bold"
-                [ngClass]="{
-                  'bg-indigo-100 text-indigo-700': membro.papel === 'admin_clinica',
-                  'bg-teal-100 text-teal-700': membro.papel === 'veterinario',
-                  'bg-orange-100 text-orange-700': membro.papel === 'recepcionista'
-                }">
-                {{ membro.papel | uppercase }}
-              </span>
-            </td>
+            {{ isSubmitting() ? 'Processando...' : '🚀 Salvar Membro' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-            <td class="py-5 px-8 font-medium text-neutral-600">
-              {{ membro.crmv ? membro.crmv : '---' }}
-            </td>
+  <div *ngIf="telaAtual() === 'convite_gerado'" class="animate-fade-in max-w-2xl mx-auto text-center mt-12">
+    <div class="bg-white rounded-3xl shadow-lg p-10 border border-neutral-100">
+      
+      <div class="w-20 h-20 bg-teal-100 text-[#0da193] rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+        💌
+      </div>
+      
+      <h2 class="text-2xl font-extrabold text-neutral-800 mb-2">Convite Pronto!</h2>
+      <p class="text-neutral-600 font-medium mb-8">O usuário <strong>{{ cadastroForm.get('nome')?.value }}</strong> já possui uma conta na plataforma. Envie o link abaixo para ele aceitar o convite e entrar na sua clínica.</p>
+      
+      <div class="bg-neutral-50 p-4 rounded-xl border border-neutral-200 flex flex-col gap-4 mb-8">
+        <code class="text-lg text-neutral-600 break-all select-all block text-center font-bold p-5 bg-white rounded-xl border border-neutral-200">
+          {{ linkConviteGerado() }}
+        </code>
+        
+        <button (click)="copiarLink()" class="bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 w-full sm:w-auto self-center">
+          <span>📋</span> Copiar Link
+        </button>
+      </div>
 
-            <td class="py-5 px-8">
-              <div class="flex items-center gap-2">
-                <div class="w-2.5 h-2.5 rounded-full" [ngClass]="membro.ativo ? 'bg-emerald-500' : 'bg-red-500'"></div>
-                <span class="text-sm font-semibold" [ngClass]="membro.ativo ? 'text-emerald-700' : 'text-red-700'">
-                  {{ membro.ativo ? 'Ativo' : 'Inativo' }}
-                </span>
-              </div>
-            </td>
+      <button (click)="voltarParaLista()" class="text-neutral-500 font-bold hover:text-neutral-700 transition-colors">
+        Voltar para a lista de equipe
+      </button>
 
-            <td class="py-5 px-8 text-right">
-              <button class="text-neutral-400 hover:text-[#0da193] font-bold p-2 transition-colors">
-                Editar
-              </button>
-            </td>
-          </tr>
-
-        </tbody>
-      </table>
     </div>
   </div>
 
 </div>
+
+<style>
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
