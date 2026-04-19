@@ -75,31 +75,44 @@ export class ClinicaService {
 
   // 1. Carrega a lista real do banco fazendo JOIN
   async carregarMembrosEquipe(forceReload = false): Promise<void> {
-    // A TRAVA DE CACHE: Se não for forçado e já tiver gente na lista, nem vai no banco!
     if (!forceReload && this.membrosEquipe().length > 0) {
       return;
     }
+
     const clinicaId = this.clinicaAtivaId;
     if (!clinicaId) return;
 
-    const { data, error } = await this.supabase
-      .from('equipe_clinica')
-      .select(
-        `
-        id,
-        papel,
-        crmv,
-        ativo,
-        perfis ( id, nome_completo, email, cpf, telefone )
-      `,
-      )
-      .eq('clinica_id', clinicaId)
-      .order('criado_em', { ascending: false });
+    // DISPARO PARALELO: Busca as duas tabelas ao mesmo tempo
+    const [equipeRes, convitesRes] = await Promise.all([
+      // Consulta 1: Membros Ativos
+      this.supabase
+        .from('equipe_clinica')
+        .select(
+          `
+          id, papel, crmv, ativo,
+          perfis ( id, nome_completo, email, cpf, telefone )
+        `,
+        )
+        .eq('clinica_id', clinicaId),
 
-    if (error) throw error;
+      // Consulta 2: Convites Pendentes
+      this.supabase
+        .from('convites_clinica')
+        .select(
+          `
+          id, papel, token, status,
+          perfis:perfis!convites_clinica_perfil_id_fkey ( id, nome_completo, email, cpf, telefone )
+        `,
+        )
+        .eq('clinica_id', clinicaId)
+        .eq('status', 'pendente'),
+    ]);
 
-    // Mapeamento (Anti-Corruption Layer)
-    const equipeFormatada = data.map((item: any) => ({
+    if (equipeRes.error) throw equipeRes.error;
+    if (convitesRes.error) throw convitesRes.error;
+
+    // MAPEAMENTO 1: Membros já vinculados
+    const membrosAtivos = equipeRes.data.map((item: any) => ({
       id: item.id,
       perfil_id: item.perfis?.id,
       nome: item.perfis?.nome_completo || 'Sem Nome',
@@ -107,10 +120,30 @@ export class ClinicaService {
       telefone: item.perfis?.telefone || '',
       papel: item.papel,
       crmv: item.crmv,
-      ativo: item.ativo,
+      status: item.ativo ? 'ativo' : 'inativo', // Status baseado na coluna ativo
+      isConvite: false,
     }));
 
-    this.membrosEquipe.set(equipeFormatada);
+    // MAPEAMENTO 2: Convites que ainda não foram aceitos
+    const convitesPendentes = convitesRes.data.map((item: any) => ({
+      id: item.id,
+      perfil_id: item.perfis?.id,
+      nome: item.perfis?.nome_completo || 'Pendente',
+      email: item.perfis?.email || '',
+      telefone: item.perfis?.telefone || '',
+      papel: item.papel,
+      crmv: '---',
+      status: 'pendente', // Status fixo como pendente
+      token: item.token,
+      isConvite: true,
+    }));
+
+    // UNIFICAÇÃO: Junta as duas listas e ordena por nome
+    const listaUnificada = [...membrosAtivos, ...convitesPendentes].sort((a, b) =>
+      a.nome.localeCompare(b.nome),
+    );
+
+    this.membrosEquipe.set(listaUnificada);
   }
 
   // 2. Envia os dados para a Edge Function de cadastro/convite

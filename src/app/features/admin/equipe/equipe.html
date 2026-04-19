@@ -57,12 +57,27 @@
               </td>
 
               <td class="py-5 px-8">
-                <div class="flex items-center gap-2">
-                  <div class="w-2.5 h-2.5 rounded-full" [ngClass]="membro.ativo ? 'bg-emerald-500' : 'bg-red-500'"></div>
-                  <span class="text-sm font-semibold" [ngClass]="membro.ativo ? 'text-emerald-700' : 'text-red-700'">
-                    {{ membro.ativo ? 'Ativo' : 'Inativo' }}
-                  </span>
-                </div>
+               <div class="flex items-center gap-2">
+                 <div class="w-2.5 h-2.5 rounded-full" 
+                      [ngClass]="{
+                        'bg-emerald-500': membro.status === 'ativo',
+                        'bg-orange-400': membro.status === 'pendente',
+                        'bg-red-500': membro.status === 'inativo'
+                      }">
+                 </div>
+               
+                 <span class="text-sm font-semibold" 
+                       [ngClass]="{
+                         'text-emerald-700': membro.status === 'ativo',
+                         'text-orange-700': membro.status === 'pendente',
+                         'text-red-700': membro.status === 'inativo'
+                       }">
+                   {{ 
+                     membro.status === 'ativo' ? 'Ativo' : 
+                     (membro.status === 'pendente' ? 'Aguardando Aceite' : 'Inativo') 
+                   }}
+                 </span>
+               </div>
               </td>
 
               <td class="py-5 px-8 text-right">
