@@ -250,51 +250,18 @@ export class ClinicaService {
   }
 
   async aceitarConvite(userId: string, tokenFormatado: string): Promise<string> {
-    const { data: convite, error: buscaError } = await this.supabase
-      .from('convites_clinica')
-      .select('*')
-      .eq('token', tokenFormatado)
-      .eq('status', 'pendente')
-      .eq('perfil_id', userId)
-      .single();
-
-    if (buscaError || !convite) {
-      throw new Error('Convite inválido, expirado ou já utilizado.');
-    }
-
-    if (convite.perfil_id !== userId) {
-      throw new Error('Acesso Negado: Este convite pertence a outro usuário.');
-    }
-
-    const dataExpiracao = new Date(convite.expira_em);
-    if (new Date() > dataExpiracao) {
-      await this.supabase
-        .from('convites_clinica')
-        .update({ status: 'expirado' })
-        .eq('id', convite.id);
-      throw new Error('Este convite já expirou.');
-    }
-
-    const { error: vinculoError } = await this.supabase.from('equipe_clinica').insert({
-      clinica_id: convite.clinica_id,
-      perfil_id: userId,
-      papel: convite.papel,
+    // Chamada única ao banco - Máxima economia de recursos e latência
+    const { data, error } = await this.supabase.rpc('aceitar_convite_clinica', {
+      p_token: tokenFormatado,
+      p_user_id: userId,
     });
 
-    if (vinculoError) {
-      if (vinculoError.code === '23505') {
-        throw new Error('Você já faz parte desta clínica.');
-      }
-      throw vinculoError;
+    if (error) {
+      // O erro levantado pelo RAISE EXCEPTION no Postgres vem parar aqui
+      throw new Error(error.message);
     }
 
-    const { error: updateError } = await this.supabase
-      .from('convites_clinica')
-      .update({ status: 'aceito' })
-      .eq('id', convite.id);
-
-    if (updateError) throw updateError;
-
-    return convite.clinica_id;
+    // Retorna o clinica_id (UUID)
+    return data as string;
   }
 }
