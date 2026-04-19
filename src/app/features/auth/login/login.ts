@@ -41,16 +41,8 @@ export class Login {
 
       if (role === 'tutor') {
         this.router.navigate(['/tutor/meus-pets']);
-      } else if (
-        role === 'admin_clinica' ||
-        role === 'veterinario' ||
-        role === 'recepcionista' ||
-        role === 'admin_plataforma'
-      ) {
-        this.router.navigate(['/hub']);
       } else {
-        this.errorMessage = 'Perfil não configurado no sistema. Contate o suporte.';
-        this.authService.logout();
+        this.router.navigate(['/hub']);
       }
     } catch (error: any) {
       this.errorMessage = 'E-mail ou senha inválidos. Tente novamente.';

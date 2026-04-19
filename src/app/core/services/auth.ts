@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, map } from 'rxjs';
 import { User } from '@supabase/supabase-js';
 import { Tutor } from '../models/tutor.model';
 import { Pet } from '../models/pet.model';

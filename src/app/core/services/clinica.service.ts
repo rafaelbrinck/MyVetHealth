@@ -1,13 +1,13 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { SupabaseService } from './supabase';
 import { WorkspaceClinica, CriarClinicaDTO, Clinica } from '../models/clinica.model'; // Ajuste o caminho se necessário
+import { Auth } from './auth';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ClinicaService {
   private supabase = inject(SupabaseService).client;
-
   // Estado da Clínica
   private _clinica = signal<Clinica>({} as Clinica);
   public clinica = this._clinica.asReadonly();
@@ -255,6 +255,7 @@ export class ClinicaService {
       .select('*')
       .eq('token', tokenFormatado)
       .eq('status', 'pendente')
+      .eq('perfil_id', userId)
       .single();
 
     if (buscaError || !convite) {
