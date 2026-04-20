@@ -71,28 +71,38 @@ export class Auth {
   }
 
   private async carregarRole(userId: string) {
-    // Agora o papel não fica mais no perfil.
-    // Vamos buscar se esse usuário faz parte de alguma clínica.
-    const { data, error } = await this.supabase
-      .from('equipe_clinica')
-      .select('papel')
-      .eq('perfil_id', userId)
-      .eq('ativo', true)
-      .limit(1)
-      .maybeSingle(); // maybeSingle é perfeito aqui: se não achar nada, ele retorna null em vez de dar erro.
+    const [equipeData, validConvite] = await Promise.all([
+      this.supabase
+        .from('equipe_clinica')
+        .select('papel')
+        .eq('perfil_id', userId)
+        .eq('ativo', true)
+        .limit(1)
+        .maybeSingle(),
 
-    if (error) {
-      console.error('Erro ao carregar role da equipe:', error);
-      this.userRole.next(null);
-      return;
-    }
+      this.supabase
+        .from('convites_clinica')
+        .select(
+          `
+          id, papel
+        `,
+        )
+        .eq('perfil_id', userId)
+        .eq('status', 'pendente')
+        .maybeSingle(),
+    ]);
 
-    if (data) {
+    if (equipeData.error) throw equipeData.error;
+    if (validConvite.error) throw validConvite.error;
+
+    if (equipeData.data) {
       // Se achou, o usuário já está vinculado a uma clínica (é admin, vet ou recepcionista)
-      this.userRole.next(data.papel);
-    } else {
+      this.userRole.next(equipeData.data.papel);
+    } else if (validConvite.data) {
       // Se não achou na equipe, ele é um usuário recém-cadastrado (sem clínica) ou um Tutor
-      this.userRole.next('sem_vinculo');
+      this.userRole.next(validConvite.data.papel);
+    } else {
+      this.userRole.next('tutor');
     }
   }
 
