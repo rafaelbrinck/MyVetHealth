@@ -12,6 +12,13 @@ export class AdminLayoutComponent {
   private authService = inject(Auth);
   private router = inject(Router);
   isMobileMenuOpen = signal(false);
+  public papelAtivo = signal<string | null>(this.authService.getUserRoleValue());
+
+  public podeAcessar(rolesPermitidas: string[]): boolean {
+    const papel = this.papelAtivo();
+    if (!papel) return false;
+    return rolesPermitidas.includes(papel);
+  }
 
   toggleMenu() {
     this.isMobileMenuOpen.update((v) => !v);

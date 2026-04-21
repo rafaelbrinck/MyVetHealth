@@ -19,24 +19,37 @@
     </div>
     
     <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-      <a routerLink="/clinica/recepcao" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
-        🛎️ Recepção
-      </a>
+      
       <a routerLink="/clinica/dashboard" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
         📊 Dashboard
       </a>
-      <a routerLink="/clinica/prontuarios" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
-        🩺 Prontuários
-      </a>
+      
       <a routerLink="/clinica/pacientes" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
         🐾 Pacientes
       </a>
-      <a routerLink="/clinica/equipe" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
-        👥 Equipe
-      </a>
+
+      @if (podeAcessar(['admin_clinica', 'recepcionista'])) {
+        <a routerLink="/clinica/recepcao" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
+          🛎️ Recepção
+        </a>
+      }
+
+      @if (podeAcessar(['admin_clinica', 'veterinario'])) {
+        <a routerLink="/clinica/prontuarios" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
+          🩺 Prontuários
+        </a>
+        
         <a routerLink="/clinica/vacinas" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
-        💉 Vacinas
-      </a>
+          💉 Vacinas
+        </a>
+      }
+
+      @if (podeAcessar(['admin_clinica'])) {
+        <a routerLink="/clinica/equipe" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
+          👥 Equipe
+        </a>
+      }
+
     </nav>
 
     <div class="p-4 border-t border-slate-800 text-sm">

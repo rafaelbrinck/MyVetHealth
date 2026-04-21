@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { roleGuard } from './core/guards/role-guard';
 
 export const routes: Routes = [
   // ==========================================
@@ -55,7 +56,7 @@ export const routes: Routes = [
     path: 'clinica',
     loadComponent: () =>
       import('./features/admin/layout/admin-layout.component').then((m) => m.AdminLayoutComponent),
-    // canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
     data: { roles: ['admin_clinica', 'veterinario', 'recepcionista'] },
     children: [
       // {
@@ -69,6 +70,8 @@ export const routes: Routes = [
         path: 'recepcao',
         loadComponent: () =>
           import('./features/admin/reception/reception').then((m) => m.ReceptionComponent),
+        canActivate: [roleGuard],
+        data: { roles: ['admin_clinica', 'recepcionista'] },
       },
       {
         path: 'dashboard',
@@ -79,6 +82,8 @@ export const routes: Routes = [
         path: 'prontuarios',
         loadComponent: () =>
           import('./features/admin/prontuario/prontuario').then((m) => m.ProntuarioComponent),
+        canActivate: [roleGuard],
+        data: { roles: ['admin_clinica', 'veterinario'] },
       },
       {
         path: 'pacientes',
@@ -89,6 +94,8 @@ export const routes: Routes = [
         path: 'equipe',
         loadComponent: () =>
           import('./features/admin/equipe/equipe').then((m) => m.EquipeComponent),
+        canActivate: [roleGuard],
+        data: { roles: ['admin_clinica'] },
       },
       {
         path: 'vacinas',
