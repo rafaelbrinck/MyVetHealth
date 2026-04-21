@@ -1,8 +1,10 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; 
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Auth } from '../../../core/services/auth';
 import { TutorService } from '../../../core/services/tutor.service';
+import { ClinicaService } from '../../../core/services/clinica.service';
+import { ConsultaService } from '../../../core/services/consulta.service';
 import { Tutor } from '../../../core/models/tutor.model';
 
 @Component({
@@ -13,31 +15,28 @@ import { Tutor } from '../../../core/models/tutor.model';
   styleUrl: './reception.css',
 })
 export class ReceptionComponent implements OnInit {
-  
-  // ==========================================
-  // INJEÇÕES DE DEPENDÊNCIA
-  // ==========================================
   private fb = inject(FormBuilder);
   private authService = inject(Auth);
-  public tutorService = inject(TutorService); // Público para acessar o signal 'tutores' no HTML se necessário
+  public tutorService = inject(TutorService);
+  public clinicaService = inject(ClinicaService);
+  public consultaService = inject(ConsultaService);
 
-  // ==========================================
-  // ESTADOS DA TELA
-  // ==========================================
-  public telaAtual = signal<'busca' | 'perfil_tutor' | 'novo_cadastro'>('busca');
+  public telaAtual = signal<'busca' | 'perfil_tutor' | 'novo_cadastro' | 'agendamento'>('busca');
   public statusBusca = signal<'ocioso' | 'buscando' | 'nao_encontrado'>('ocioso');
   public isSubmitting = signal(false);
 
-  // ==========================================
-  // DADOS DO TUTOR SELECIONADO
-  // ==========================================
   public tutorAtivo = signal<Tutor | null>(null);
   public petsTutor = signal<any[]>([]);
+  public petSelecionadoParaConsulta = signal<any>(null);
 
-  // ==========================================
-  // FORMULÁRIO REATIVO
-  // ==========================================
   public cadastroForm: FormGroup;
+  public agendamentoForm: FormGroup;
+
+  public veterinariosClinica = computed(() => {
+    return this.clinicaService
+      .membrosEquipe()
+      .filter((membro) => membro.papel === 'veterinario' && membro.status === 'ativo');
+  });
 
   constructor() {
     this.cadastroForm = this.fb.group({
@@ -48,36 +47,41 @@ export class ReceptionComponent implements OnInit {
       especie: ['', Validators.required],
       raca: [''],
       cor: [''],
-      dataNascimento: ['']
+      dataNascimento: [''],
+    });
+
+    this.agendamentoForm = this.fb.group({
+      veterinarioId: [''],
+      data: ['', Validators.required],
+      hora: ['', Validators.required],
+      sintomas: [''],
     });
   }
 
-  // Carrega os dados da clínica ao iniciar o componente
   async ngOnInit() {
     try {
       await this.tutorService.getTutoresComPets();
+      await this.clinicaService.carregarMembrosEquipe();
     } catch (error) {
       console.error('Erro ao inicializar recepção:', error);
     }
   }
 
-  // ==========================================
-  // FLUXO DE BUSCA (REAL)
-  // ==========================================
   public buscarTutor(termo: string): void {
     if (!termo.trim()) return;
     this.statusBusca.set('buscando');
 
-    // Pequeno delay apenas para feedback visual (UX)
     setTimeout(() => {
       const busca = termo.toLowerCase().trim();
-      
-      // Busca no signal global de tutores que já está carregado
-      const encontrado = this.tutorService.tutores().find(t => 
-        t.cpf.replace(/\D/g, '').includes(busca.replace(/\D/g, '')) || 
-        t.nome.toLowerCase().includes(busca) ||
-        t.email.toLowerCase().includes(busca)
-      );
+
+      const encontrado = this.tutorService
+        .tutores()
+        .find(
+          (t) =>
+            t.cpf.replace(/\D/g, '').includes(busca.replace(/\D/g, '')) ||
+            t.nome.toLowerCase().includes(busca) ||
+            t.email.toLowerCase().includes(busca),
+        );
 
       if (encontrado) {
         this.tutorAtivo.set(encontrado);
@@ -91,16 +95,19 @@ export class ReceptionComponent implements OnInit {
   }
 
   public iniciarConsulta(pet: any): void {
-    // Integração futura com ConsultaService
-    alert(`✅ Consulta aberta para ${pet.nome}! O paciente foi enviado para a fila.`);
-    this.voltarParaBusca();
+    this.petSelecionadoParaConsulta.set(pet);
+
+    const agora = new Date();
+    this.agendamentoForm.patchValue({
+      data: agora.toISOString().split('T')[0],
+      hora: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    });
+
+    this.telaAtual.set('agendamento');
   }
 
-  // ==========================================
-  // NAVEGAÇÃO E CADASTRO
-  // ==========================================
   public irParaNovoCadastro(): void {
-    this.cadastroForm.reset(); 
+    this.cadastroForm.reset();
     this.telaAtual.set('novo_cadastro');
   }
 
@@ -113,7 +120,7 @@ export class ReceptionComponent implements OnInit {
 
   public async salvarCadastro() {
     if (this.cadastroForm.invalid) {
-      this.cadastroForm.markAllAsTouched(); 
+      this.cadastroForm.markAllAsTouched();
       return;
     }
 
@@ -121,12 +128,7 @@ export class ReceptionComponent implements OnInit {
 
     try {
       const valores = this.cadastroForm.value;
-      
-      // Envia para a Edge Function via AuthService
       await this.authService.criarCadastroExpresso(valores);
-
-      // AQUI VOCÊ FORÇA A ATUALIZAÇÃO! 
-      // Passamos 'true' para ele ignorar o cache e buscar o cliente que acabou de ser criado.
       await this.tutorService.getTutoresComPets(true);
 
       alert('🎉 Cadastro e ficha do pet criados com sucesso!');
@@ -134,6 +136,36 @@ export class ReceptionComponent implements OnInit {
     } catch (error: any) {
       console.error('Erro no cadastro expresso:', error);
       alert('Erro: ' + (error.message || 'Falha ao processar cadastro'));
+    } finally {
+      this.isSubmitting.set(false);
+    }
+  }
+
+  public async salvarAgendamento() {
+    if (this.agendamentoForm.invalid) {
+      this.agendamentoForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSubmitting.set(true);
+
+    try {
+      const valores = this.agendamentoForm.value;
+      const petId = this.petSelecionadoParaConsulta().id;
+      const dataHoraCompleta = new Date(`${valores.data}T${valores.hora}:00`).toISOString();
+
+      await this.consultaService.agendarConsulta({
+        petId: petId,
+        veterinarioId: valores.veterinarioId || null,
+        dataHora: dataHoraCompleta,
+        sintomas: valores.sintomas,
+      });
+
+      alert(`✅ Consulta agendada com sucesso para ${this.petSelecionadoParaConsulta().nome}!`);
+      this.telaAtual.set('perfil_tutor');
+    } catch (error: any) {
+      console.error('Erro ao agendar consulta:', error);
+      alert('Erro: Não foi possível agendar a consulta.');
     } finally {
       this.isSubmitting.set(false);
     }

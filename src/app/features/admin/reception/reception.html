@@ -97,7 +97,7 @@
         <button 
           (click)="iniciarConsulta(pet)"
           class="w-full bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
-          <span>🩺</span> Iniciar Atendimento
+          <span>🩺</span> Agendar / Atender
         </button>
       </div>
     </div>
@@ -182,6 +182,66 @@
       </form>
     </div>
   </div>
+
+  <div *ngIf="telaAtual() === 'agendamento'" class="animate-fade-in max-w-3xl mx-auto">
+    <button (click)="telaAtual.set('perfil_tutor')" class="text-neutral-400 hover:text-[#0da193] font-bold mb-6 flex items-center gap-2 transition-colors">
+      &larr; Voltar para Perfil
+    </button>
+
+    <div class="bg-white rounded-3xl shadow-lg border border-neutral-100 overflow-hidden">
+      <div class="bg-teal-50 p-8 border-b border-teal-100 flex items-center gap-6">
+        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+          {{ petSelecionadoParaConsulta()?.especie === 'Cachorro' ? '🐕' : '🐈' }}
+        </div>
+        <div>
+          <h3 class="text-2xl font-extrabold text-neutral-800">Agendar Consulta</h3>
+          <p class="text-neutral-600 font-medium mt-1">
+            Paciente: <span class="font-bold text-[#0da193]">{{ petSelecionadoParaConsulta()?.nome }}</span>
+          </p>
+        </div>
+      </div>
+
+      <form [formGroup]="agendamentoForm" (ngSubmit)="salvarAgendamento()" class="p-8 space-y-6">
+        
+        <div>
+          <label class="block text-sm font-bold text-neutral-800 mb-2">Veterinário Responsável</label>
+          <select formControlName="veterinarioId" class="w-full border border-neutral-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-neutral-700 bg-white shadow-sm appearance-none cursor-pointer">
+            <option value="">Aberto (O primeiro que liberar)</option>
+            <option *ngFor="let vet of veterinariosClinica()" [value]="vet.perfil_id">
+              👨‍⚕️ Dr(a). {{ vet.nome }}
+            </option>
+          </select>
+          <p class="text-xs text-neutral-500 mt-2 font-medium">Deixe em branco para o paciente cair na fila geral da clínica.</p>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="w-1/2">
+            <label class="block text-sm font-bold text-neutral-800 mb-2">Data *</label>
+            <input formControlName="data" type="date" class="w-full border border-neutral-200 rounded-xl px-4 py-4 focus:ring-2 focus:ring-teal-200 outline-none font-medium text-neutral-700 shadow-sm" [ngClass]="{'border-red-400': agendamentoForm.get('data')?.invalid && agendamentoForm.get('data')?.touched}">
+          </div>
+          <div class="w-1/2">
+            <label class="block text-sm font-bold text-neutral-800 mb-2">Horário *</label>
+            <input formControlName="hora" type="time" class="w-full border border-neutral-200 rounded-xl px-4 py-4 focus:ring-2 focus:ring-teal-200 outline-none font-medium text-neutral-700 shadow-sm" [ngClass]="{'border-red-400': agendamentoForm.get('hora')?.invalid && agendamentoForm.get('hora')?.touched}">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-neutral-800 mb-2">Motivo / Sintomas Iniciais</label>
+          <textarea formControlName="sintomas" rows="3" placeholder="Ex: Vomitando desde ontem, letárgico..." class="w-full border border-neutral-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-neutral-700 shadow-sm resize-none"></textarea>
+        </div>
+
+        <div class="pt-6 border-t border-neutral-100">
+          <button 
+            type="submit" 
+            [disabled]="isSubmitting()"
+            class="w-full bg-[#0da193] hover:bg-[#006064] text-white font-bold py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed">
+            {{ isSubmitting() ? 'Processando...' : 'Confirmar Agendamento' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </div>
 
 <style>

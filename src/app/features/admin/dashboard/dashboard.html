@@ -47,11 +47,11 @@
 
   <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 overflow-hidden">
     <div class="p-8 border-b border-neutral-100 flex justify-between items-center">
-    <h2 class="text-xl font-bold text-[#0da193]">Fila de Atendimento</h2>
-    <button (click)="verAgendaCompleta()" class="text-sm font-bold text-[#0da193] hover:underline focus:outline-none">
-    Ver Agenda Completa
-    </button>
-  </div>
+      <h2 class="text-xl font-bold text-[#0da193]">Fila de Atendimento</h2>
+      <button (click)="verAgendaCompleta()" class="text-sm font-bold text-[#0da193] hover:underline focus:outline-none">
+        Ver Agenda Completa
+      </button>
+    </div>
     
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
@@ -76,17 +76,20 @@
             </td>
             <td class="py-5 px-8 font-medium">{{ item.tutor }}</td>
             <td class="py-5 px-8">
-              <span class="px-4 py-1.5 rounded-full text-xs font-bold"
+              <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
                 [ngClass]="{
-                  'bg-teal-100 text-[#0da193]': item.status === 'Em Atendimento',
-                  'bg-orange-100 text-orange-600': item.status === 'Aguardando',
-                  'bg-neutral-100 text-neutral-500': item.status === 'Agendado'
+                  'bg-teal-100 text-[#0da193]': item.status === 'em_andamento',
+                  'bg-orange-100 text-orange-600': item.status === 'agendada'
                 }">
-                {{ item.status }}
+                {{ item.status === 'em_andamento' ? 'Em Sala' : 'Aguardando' }}
               </span>
+              <div *ngIf="item.veterinario" class="text-[10px] text-neutral-400 font-bold mt-1">
+                Com: {{ item.veterinario }}
+              </div>
+            </td>
             <td class="py-5 px-8 text-right">
               <button (click)="abrirFicha(item.pet)" class="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors shadow-sm">
-              Abrir Ficha
+                Abrir Ficha
               </button>
             </td>
           </tr>
