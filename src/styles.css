@@ -1,3 +1,24 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+/* Customização UI/UX do My Pet Health para a Agenda */
+:root {
+  /* Bordas mais suaves (Tailwind neutral-100) */
+  --cal-border-color: #f3f4f6;
+
+  /* Cor do dia atual na visão mensal (Tailwind teal-50) */
+  --cal-today-bg: #f0fdfa;
+
+  /* Cor principal dos eventos e indicativos (Nosso Teal) */
+  --cal-event-bg: #0da193;
+  --cal-event-color: #ffffff;
+
+  /* Tipografia padrão herdando da aplicação */
+  --cal-font-family: inherit;
+}
+
+/* Deixa as linhas da agenda um pouco mais limpas */
+.cal-week-view .cal-time-events .cal-day-column {
+  border-left: solid 1px var(--cal-border-color);
+}

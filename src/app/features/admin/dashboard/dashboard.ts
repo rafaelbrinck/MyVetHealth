@@ -43,6 +43,6 @@ export class DashboardComponent implements OnInit {
   }
 
   public verAgendaCompleta(): void {
-    this.router.navigate(['/clinica/pacientes']);
+    this.router.navigate(['/clinica/calendario']);
   }
 }

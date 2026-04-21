@@ -1,0 +1,93 @@
+<div class="h-[calc(100vh-4rem)] p-6 flex flex-col gap-6">
+  
+  <div class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-neutral-200 gap-4 shrink-0">
+    
+    <div class="flex items-center gap-2">
+      <button (click)="anterior()" 
+              class="px-4 py-2 border border-neutral-300 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors focus:ring-2 focus:ring-teal-500 focus:outline-none">
+        Anterior
+      </button>
+      <button (click)="hoje()" 
+              class="px-4 py-2 border border-neutral-300 bg-neutral-50 rounded-lg text-sm font-semibold text-neutral-800 hover:bg-neutral-100 transition-colors focus:ring-2 focus:ring-teal-500 focus:outline-none">
+        Hoje
+      </button>
+      <button (click)="proximo()" 
+              class="px-4 py-2 border border-neutral-300 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors focus:ring-2 focus:ring-teal-500 focus:outline-none">
+        Próximo
+      </button>
+    </div>
+
+    <h2 class="text-xl font-bold text-neutral-800 capitalize">
+      @if (view() === CalendarView.Day) {
+        {{ viewDate() | date: "dd 'de' MMMM 'de' yyyy" : '' : 'pt-BR' }}
+      } @else if (view() === CalendarView.Week) {
+        Semana de {{ viewDate() | date: 'dd/MM' : '' : 'pt-BR' }}
+      } @else {
+        {{ viewDate() | date: 'MMMM yyyy' : '' : 'pt-BR' }}
+      }
+    </h2>
+
+    <div class="flex bg-neutral-100 p-1 rounded-lg">
+      <button (click)="mudarVisao(CalendarView.Month)"
+              [class.bg-white]="view() === CalendarView.Month"
+              [class.shadow]="view() === CalendarView.Month"
+              [class.text-teal-700]="view() === CalendarView.Month"
+              class="px-4 py-1.5 rounded-md text-sm font-medium transition-all text-neutral-600 hover:text-neutral-900">
+        Mês
+      </button>
+      <button (click)="mudarVisao(CalendarView.Week)"
+              [class.bg-white]="view() === CalendarView.Week"
+              [class.shadow]="view() === CalendarView.Week"
+              [class.text-teal-700]="view() === CalendarView.Week"
+              class="px-4 py-1.5 rounded-md text-sm font-medium transition-all text-neutral-600 hover:text-neutral-900">
+        Semana
+      </button>
+      <button (click)="mudarVisao(CalendarView.Day)"
+              [class.bg-white]="view() === CalendarView.Day"
+              [class.shadow]="view() === CalendarView.Day"
+              [class.text-teal-700]="view() === CalendarView.Day"
+              class="px-4 py-1.5 rounded-md text-sm font-medium transition-all text-neutral-600 hover:text-neutral-900">
+        Dia
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-y-auto flex-1 min-h-0 p-4">
+    @switch (view()) {
+      @case (CalendarView.Month) {
+        <mwl-calendar-month-view
+          [viewDate]="viewDate()"
+          [events]="consultaService.eventosCalendario()"
+          locale="pt-BR"
+          (eventClicked)="aoClicarNoEvento($event)">
+        </mwl-calendar-month-view>
+      }
+      @case (CalendarView.Week) {
+        <mwl-calendar-week-view
+          [viewDate]="viewDate()"
+          [events]="consultaService.eventosCalendario()"
+          locale="pt-BR"
+          [dayStartHour]="7" 
+          [dayEndHour]="20"
+          (eventClicked)="aoClicarNoEvento($event)">
+        </mwl-calendar-week-view>
+      }
+      @case (CalendarView.Day) {
+        <mwl-calendar-day-view
+          [viewDate]="viewDate()"
+          [events]="consultaService.eventosCalendario()"
+          locale="pt-BR"
+          [dayStartHour]="7"
+          [dayEndHour]="20"
+          (eventClicked)="aoClicarNoEvento($event)">
+        </mwl-calendar-day-view>
+      }
+    }
+  </div>
+</div>
+@if (consultaAtiva()) {
+  <app-consulta-detalhe 
+    [consulta]="consultaAtiva()!" 
+    (fechar)="consultaAtiva.set(null)">
+  </app-consulta-detalhe>
+}

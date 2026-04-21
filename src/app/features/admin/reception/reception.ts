@@ -159,6 +159,7 @@ export class ReceptionComponent implements OnInit {
         veterinarioId: valores.veterinarioId || null,
         dataHora: dataHoraCompleta,
         sintomas: valores.sintomas,
+        status: 'aguardando',
       });
 
       alert(`✅ Consulta agendada com sucesso para ${this.petSelecionadoParaConsulta().nome}!`);

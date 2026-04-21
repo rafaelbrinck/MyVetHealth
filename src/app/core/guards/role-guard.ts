@@ -16,7 +16,5 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
     return true;
   }
 
-  console.warn('Bloqueado pelo RoleGuard: Acesso não autorizado.');
-
   return router.createUrlTree(['/clinica/dashboard']);
 };

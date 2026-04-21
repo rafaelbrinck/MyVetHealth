@@ -59,19 +59,19 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: ['admin_clinica', 'veterinario', 'recepcionista'] },
     children: [
-      // {
-      //   path: 'dashboard',
-      //   loadComponent: () =>
-      //     import('./features/admin/dashboard/dashboard.component').then(
-      //       (m) => m.DashboardComponent,
-      //     ),
-      // },
       {
         path: 'recepcao',
         loadComponent: () =>
           import('./features/admin/reception/reception').then((m) => m.ReceptionComponent),
         canActivate: [roleGuard],
         data: { roles: ['admin_clinica', 'recepcionista'] },
+      },
+      {
+        path: 'calendario',
+        loadComponent: () =>
+          import('./features/admin/calendario/calendario').then((m) => m.CalendarioComponent),
+        // canActivate: [roleGuard],
+        // data: { roles: ['admin_clinica', 'recepcionista'] },
       },
       {
         path: 'dashboard',

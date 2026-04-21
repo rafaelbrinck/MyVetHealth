@@ -79,9 +79,10 @@
               <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
                 [ngClass]="{
                   'bg-teal-100 text-[#0da193]': item.status === 'em_andamento',
-                  'bg-orange-100 text-orange-600': item.status === 'agendada'
+                  'bg-orange-100 text-orange-600': item.status === 'agendada',
+                  'bg-blue-100 text-blue-600': item.status === 'aguardando'
                 }">
-                {{ item.status === 'em_andamento' ? 'Em Sala' : 'Aguardando' }}
+                {{ item.status === 'em_andamento' ? 'Em Sala' : item.status === 'aguardando' ? 'Aguardando' : 'Agendada' }}
               </span>
               <div *ngIf="item.veterinario" class="text-[10px] text-neutral-400 font-bold mt-1">
                 Com: {{ item.veterinario }}
