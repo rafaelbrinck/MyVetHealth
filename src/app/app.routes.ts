@@ -91,16 +91,26 @@ export const routes: Routes = [
           import('./features/admin/pacientes/pacientes').then((m) => m.PacientesComponent),
       },
       {
-        path: 'equipe',
-        loadComponent: () =>
-          import('./features/admin/equipe/equipe').then((m) => m.EquipeComponent),
-        canActivate: [roleGuard],
-        data: { roles: ['admin_clinica'] },
-      },
-      {
         path: 'vacinas',
         loadComponent: () =>
           import('./features/admin/vacinas/vacinas').then((m) => m.VacinasComponent),
+      },
+      {
+        path: 'settings',
+        canActivate: [roleGuard],
+        data: { roles: ['admin_clinica'] }, // 👑 Apenas Admin acessa o agrupador
+        children: [
+          // {
+          //   path: 'clinic',
+          //   loadComponent: () => import('./features/admin/settings/clinic-data').then(m => m.ClinicDataComponent)
+          // },
+          {
+            path: 'equipe',
+            loadComponent: () =>
+              import('./features/admin/equipe/equipe').then((m) => m.EquipeComponent),
+          },
+          { path: '', redirectTo: 'clinic', pathMatch: 'full' },
+        ],
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
