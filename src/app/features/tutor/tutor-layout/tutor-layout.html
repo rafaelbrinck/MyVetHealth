@@ -1,0 +1,26 @@
+<div class="bg-neutral-50 min-h-screen flex flex-col max-w-md mx-auto shadow-2xl relative overflow-hidden">
+  
+  <main class="flex-1 overflow-y-auto pb-20">
+    <router-outlet></router-outlet>
+  </main>
+
+  <nav class="bg-white border-t border-neutral-100 fixed bottom-0 w-full max-w-md mx-auto flex justify-around items-center h-16 px-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] rounded-t-2xl">
+    
+    <a routerLink="/tutor/dashboard" routerLinkActive="text-[#0da193]" [routerLinkActiveOptions]="{exact: true}" class="flex flex-col items-center text-neutral-400 hover:text-[#0da193] transition-colors w-16">
+      <span class="text-2xl mb-0.5">🏠</span>
+      <span class="text-[10px] font-bold tracking-wide">Início</span>
+    </a>
+    
+    <a routerLink="/tutor/pets" routerLinkActive="text-[#0da193]" class="flex flex-col items-center text-neutral-400 hover:text-[#0da193] transition-colors w-16">
+      <span class="text-2xl mb-0.5">🐾</span>
+      <span class="text-[10px] font-bold tracking-wide">Pets</span>
+    </a>
+    
+    <a routerLink="/tutor/perfil" routerLinkActive="text-[#0da193]" class="flex flex-col items-center text-neutral-400 hover:text-[#0da193] transition-colors w-16">
+      <span class="text-2xl mb-0.5">👤</span>
+      <span class="text-[10px] font-bold tracking-wide">Perfil</span>
+    </a>
+
+  </nav>
+
+</div>

@@ -48,6 +48,29 @@ export const routes: Routes = [
       { path: '', redirectTo: 'meus-pets', pathMatch: 'full' },
     ],
   },
+    {
+    path: 'tutor',
+    loadComponent: () => import('./features/tutor/tutor-layout/tutor-layout').then(m => m.TutorLayoutComponent),
+    children: [
+      // Aqui vão entrar as páginas do Dashboard do Tutor, Meus Pets, etc.
+    ]
+  },
+  {
+    path: 'tutor',
+    loadComponent: () => import('./features/tutor/tutor-layout/tutor-layout').then(m => m.TutorLayoutComponent),
+    children: [
+      {
+        path: '', 
+        redirectTo: 'dashboard', 
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/tutor/tutor-dashboard/tutor-dashboard').then(m => m.TutorDashboardComponent)
+      }
+      // Aqui depois colocaremos a rota do perfil do pet e as receitas
+    ]
+  },
 
   // ==========================================
   // 3. ROTAS DA CLÍNICA (B2B - Layout Admin)

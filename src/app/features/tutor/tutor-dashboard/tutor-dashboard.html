@@ -1,0 +1,64 @@
+<div class="p-6 space-y-6">
+  
+  <div class="flex items-center justify-between">
+    <div>
+      <p class="text-neutral-500 font-medium">{{ tutor().saudacao }},</p>
+      <h1 class="text-2xl font-extrabold text-[#0da193]">{{ tutor().nome }} 👋</h1>
+    </div>
+    <div class="w-12 h-12 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center font-bold text-lg shadow-sm">
+      {{ tutor().nome.charAt(0) }}
+    </div>
+  </div>
+
+  <div *ngIf="alertaImportante().ativo" class="bg-gradient-to-r from-orange-400 to-orange-500 rounded-3xl p-5 text-white shadow-md relative overflow-hidden">
+    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+    
+    <div class="flex items-start gap-4 relative z-10">
+      <div class="text-3xl bg-white/20 p-2 rounded-2xl">💉</div>
+      <div>
+        <h3 class="font-bold text-lg mb-1">Atenção!</h3>
+        <p class="text-orange-50 text-sm font-medium mb-3">{{ alertaImportante().mensagem }}</p>
+        <button class="bg-white text-orange-600 px-4 py-2 rounded-full text-xs font-bold hover:bg-orange-50 transition-colors shadow-sm">
+          {{ alertaImportante().acaoTexto }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-lg font-bold text-neutral-800 mb-4">Acesso Rápido</h2>
+    <div class="grid grid-cols-2 gap-4">
+      <button class="bg-white border border-neutral-100 p-4 rounded-3xl shadow-sm hover:shadow-md transition-all text-left flex flex-col items-center justify-center gap-2">
+        <span class="text-3xl bg-teal-50 p-3 rounded-2xl w-full text-center">📅</span>
+        <span class="text-sm font-bold text-neutral-700">Consultas</span>
+      </button>
+      <button class="bg-white border border-neutral-100 p-4 rounded-3xl shadow-sm hover:shadow-md transition-all text-left flex flex-col items-center justify-center gap-2">
+        <span class="text-3xl bg-teal-50 p-3 rounded-2xl w-full text-center">💊</span>
+        <span class="text-sm font-bold text-neutral-700">Receitas</span>
+      </button>
+    </div>
+  </div>
+
+  <div>
+    <div class="flex justify-between items-end mb-4">
+      <h2 class="text-lg font-bold text-neutral-800">Meus Pets</h2>
+      <a routerLink="/tutor/pets" class="text-sm font-bold text-[#0da193]">Ver todos</a>
+    </div>
+    
+    <div class="space-y-3">
+      <a *ngFor="let pet of meusPets()" class="flex items-center gap-4 bg-white border border-neutral-100 p-4 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer">
+        <div class="w-14 h-14 bg-neutral-50 rounded-2xl flex items-center justify-center text-3xl">
+          {{ pet.foto }}
+        </div>
+        <div class="flex-1">
+          <h3 class="text-lg font-bold text-neutral-800">{{ pet.nome }}</h3>
+          <p class="text-xs text-neutral-500 font-medium">{{ pet.raca }}</p>
+        </div>
+        <div class="text-neutral-400 font-bold">
+          ➔
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>
