@@ -46,7 +46,7 @@
     </div>
     
     <div class="space-y-3">
-      <a *ngFor="let pet of meusPets()" class="flex items-center gap-4 bg-white border border-neutral-100 p-4 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer">
+      <a *ngFor="let pet of meusPets()" routerLink="/tutor/pet-perfil" class="flex items-center gap-4 bg-white border border-neutral-100 p-4 rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer">
         <div class="w-14 h-14 bg-neutral-50 rounded-2xl flex items-center justify-center text-3xl">
           {{ pet.foto }}
         </div>

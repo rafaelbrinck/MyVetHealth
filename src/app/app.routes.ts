@@ -48,6 +48,11 @@ export const routes: Routes = [
       { path: '', redirectTo: 'meus-pets', pathMatch: 'full' },
     ],
   },
+  // A rota exclusiva de login do tutor
+  {
+    path: 'login-tutor',
+    loadComponent: () => import('./features/auth/login-tutor/login-tutor').then((m) => m.LoginTutorComponent),
+  },
     {
     path: 'tutor',
     loadComponent: () => import('./features/tutor/tutor-layout/tutor-layout').then(m => m.TutorLayoutComponent),
@@ -67,8 +72,15 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () => import('./features/tutor/tutor-dashboard/tutor-dashboard').then(m => m.TutorDashboardComponent)
-      }
-      // Aqui depois colocaremos a rota do perfil do pet e as receitas
+      },
+      {
+        path: 'pet-perfil',
+        loadComponent: () => import('./features/tutor/pet-perfil/pet-perfil').then(m => m.PetPerfilComponent)
+      },
+      {
+        path: 'perfil',
+        loadComponent: () => import('./features/tutor/tutor-perfil/tutor-perfil').then(m => m.TutorPerfilComponent)
+      },
     ]
   },
 

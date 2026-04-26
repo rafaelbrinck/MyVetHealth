@@ -1,0 +1,65 @@
+<div class="pb-24">
+  
+  <div class="p-6 text-center border-b border-neutral-100 bg-white">
+    <div class="w-24 h-24 bg-teal-100 text-[#0da193] rounded-full flex items-center justify-center text-4xl font-black mx-auto mb-4 shadow-inner">
+      {{ usuario().nome.charAt(0) }}
+    </div>
+    <h2 class="text-2xl font-extrabold text-neutral-800">{{ usuario().nome }}</h2>
+    <p class="text-neutral-500 text-sm font-medium">Membro desde {{ usuario().membroDesde }}</p>
+  </div>
+
+  <div class="p-6 space-y-8">
+    
+    <div>
+      <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4">Dados da Conta</h3>
+      <div class="bg-white rounded-3xl border border-neutral-100 overflow-hidden shadow-sm">
+        <div class="p-4 flex items-center gap-4 border-b border-neutral-50">
+          <span class="text-xl">📧</span>
+          <div class="flex-1">
+            <p class="text-[10px] text-neutral-400 font-bold uppercase">E-mail</p>
+            <p class="text-neutral-700 font-medium">{{ usuario().email }}</p>
+          </div>
+        </div>
+        <div class="p-4 flex items-center gap-4">
+          <span class="text-xl">📱</span>
+          <div class="flex-1">
+            <p class="text-[10px] text-neutral-400 font-bold uppercase">Telemóvel</p>
+            <p class="text-neutral-700 font-medium">{{ usuario().telefone }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4">Preferências</h3>
+      <div class="bg-white rounded-3xl border border-neutral-100 overflow-hidden shadow-sm">
+        <button (click)="toggleNotificacoes()" class="w-full p-4 flex items-center justify-between hover:bg-neutral-50 transition-colors">
+          <div class="flex items-center gap-4">
+            <span class="text-xl">🔔</span>
+            <span class="text-neutral-700 font-bold">Notificações Push</span>
+          </div>
+          <div class="w-12 h-6 rounded-full relative transition-colors duration-300" 
+               [ngClass]="notificacoesAtivas() ? 'bg-[#0da193]' : 'bg-neutral-200'">
+            <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300"
+                 [ngClass]="notificacoesAtivas() ? 'translate-x-6' : 'translate-x-0'"></div>
+          </div>
+        </button>
+        
+        <button class="w-full p-4 flex items-center justify-between hover:bg-neutral-50 transition-colors">
+          <div class="flex items-center gap-4">
+            <span class="text-xl">🔒</span>
+            <span class="text-neutral-700 font-bold">Alterar Senha</span>
+          </div>
+          <span class="text-neutral-300">➔</span>
+        </button>
+      </div>
+    </div>
+
+    <button (click)="logout()" class="w-full py-4 px-6 bg-red-50 text-red-600 font-bold rounded-2xl flex items-center justify-center gap-3 hover:bg-red-100 transition-all border border-red-100">
+      <span class="text-xl">🚪</span>
+      Sair da Conta
+    </button>
+
+  </div>
+
+</div>
