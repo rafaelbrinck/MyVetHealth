@@ -81,6 +81,10 @@ export const routes: Routes = [
         path: 'perfil',
         loadComponent: () => import('./features/tutor/tutor-perfil/tutor-perfil').then(m => m.TutorPerfilComponent)
       },
+      {
+        path: 'pets',
+        loadComponent: () => import('./features/tutor/tutor-pets/tutor-pets').then(m => m.TutorPetsComponent)
+      }
     ]
   },
 
