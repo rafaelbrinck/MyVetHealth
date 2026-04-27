@@ -84,7 +84,15 @@ export const routes: Routes = [
       {
         path: 'pets',
         loadComponent: () => import('./features/tutor/tutor-pets/tutor-pets').then(m => m.TutorPetsComponent)
-      }
+      },
+      {
+        path: 'consultas',
+        loadComponent: () => import('./features/tutor/tutor-consultas/tutor-consultas').then(m => m.TutorConsultasComponent)
+      },
+      {
+        path: 'receitas',
+        loadComponent: () => import('./features/tutor/tutor-receitas/tutor-receitas').then(m => m.TutorReceitasComponent)
+      },
     ]
   },
 

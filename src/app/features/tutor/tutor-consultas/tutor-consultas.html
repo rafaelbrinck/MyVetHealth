@@ -1,0 +1,29 @@
+<div class="pb-8">
+  <div class="px-6 py-4 flex items-center justify-between sticky top-0 bg-neutral-50/90 dark:bg-neutral-950/90 backdrop-blur-md z-40 border-b border-neutral-100 dark:border-neutral-800">
+    <button (click)="voltar()" class="w-10 h-10 flex items-center justify-center bg-white dark:bg-neutral-800 rounded-full shadow-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors font-bold text-xl">←</button>
+    <h1 class="text-lg font-bold text-neutral-800 dark:text-white">Minhas Consultas</h1>
+    <div class="w-10"></div> 
+  </div>
+
+  <div class="p-6 space-y-4">
+    <div *ngFor="let consulta of consultas()" class="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-3xl p-5 shadow-sm relative overflow-hidden">
+      <div class="absolute left-0 top-0 bottom-0 w-1.5" [ngClass]="consulta.status === 'Agendada' ? 'bg-[#0da193]' : 'bg-neutral-300 dark:bg-neutral-700'"></div>
+      <div class="flex justify-between items-start mb-2">
+        <div>
+          <span class="text-xs font-bold px-2 py-1 rounded-md mb-2 inline-block" [ngClass]="consulta.status === 'Agendada' ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'">
+            {{ consulta.status }}
+          </span>
+          <h3 class="text-lg font-bold text-neutral-800 dark:text-white">Consulta {{ consulta.pet }}</h3>
+        </div>
+        <div class="text-right">
+          <p class="font-bold text-neutral-800 dark:text-white">{{ consulta.data }}</p>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400 font-medium">{{ consulta.hora }}</p>
+        </div>
+      </div>
+      <div class="pt-3 border-t border-neutral-50 dark:border-neutral-800/50 flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 font-medium">
+        <span>👨‍⚕️</span>
+        <span>Veterinário: {{ consulta.vet }}</span>
+      </div>
+    </div>
+  </div>
+</div>

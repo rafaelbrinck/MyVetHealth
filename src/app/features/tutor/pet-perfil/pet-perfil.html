@@ -1,27 +1,27 @@
 <div class="pb-8">
-  
-  <div class="px-6 py-4 flex items-center justify-between sticky top-0 bg-neutral-50/90 backdrop-blur-md z-40 border-b border-neutral-100">
-    <button (click)="voltar()" class="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm text-neutral-600 hover:bg-neutral-100 transition-colors font-bold text-xl">
-      ←
-    </button>
-    <h1 class="text-lg font-bold text-neutral-800">Perfil do Pet</h1>
-    <div class="w-10"></div> </div>
+  <div class="px-6 py-4 flex items-center justify-between sticky top-0 bg-neutral-50/90 dark:bg-neutral-950/90 backdrop-blur-md z-40 border-b border-neutral-100 dark:border-neutral-800">
+    <button (click)="voltar()" class="w-10 h-10 flex items-center justify-center bg-white dark:bg-neutral-800 rounded-full shadow-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors font-bold text-xl">←</button>
+    <h1 class="text-lg font-bold text-neutral-800 dark:text-white">Perfil do Pet</h1>
+    <div class="w-10"></div>
+  </div>
 
   <div class="px-6 mt-6 flex flex-col items-center">
-    <div class="w-28 h-28 bg-teal-100 rounded-full flex items-center justify-center text-6xl shadow-inner mb-4">
-      {{ pet().foto }}
+    <div class="relative mb-4">
+      <div class="w-28 h-28 bg-teal-100 dark:bg-teal-900/50 text-[#0da193] dark:text-teal-400 rounded-full flex items-center justify-center text-6xl shadow-inner border-4 border-white dark:border-neutral-900">{{ pet().foto }}</div>
+      <button (click)="fileInput.click()" class="absolute bottom-0 right-0 bg-white dark:bg-neutral-700 p-2.5 rounded-full shadow-md border border-neutral-100 dark:border-neutral-600 text-neutral-600 dark:text-neutral-200 hover:text-[#0da193] hover:scale-110 transition-transform active:scale-95">📷</button>
+      <input #fileInput type="file" accept="image/*" class="hidden" (change)="aoEscolherFoto($event)">
     </div>
-    <h2 class="text-3xl font-extrabold text-neutral-800">{{ pet().nome }}</h2>
-    <p class="text-neutral-500 font-medium mt-1">{{ pet().raca }}</p>
+    <h2 class="text-3xl font-extrabold text-neutral-800 dark:text-white">{{ pet().nome }}</h2>
+    <p class="text-neutral-500 dark:text-neutral-400 font-medium mt-1">{{ pet().raca }}</p>
     
     <div class="flex gap-3 mt-6 w-full">
-      <div class="flex-1 bg-white border border-neutral-100 rounded-2xl p-3 flex flex-col items-center shadow-sm">
-        <span class="text-xs text-neutral-400 font-bold uppercase tracking-wider">Idade</span>
-        <span class="font-bold text-neutral-700 mt-1">{{ pet().idade }}</span>
+      <div class="flex-1 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl p-3 flex flex-col items-center shadow-sm">
+        <span class="text-xs text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider">Idade</span>
+        <span class="font-bold text-neutral-700 dark:text-white mt-1">{{ pet().idade }}</span>
       </div>
-      <div class="flex-1 bg-white border border-neutral-100 rounded-2xl p-3 flex flex-col items-center shadow-sm">
-        <span class="text-xs text-neutral-400 font-bold uppercase tracking-wider">Peso</span>
-        <span class="font-bold text-neutral-700 mt-1">{{ pet().peso }}</span>
+      <div class="flex-1 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl p-3 flex flex-col items-center shadow-sm">
+        <span class="text-xs text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider">Peso</span>
+        <span class="font-bold text-neutral-700 dark:text-white mt-1">{{ pet().peso }}</span>
       </div>
     </div>
   </div>
@@ -29,28 +29,23 @@
   <div class="px-6 mt-10">
     <div class="flex items-center gap-2 mb-4">
       <span class="text-xl">💊</span>
-      <h3 class="text-xl font-bold text-neutral-800">Receituário Ativo</h3>
+      <h3 class="text-xl font-bold text-neutral-800 dark:text-white">Receituário Ativo</h3>
     </div>
-
-    <div *ngIf="receitasAtivas().length === 0" class="bg-white border border-neutral-100 rounded-3xl p-6 text-center shadow-sm">
-      <p class="text-neutral-500 font-medium">Nenhum tratamento ativo no momento.</p>
+    <div *ngIf="receitasAtivas().length === 0" class="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-3xl p-6 text-center shadow-sm">
+      <p class="text-neutral-500 dark:text-neutral-400 font-medium">Nenhum tratamento ativo.</p>
     </div>
-
     <div class="space-y-4">
-      <div *ngFor="let receita of receitasAtivas()" class="bg-[#0da193] rounded-3xl p-5 text-white shadow-md relative overflow-hidden">
-        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white opacity-10 rounded-full"></div>
-        
-        <div class="relative z-10">
+      <div *ngFor="let receita of receitasAtivas()" (click)="abrirDetalhesMedicamento(receita)" class="bg-[#0da193] rounded-3xl p-5 text-white shadow-md relative overflow-hidden cursor-pointer active:scale-95 transition-transform w-full block">
+        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white opacity-10 rounded-full pointer-events-none"></div>
+        <div class="relative z-10 w-full">
           <div class="flex justify-between items-start mb-3">
             <h4 class="font-bold text-xl">{{ receita.medicamento }}</h4>
             <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">{{ receita.data }}</span>
           </div>
           <p class="text-teal-50 text-sm mb-1"><span class="font-semibold text-white">Dosagem:</span> {{ receita.dosagem }}</p>
-          <p class="text-teal-50 text-sm mb-4"><span class="font-semibold text-white">Uso:</span> {{ receita.posologia }}</p>
-          
-          <div class="pt-3 border-t border-teal-500/50 flex justify-between items-center text-xs text-teal-100">
-            <span>Prescrito por: {{ receita.veterinario }}</span>
-            <button class="font-bold text-white hover:underline">Imprimir PDF</button>
+          <p class="text-teal-50 text-sm mb-4 truncate"><span class="font-semibold text-white">Uso:</span> {{ receita.posologia }}</p>
+          <div class="pt-3 border-t border-teal-500/50 flex justify-between items-center text-xs text-teal-100 font-medium">
+            <span>Ver prescrição completa</span><span>➔</span>
           </div>
         </div>
       </div>
@@ -60,25 +55,40 @@
   <div class="px-6 mt-10">
     <div class="flex items-center gap-2 mb-4">
       <span class="text-xl">💉</span>
-      <h3 class="text-xl font-bold text-neutral-800">Vacinas</h3>
+      <h3 class="text-xl font-bold text-neutral-800 dark:text-white">Vacinas</h3>
     </div>
-
-    <div class="bg-white border border-neutral-100 rounded-3xl overflow-hidden shadow-sm">
-      <div *ngFor="let vacina of vacinas(); let ultimo = last" 
-           class="p-4" 
-           [ngClass]="{'border-b border-neutral-100': !ultimo}">
-        
+    <div class="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-sm">
+      <div *ngFor="let vacina of vacinas(); let ultimo = last" class="p-4" [ngClass]="{'border-b border-neutral-100 dark:border-neutral-800': !ultimo}">
         <div class="flex justify-between items-center mb-1">
-          <h4 class="font-bold text-neutral-800">{{ vacina.nome }}</h4>
-          <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">{{ vacina.status }}</span>
+          <h4 class="font-bold text-neutral-800 dark:text-white">{{ vacina.nome }}</h4>
+          <span class="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded text-xs font-bold">{{ vacina.status }}</span>
         </div>
-        
-        <div class="flex justify-between text-xs text-neutral-500 font-medium">
+        <div class="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 font-medium">
           <span>Aplicada: {{ vacina.dataAplicacao }}</span>
-          <span>Próxima: <strong class="text-neutral-700">{{ vacina.proximaDose }}</strong></span>
+          <span>Próxima: <strong class="text-neutral-700 dark:text-neutral-200">{{ vacina.proximaDose }}</strong></span>
         </div>
       </div>
     </div>
   </div>
 
-</div>  
+  <div *ngIf="isMedicineModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-md p-6 transition-opacity duration-300">
+    <div class="bg-white dark:bg-neutral-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-white/10">
+      <div class="bg-[#0da193] p-6 text-white text-center relative">
+        <button (click)="fecharModalMedicamento()" class="absolute top-4 right-4 text-teal-100 hover:text-white text-2xl font-bold leading-none focus:outline-none">&times;</button>
+        <div class="text-4xl mb-2">💊</div>
+        <h3 class="text-xl font-bold">{{ selectedMedicine()?.medicamento }}</h3>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <p class="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">Posologia completa</p>
+          <p class="text-neutral-700 dark:text-white font-medium mt-1">{{ selectedMedicine()?.posologia }}</p>
+        </div>
+        <div class="bg-neutral-50 dark:bg-neutral-800 p-4 rounded-2xl border border-neutral-100 dark:border-neutral-700">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium italic">"Lembre-se de oferecer o medicamento sempre após as refeições para evitar desconforto gástrico."</p>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">Prescrito por: <br><strong class="text-neutral-700 dark:text-white">{{ selectedMedicine()?.veterinario }}</strong></p>
+        </div>
+        <button (click)="fecharModalMedicamento()" class="w-full py-4 bg-[#0da193] hover:bg-[#006064] text-white font-bold rounded-2xl transition-colors">Entendido</button>
+      </div>
+    </div>
+  </div>
+</div>
