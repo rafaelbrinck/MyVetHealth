@@ -140,4 +140,8 @@ export class WorkspaceClinicas implements OnInit {
       this.isSubmitting.set(false);
     }
   }
+
+  acessarAreaTutor() {
+    this.router.navigate(['/tutor/dashboard']);
+  }
 }

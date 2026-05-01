@@ -48,52 +48,61 @@ export const routes: Routes = [
       { path: '', redirectTo: 'meus-pets', pathMatch: 'full' },
     ],
   },
-  // A rota exclusiva de login do tutor
   {
-    path: 'login-tutor',
-    loadComponent: () => import('./features/auth/login-tutor/login-tutor').then((m) => m.LoginTutorComponent),
-  },
-    {
     path: 'tutor',
-    loadComponent: () => import('./features/tutor/tutor-layout/tutor-layout').then(m => m.TutorLayoutComponent),
+    loadComponent: () =>
+      import('./features/tutor/tutor-layout/tutor-layout').then((m) => m.TutorLayoutComponent),
     children: [
       // Aqui vão entrar as páginas do Dashboard do Tutor, Meus Pets, etc.
-    ]
+    ],
   },
   {
     path: 'tutor',
-    loadComponent: () => import('./features/tutor/tutor-layout/tutor-layout').then(m => m.TutorLayoutComponent),
+    loadComponent: () =>
+      import('./features/tutor/tutor-layout/tutor-layout').then((m) => m.TutorLayoutComponent),
     children: [
       {
-        path: '', 
-        redirectTo: 'dashboard', 
-        pathMatch: 'full'
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
       },
       {
         path: 'dashboard',
-        loadComponent: () => import('./features/tutor/tutor-dashboard/tutor-dashboard').then(m => m.TutorDashboardComponent)
+        loadComponent: () =>
+          import('./features/tutor/tutor-dashboard/tutor-dashboard').then(
+            (m) => m.TutorDashboardComponent,
+          ),
       },
       {
         path: 'pet-perfil',
-        loadComponent: () => import('./features/tutor/pet-perfil/pet-perfil').then(m => m.PetPerfilComponent)
+        loadComponent: () =>
+          import('./features/tutor/pet-perfil/pet-perfil').then((m) => m.PetPerfilComponent),
       },
       {
         path: 'perfil',
-        loadComponent: () => import('./features/tutor/tutor-perfil/tutor-perfil').then(m => m.TutorPerfilComponent)
+        loadComponent: () =>
+          import('./features/tutor/tutor-perfil/tutor-perfil').then((m) => m.TutorPerfilComponent),
       },
       {
         path: 'pets',
-        loadComponent: () => import('./features/tutor/tutor-pets/tutor-pets').then(m => m.TutorPetsComponent)
+        loadComponent: () =>
+          import('./features/tutor/tutor-pets/tutor-pets').then((m) => m.TutorPetsComponent),
       },
       {
         path: 'consultas',
-        loadComponent: () => import('./features/tutor/tutor-consultas/tutor-consultas').then(m => m.TutorConsultasComponent)
+        loadComponent: () =>
+          import('./features/tutor/tutor-consultas/tutor-consultas').then(
+            (m) => m.TutorConsultasComponent,
+          ),
       },
       {
         path: 'receitas',
-        loadComponent: () => import('./features/tutor/tutor-receitas/tutor-receitas').then(m => m.TutorReceitasComponent)
+        loadComponent: () =>
+          import('./features/tutor/tutor-receitas/tutor-receitas').then(
+            (m) => m.TutorReceitasComponent,
+          ),
       },
-    ]
+    ],
   },
 
   // ==========================================

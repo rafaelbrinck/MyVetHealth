@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+<div class="bg-slate-50 flex flex-col justify-center items-center p-4">
   
   <div class="w-full max-w-4xl">
     
@@ -13,52 +13,82 @@
 
     <div *ngIf="!isLoading()">
 
-      <div *ngIf="clinicas().length > 0 && modoAcao() === 'nenhum'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div *ngIf="clinicas().length > 0 && modoAcao() === 'nenhum'" class="space-y-8">
         
-        <button 
-          *ngFor="let clinica of clinicas()" 
-          (click)="acessarClinica(clinica.id)"
-          class="bg-white p-8 rounded-3xl shadow-sm border border-neutral-100 hover:border-teal-300 hover:shadow-md transition-all text-left group flex items-center gap-5">
-          
-          <div class="w-14 h-14 bg-teal-50 text-[#0da193] rounded-2xl flex items-center justify-center text-2xl font-bold group-hover:bg-[#0da193] group-hover:text-white transition-colors">
-            {{ clinica.nome.charAt(0) }}
-          </div>
-          
-          <div>
-            <h2 class="text-xl font-bold text-neutral-800">{{ clinica.nome }}</h2>
-            <p class="text-sm text-neutral-500 font-medium capitalize">Acesso: {{ clinica.papel.replace('_', ' ') }}</p>
-          </div>
-        </button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <button 
+            *ngFor="let clinica of clinicas()" 
+            (click)="acessarClinica(clinica.id)"
+            class="bg-white p-8 rounded-3xl shadow-sm border border-neutral-100 hover:border-teal-300 hover:shadow-md transition-all text-left group flex items-center gap-5">
+            
+            <div class="w-14 h-14 bg-teal-50 text-[#0da193] rounded-2xl flex items-center justify-center text-2xl font-bold group-hover:bg-[#0da193] group-hover:text-white transition-colors">
+              {{ clinica.nome.charAt(0) }}
+            </div>
+            
+            <div>
+              <h2 class="text-xl font-bold text-neutral-800">{{ clinica.nome }}</h2>
+              <p class="text-sm text-neutral-500 font-medium capitalize">Acesso: {{ clinica.papel.replace('_', ' ') }}</p>
+            </div>
+          </button>
 
-        <button 
-          (click)="abrirModo('convite')"
-          class="bg-transparent p-8 rounded-3xl border-2 border-dashed border-neutral-200 hover:border-[#0da193] hover:bg-teal-50 transition-all text-center flex flex-col items-center justify-center gap-3">
-          <span class="text-3xl text-neutral-400">🎟️</span>
-          <span class="font-bold text-neutral-600">Recebeu um novo convite?</span>
-        </button>
+          <button 
+            (click)="abrirModo('convite')"
+            class="bg-transparent p-8 rounded-3xl border-2 border-dashed border-neutral-200 hover:border-[#0da193] hover:bg-teal-50 transition-all text-center flex flex-col items-center justify-center gap-3">
+            <span class="text-3xl text-neutral-400">🎟️</span>
+            <span class="font-bold text-neutral-600">Recebeu um novo convite?</span>
+          </button>
+        </div>
+
+        <div class="pt-6 border-t border-neutral-200">
+          <button 
+            (click)="acessarAreaTutor()"
+            class="w-full flex flex-col sm:flex-row items-center justify-between bg-emerald-50 p-6 sm:p-8 rounded-3xl border border-emerald-100 hover:border-[#0da193] hover:shadow-md transition-all text-center sm:text-left group gap-4">
+            
+            <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+              <div class="w-16 h-16 bg-white text-[#0da193] rounded-2xl flex items-center justify-center text-3xl font-bold shadow-sm group-hover:bg-[#0da193] group-hover:text-white transition-colors">
+                🐾
+              </div>
+              <div>
+                <h2 class="text-xl font-bold text-neutral-800">Minha Área de Tutor</h2>
+                <p class="text-sm text-neutral-600 font-medium mt-1">Acesse a carteirinha, vacinas e consultas dos seus próprios pets.</p>
+              </div>
+            </div>
+            
+            <span class="text-[#0da193] font-bold group-hover:translate-x-1 transition-transform whitespace-nowrap mt-2 sm:mt-0">
+              Acessar Perfil &rarr;
+            </span>
+          </button>
+        </div>
+
       </div>
 
 
-      <div *ngIf="clinicas().length === 0 && modoAcao() === 'nenhum'" class="bg-white rounded-3xl shadow-lg border border-neutral-100 p-10 text-center">
+      <div *ngIf="clinicas().length === 0 && modoAcao() === 'nenhum'" class="bg-white rounded-3xl shadow-lg border border-neutral-100 p-6 sm:p-10 text-center">
         
         <div class="w-20 h-20 bg-neutral-50 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
           👋
         </div>
         <h2 class="text-2xl font-bold text-neutral-800 mb-2">Bem-vindo ao sistema!</h2>
-        <p class="text-neutral-500 font-medium mb-10 max-w-md mx-auto">Parece que você ainda não está vinculado a nenhuma clínica. Como deseja começar?</p>
+        <p class="text-neutral-500 font-medium mb-10 max-w-md mx-auto">Como você deseja começar a utilizar a plataforma?</p>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           
-          <button (click)="abrirModo('nova_clinica')" class="border border-neutral-200 rounded-2xl p-6 hover:border-[#0da193] hover:bg-teal-50 transition-all group text-left">
-            <span class="text-3xl mb-4 block">🏥</span>
-            <h3 class="font-bold text-neutral-800 text-lg">Sou dono(a) de Clínica</h3>
-            <p class="text-sm text-neutral-500 mt-1">Quero cadastrar minha empresa e começar a gerenciar.</p>
+          <button (click)="abrirModo('nova_clinica')" class="border border-neutral-200 rounded-2xl p-6 hover:border-[#0da193] hover:bg-teal-50 transition-all group text-left flex flex-col items-start">
+            <span class="text-3xl mb-4">🏥</span>
+            <h3 class="font-bold text-neutral-800 text-lg">Sou dono(a)</h3>
+            <p class="text-sm text-neutral-500 mt-1">Quero cadastrar minha clínica e gerenciar a equipe.</p>
           </button>
 
-          <button (click)="abrirModo('convite')" class="border border-neutral-200 rounded-2xl p-6 hover:border-[#0da193] hover:bg-teal-50 transition-all group text-left">
-            <span class="text-3xl mb-4 block">📩</span>
-            <h3 class="font-bold text-neutral-800 text-lg">Fui Convidado(a)</h3>
-            <p class="text-sm text-neutral-500 mt-1">Tenho um código de acesso passado pela minha clínica.</p>
+          <button (click)="abrirModo('convite')" class="border border-neutral-200 rounded-2xl p-6 hover:border-[#0da193] hover:bg-teal-50 transition-all group text-left flex flex-col items-start">
+            <span class="text-3xl mb-4">📩</span>
+            <h3 class="font-bold text-neutral-800 text-lg">Fui Convidado</h3>
+            <p class="text-sm text-neutral-500 mt-1">Tenho um código de acesso da minha clínica.</p>
+          </button>
+
+          <button (click)="acessarAreaTutor()" class="border border-emerald-100 bg-emerald-50 rounded-2xl p-6 hover:border-[#0da193] hover:shadow-md transition-all group text-left flex flex-col items-start">
+            <span class="text-3xl mb-4 group-hover:scale-110 transition-transform">🐾</span>
+            <h3 class="font-bold text-neutral-800 text-lg">Sou Tutor</h3>
+            <p class="text-sm text-neutral-600 mt-1">Quero apenas gerenciar meus pets e agendamentos.</p>
           </button>
 
         </div>
