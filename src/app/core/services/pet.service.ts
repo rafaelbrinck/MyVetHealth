@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase';
-import { Pet } from '../models/pet.model';
+import { CriarPetDTO, Pet } from '../models/pet.model';
 
 @Injectable({
   providedIn: 'root',
@@ -18,12 +18,14 @@ export class PetService {
     return data;
   }
 
-  async addPet(pet: Pet) {
-    const { data, error } = await this.supabase.from('pets').insert(pet).select().single();
+  async addPet(pet: CriarPetDTO) {
+    const { data, error } = await this.supabase.from('pets').insert(pet).select().single(); // Retorna a linha completa criada, com ID e Datas do banco
+
     if (error) {
-      console.error('Erro ao adicionar pet:', error);
-      return null;
+      console.error('Erro no banco ao adicionar pet:', error);
+      throw new Error(error.message);
     }
+
     return data;
   }
 

@@ -1,6 +1,6 @@
 export interface Pet {
   id: string;
-  tutor_id: number;
+  tutor_id: string;
   nome: string;
   especie: string;
   raca: string;

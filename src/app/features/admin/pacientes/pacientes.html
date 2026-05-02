@@ -31,7 +31,6 @@
             </tr>
           </thead>
           <tbody class="text-neutral-700">
-            
             <tr *ngFor="let tutor of tutoresFiltrados()" class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
               <td class="py-5 px-8">
                 <div class="flex items-center gap-4">
@@ -44,18 +43,15 @@
                   </div>
                 </div>
               </td>
-              
               <td class="py-5 px-8">
                 <p class="font-medium text-sm">{{ tutor.email || '---' }}</p>
                 <p class="text-xs text-neutral-500">{{ tutor.telefone || '---' }}</p>
               </td>
-
               <td class="py-5 px-8 text-center font-bold text-[#0da193]">
                 <span class="bg-teal-50 px-3 py-1 rounded-full border border-teal-100">
                   {{ tutor.pets.length || 0 }}
                 </span>
               </td>
-
               <td class="py-5 px-8 text-right">
                 <button 
                   (click)="abrirPetsDoTutor(tutor)"
@@ -64,11 +60,9 @@
                 </button>
               </td>
             </tr>
-
           </tbody>
         </table>
       </div>
-
       <div *ngIf="tutoresFiltrados().length === 0" class="p-16 text-center">
         <span class="text-5xl mb-4 block">🐶❓</span>
         <h3 class="text-xl font-bold text-[#0da193]">Nenhum registro encontrado</h3>
@@ -82,20 +76,20 @@
       &larr; Voltar para a lista principal
     </button>
 
-    <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 p-8 mb-8 flex justify-between items-center">
+    <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 p-8 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
         <h2 class="text-2xl font-extrabold text-neutral-800">Família de {{ tutorSelecionado()?.nome }}</h2>
         <p class="text-neutral-500 font-medium">Estes são os pacientes registrados neste CPF.</p>
       </div>
-      <button class="text-sm bg-teal-50 hover:bg-teal-100 text-[#0da193] font-bold py-2 px-5 rounded-full transition-colors border border-teal-100">
+      <button 
+        (click)="abrirFormularioNovoPet()"
+        class="text-sm bg-teal-50 hover:bg-teal-100 text-[#0da193] font-bold py-3 px-6 rounded-full transition-colors border border-teal-100 shadow-sm whitespace-nowrap">
         + Adicionar Novo Pet
       </button>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      
       <div *ngFor="let pet of tutorSelecionado()?.pets" class="bg-white rounded-3xl shadow-sm p-6 border border-neutral-100 hover:shadow-md transition-shadow duration-300 flex flex-col">
-        
         <div class="flex items-center gap-4 mb-5 border-b border-neutral-100 pb-5">
           <div class="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center text-3xl">
             {{ pet.especie.toLowerCase() === 'cachorro' ? '🐕' : (pet.especie.toLowerCase() === 'gato' ? '🐈' : '🦜') }}
@@ -105,7 +99,6 @@
             <p class="text-sm text-neutral-500 font-medium">{{ pet.raca || 'S/R' }}</p>
           </div>
         </div>
-        
         <div class="space-y-3 mb-6 text-sm">
           <div class="flex justify-between items-center">
             <span class="text-neutral-500 font-medium">Nascimento:</span>
@@ -120,7 +113,6 @@
             </span>
           </div>
         </div>
-        
         <div class="flex gap-3 mt-auto pt-2">
           <button (click)="verHistorico(pet)" class="flex-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-3 rounded-2xl transition-colors text-sm">
             Histórico
@@ -134,7 +126,61 @@
       <div *ngIf="!tutorSelecionado()?.pets || tutorSelecionado()?.pets?.length === 0" class="col-span-full text-center py-10 bg-neutral-50 rounded-3xl border border-dashed border-neutral-200">
         <p class="text-neutral-500 font-medium">Este tutor ainda não possui pets cadastrados.</p>
       </div>
+    </div>
+  </div>
 
+  <div *ngIf="telaAtual() === 'novo_pet'" class="animate-fade-in max-w-3xl mx-auto">
+    <button (click)="voltarParaPets()" class="text-neutral-400 hover:text-[#0da193] font-bold mb-6 flex items-center gap-2 transition-colors">
+      &larr; Voltar para a lista de pets
+    </button>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 p-8">
+      <div class="mb-8 border-b border-neutral-100 pb-6">
+        <h2 class="text-2xl font-extrabold text-neutral-800">Cadastrar Novo Pet</h2>
+        <p class="text-neutral-500 font-medium mt-1">Este animal será vinculado ao tutor: <span class="text-[#0da193] font-bold">{{ tutorSelecionado()?.nome }}</span></p>
+      </div>
+
+      <form [formGroup]="petForm" (ngSubmit)="salvarNovoPet()" class="space-y-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-bold text-neutral-700">Nome do Pet <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="nome" placeholder="Ex: Bob, Mel, Thor..." class="w-full bg-neutral-50 border border-neutral-200 text-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all placeholder:font-normal">
+            <span *ngIf="petForm.get('nome')?.touched && petForm.get('nome')?.invalid" class="text-xs text-red-500 font-medium">O nome é obrigatório.</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-bold text-neutral-700">Espécie <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="especie" placeholder="Ex: Cachorro, Gato..." class="w-full bg-neutral-50 border border-neutral-200 text-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all placeholder:font-normal">
+            <span *ngIf="petForm.get('especie')?.touched && petForm.get('especie')?.invalid" class="text-xs text-red-500 font-medium">A espécie é obrigatória.</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-bold text-neutral-700">Raça</label>
+            <input type="text" formControlName="raca" placeholder="Ex: Poodle, Siamês..." class="w-full bg-neutral-50 border border-neutral-200 text-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all placeholder:font-normal">
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-bold text-neutral-700">Cor Principal</label>
+            <input type="text" formControlName="cor" placeholder="Ex: Preto, Caramelo, Branco..." class="w-full bg-neutral-50 border border-neutral-200 text-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all placeholder:font-normal">
+          </div>
+
+          <div class="flex flex-col gap-2 md:col-span-2">
+            <label class="text-sm font-bold text-neutral-700">Data de Nascimento (Aproximada)</label>
+            <input type="date" formControlName="data_nascimento" class="w-full bg-neutral-50 border border-neutral-200 text-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all">
+          </div>
+        </div>
+
+        <div class="flex gap-4 pt-6 border-t border-neutral-100">
+          <button type="button" (click)="voltarParaPets()" class="flex-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-3.5 rounded-xl transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" class="flex-1 bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2">
+            Salvar Paciente
+          </button>
+        </div>
+
+      </form>
     </div>
   </div>
 
