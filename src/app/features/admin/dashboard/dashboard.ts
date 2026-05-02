@@ -1,7 +1,7 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ConsultaService } from '../../../core/services/consulta.service'; // Ajuste o caminho
+import { ConsultaService } from '../../../core/services/consulta.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,26 +12,29 @@ import { ConsultaService } from '../../../core/services/consulta.service'; // Aj
 })
 export class DashboardComponent implements OnInit {
   private router = inject(Router);
-  public consultaService = inject(ConsultaService); // Injeta o Service inteiro para o HTML acessar a filaHoje
+  public consultaService = inject(ConsultaService);
 
-  // No HTML, ao invés de usar `filaHoje()`, você vai usar `consultaService.filaHoje()`
+  // ==========================================
+  // A MÁGICA ACONTECE AQUI:
+  // Trocamos 'signal' por 'computed'.
+  // Agora, toda vez que o WebSocket alterar a fila no Service,
+  // essa variável é recalculada instantaneamente!
+  // ==========================================
+  public metricas = computed(() => {
+    // Lemos a fila de hoje do service em tempo real
+    const totalConsultasHoje = this.consultaService.filaHoje().length;
 
-  public metricas = signal({
-    consultasHoje: 0,
-    faturamentoDia: 'R$ 0,00',
-    alertasEstoque: 0,
+    return {
+      consultasHoje: totalConsultasHoje,
+      faturamentoDia: 'R$ 0,00', // Futuramente você vai plugar seu FinanceiroService aqui
+      alertasEstoque: 0, // Futuramente plugar seu EstoqueService aqui
+    };
   });
 
   async ngOnInit() {
     try {
-      // Assim que a tela abrir, ele manda o service carregar as coisas
+      // Apenas mandamos carregar. Não precisamos mais calcular as métricas manualmente aqui!
       await this.consultaService.carregarConsultasDaClinica();
-
-      // Atualizamos a métrica de consultas baseado no tamanho da fila
-      this.metricas.update((m) => ({
-        ...m,
-        consultasHoje: this.consultaService.filaHoje().length,
-      }));
     } catch (error) {
       console.error('Falha ao carregar dashboard', error);
     }

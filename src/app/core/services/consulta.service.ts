@@ -1,8 +1,9 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, DestroyRef } from '@angular/core';
 import { SupabaseService } from './supabase';
 import { ClinicaService } from './clinica.service';
-import { CalendarEvent } from 'angular-calendar'; // <- Importação da Lib
-import { addHours } from 'date-fns'; // <- Auxiliar para criar o horário de término
+import { CalendarEvent } from 'angular-calendar';
+import { addHours } from 'date-fns';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export type StatusConsulta =
   | 'agendada'
@@ -30,12 +31,15 @@ export interface ConsultaView {
 export class ConsultaService {
   private supabase = inject(SupabaseService).client;
   private clinicaService = inject(ClinicaService);
+  private destroyRef = inject(DestroyRef); // NOVO: Gerenciador de ciclo de vida
 
   // Estado central
   private _consultas = signal<ConsultaView[]>([]);
   public consultas = this._consultas.asReadonly();
 
-  // Fila do Dashboard (Mantida intacta)
+  private realtimeChannel!: RealtimeChannel; // NOVO: Referência do canal WebSocket
+
+  // Fila do Dashboard
   public filaHoje = computed(() => {
     const hoje = new Date();
     return this._consultas()
@@ -51,14 +55,13 @@ export class ConsultaService {
       .sort((a, b) => a.data_completa.getTime() - b.data_completa.getTime());
   });
 
-  // NOVO: Mapeamento reativo para o Angular Calendar
+  // Mapeamento reativo para o Angular Calendar
   public eventosCalendario = computed<CalendarEvent[]>(() => {
     return this._consultas().map((consulta) => {
       return {
         id: consulta.id,
         start: consulta.data_completa,
         end: addHours(consulta.data_completa, 1),
-        // Injetamos um template HTML com classes do Tailwind no título
         title: `
           <div class="flex flex-col gap-1.5 p-1 h-full font-sans">
             <div class="flex items-center justify-between">
@@ -79,13 +82,12 @@ export class ConsultaService {
         `,
         meta: { consultaOriginal: consulta },
         color: this.definirCorPorStatus(consulta.status),
-        cssClass: 'vet-calendar-card', // Adicionamos uma classe âncora para ajustes CSS
+        cssClass: 'vet-calendar-card',
         draggable: false,
       };
     });
   });
 
-  // NOVO: Query escalável para carregar apenas o que a agenda precisa visualizar
   async carregarAgendaPorPeriodo(dataInicio: Date, dataFim: Date) {
     const clinicaId = this.clinicaService.clinicaAtivaId;
     if (!clinicaId) return;
@@ -110,9 +112,9 @@ export class ConsultaService {
     }
 
     this.processarEAtualizarConsultas(data);
+    this.iniciarEscutaRealtime(clinicaId); // NOVO: Inicia WebSocket
   }
 
-  // Método original mantido (Idealmente, no futuro, usaremos apenas o por período)
   async carregarConsultasDaClinica(force: boolean = false) {
     if (this._consultas().length > 0 && !force) return;
     const clinicaId = this.clinicaService.clinicaAtivaId;
@@ -132,29 +134,84 @@ export class ConsultaService {
 
     if (error) throw error;
     this.processarEAtualizarConsultas(data);
+    this.iniciarEscutaRealtime(clinicaId); // NOVO: Inicia WebSocket
   }
 
-  // Refatoração (Clean Code): Isolada a lógica de formatação
-  private processarEAtualizarConsultas(data: any[]) {
-    const consultasFormatadas: ConsultaView[] = data.map((item: any) => {
-      const dataObj = new Date(item.data_consulta);
-      return {
-        id: item.id,
-        status: item.status as StatusConsulta,
-        data_completa: dataObj,
-        horario: dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        pet: item.pets?.nome || 'Desconhecido',
-        pet_id: item.pet_id,
-        especie: item.pets?.especie || 'Outro',
-        raca: item.pets?.raca || null,
-        tutor: item.pets?.perfis?.nome_completo || 'Sem tutor vinculado',
-        veterinario: item.equipe_clinica?.perfis?.nome_completo,
-      };
+  // ==========================================
+  // NOVO: WEBSOCKET REALTIME
+  // ==========================================
+  private iniciarEscutaRealtime(clinicaId: string) {
+    if (this.realtimeChannel) return; // Evita múltiplas conexões
+
+    this.realtimeChannel = this.supabase
+      .channel('public:consultas')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'consultas', filter: `clinica_id=eq.${clinicaId}` },
+        async (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            this._consultas.update((consultas) =>
+              consultas.map((c) =>
+                c.id === payload.new['id'] ? { ...c, status: payload.new['status'] } : c,
+              ),
+            );
+          } else if (payload.eventType === 'INSERT') {
+            // Busca os dados completos da nova consulta para trazer os JOINs de pet e tutor
+            const { data } = await this.supabase
+              .from('consultas')
+              .select(
+                `
+                id, status, data_consulta, pet_id,
+                pets ( nome, especie, raca, perfis ( nome_completo ) ),
+                equipe_clinica ( perfis ( nome_completo ) ) 
+              `,
+              )
+              .eq('id', payload.new['id'])
+              .single();
+
+            if (data) {
+              const novaConsulta = this.formatarConsultaUnica(data);
+              this._consultas.update((consultas) => [...consultas, novaConsulta]);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            this._consultas.update((consultas) =>
+              consultas.filter((c) => c.id !== payload.old['id']),
+            );
+          }
+        },
+      )
+      .subscribe();
+
+    // Limpa a conexão se o serviço for destruído
+    this.destroyRef.onDestroy(() => {
+      this.supabase.removeChannel(this.realtimeChannel);
     });
+  }
+
+  // Refatorado para ser reaproveitado pelo WebSocket e pelo carregamento inicial
+  private processarEAtualizarConsultas(data: any[]) {
+    const consultasFormatadas: ConsultaView[] = data.map((item: any) =>
+      this.formatarConsultaUnica(item),
+    );
     this._consultas.set(consultasFormatadas);
   }
 
-  // Demais métodos mantidos (agendarConsulta, atualizarStatus...)
+  private formatarConsultaUnica(item: any): ConsultaView {
+    const dataObj = new Date(item.data_consulta);
+    return {
+      id: item.id,
+      status: item.status as StatusConsulta,
+      data_completa: dataObj,
+      horario: dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      pet: item.pets?.nome || 'Desconhecido',
+      pet_id: item.pet_id,
+      especie: item.pets?.especie || 'Outro',
+      raca: item.pets?.raca || null,
+      tutor: item.pets?.perfis?.nome_completo || 'Sem tutor vinculado',
+      veterinario: item.equipe_clinica?.perfis?.nome_completo,
+    };
+  }
+
   async agendarConsulta(dados: {
     petId: string;
     veterinarioId: string | null;
@@ -178,10 +235,10 @@ export class ConsultaService {
     }
 
     const { error } = await this.supabase.from('consultas').insert(payload);
-
     if (error) throw error;
 
-    await this.carregarConsultasDaClinica(true);
+    // Opcional: Você pode remover essa linha abaixo pois o Realtime fará o papel de atualizar a lista!
+    // await this.carregarConsultasDaClinica(true);
   }
 
   async atualizarStatus(consultaId: string, novoStatus: StatusConsulta) {
@@ -191,26 +248,21 @@ export class ConsultaService {
       .eq('id', consultaId);
 
     if (error) throw error;
-
-    // Atualiza o Signal localmente para a tela piscar na hora, sem precisar recarregar o banco todo
-    this._consultas.update((consultas) =>
-      consultas.map((c) => (c.id === consultaId ? { ...c, status: novoStatus } : c)),
-    );
+    // O sinal será atualizado via WebSocket automaticamente após o update no banco!
   }
 
-  // Auxiliar visual para o Calendário
   private definirCorPorStatus(status: StatusConsulta) {
     switch (status) {
       case 'agendada':
-        return { primary: '#0da193', secondary: '#ccfbf1' }; // Nossos tons de Teal
+        return { primary: '#0da193', secondary: '#ccfbf1' };
       case 'em_andamento':
-        return { primary: '#f59e0b', secondary: '#fef3c7' }; // Amber
+        return { primary: '#f59e0b', secondary: '#fef3c7' };
       case 'finalizada':
-        return { primary: '#10b981', secondary: '#d1fae5' }; // Emerald
+        return { primary: '#10b981', secondary: '#d1fae5' };
       case 'cancelada':
-        return { primary: '#ef4444', secondary: '#fee2e2' }; // Red
+        return { primary: '#ef4444', secondary: '#fee2e2' };
       default:
-        return { primary: '#6b7280', secondary: '#f3f4f6' }; // Gray
+        return { primary: '#6b7280', secondary: '#f3f4f6' };
     }
   }
 }

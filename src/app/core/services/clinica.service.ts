@@ -1,40 +1,35 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, DestroyRef } from '@angular/core';
 import { SupabaseService } from './supabase';
-import { WorkspaceClinica, CriarClinicaDTO, Clinica } from '../models/clinica.model'; // Ajuste o caminho se necessário
+import { WorkspaceClinica, CriarClinicaDTO, Clinica } from '../models/clinica.model';
 import { Auth } from './auth';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ClinicaService {
   private supabase = inject(SupabaseService).client;
+  private destroyRef = inject(DestroyRef); // NOVO
+
   // Estado da Clínica
   private _clinica = signal<Clinica>({} as Clinica);
   public clinica = this._clinica.asReadonly();
 
-  // NOVO: Signal para guardar a lista da equipe em memória (Alta Performance)
+  // Signal para guardar a lista da equipe em memória
   public membrosEquipe = signal<any[]>([]);
 
+  private realtimeEquipeChannel!: RealtimeChannel; // NOVO
+
   constructor() {
-    // 1. AUTO-HIDRATAÇÃO
-    // Toda vez que o serviço é construído (ex: usuário deu F5),
-    // ele tenta recuperar a clínica silenciosamente.
     this.recuperarClinicaDoCache();
   }
 
-  // ==========================================
-  // O GETTER SEGURO DE ID
-  // ==========================================
-  // Ele tenta ler do Signal. Se estiver vazio (porque o Supabase ainda está carregando),
-  // ele lê instantaneamente do cache do navegador.
   get clinicaAtivaId(): string | null {
     return this._clinica().id || localStorage.getItem('clinica_ativa');
   }
 
   private async recuperarClinicaDoCache() {
     const clinicaIdSalva = localStorage.getItem('clinica_ativa');
-
-    // Só busca no banco se tiver ID no cache e o Signal estiver vazio
     if (clinicaIdSalva && !this._clinica().id) {
       try {
         await this.setarClinicaAtiva(clinicaIdSalva);
@@ -57,23 +52,21 @@ export class ClinicaService {
     }
 
     this._clinica.set(data);
-
-    // SALVA NO CACHE SEMPRE QUE SETAR
     localStorage.setItem('clinica_ativa', clinicaId);
   }
 
-  // LIMPEZA (Chame isso no método de Logout do seu sistema)
   limparClinicaAtiva() {
     this._clinica.set({} as Clinica);
     localStorage.removeItem('clinica_ativa');
-    this.membrosEquipe.set([]); // NOVO: Limpa a equipe da memória ao deslogar
+    this.membrosEquipe.set([]);
+
+    // NOVO: Limpa a conexão websocket ao deslogar
+    if (this.realtimeEquipeChannel) {
+      this.supabase.removeChannel(this.realtimeEquipeChannel);
+      this.realtimeEquipeChannel = undefined as any;
+    }
   }
 
-  // ==========================================
-  // NOVOS MÉTODOS: GESTÃO DE EQUIPE
-  // ==========================================
-
-  // 1. Carrega a lista real do banco fazendo JOIN
   async carregarMembrosEquipe(forceReload = false): Promise<void> {
     if (!forceReload && this.membrosEquipe().length > 0) {
       return;
@@ -82,27 +75,15 @@ export class ClinicaService {
     const clinicaId = this.clinicaAtivaId;
     if (!clinicaId) return;
 
-    // DISPARO PARALELO: Busca as duas tabelas ao mesmo tempo
     const [equipeRes, convitesRes] = await Promise.all([
-      // Consulta 1: Membros Ativos
       this.supabase
         .from('equipe_clinica')
-        .select(
-          `
-          id, papel, crmv, ativo,
-          perfis ( id, nome_completo, email, cpf, telefone )
-        `,
-        )
+        .select(`id, papel, crmv, ativo, perfis ( id, nome_completo, email, cpf, telefone )`)
         .eq('clinica_id', clinicaId),
-
-      // Consulta 2: Convites Pendentes
       this.supabase
         .from('convites_clinica')
         .select(
-          `
-          id, papel, token, status,
-          perfis:perfis!convites_clinica_perfil_id_fkey ( id, nome_completo, email, cpf, telefone )
-        `,
+          `id, papel, token, status, perfis:perfis!convites_clinica_perfil_id_fkey ( id, nome_completo, email, cpf, telefone )`,
         )
         .eq('clinica_id', clinicaId)
         .eq('status', 'pendente'),
@@ -111,7 +92,6 @@ export class ClinicaService {
     if (equipeRes.error) throw equipeRes.error;
     if (convitesRes.error) throw convitesRes.error;
 
-    // MAPEAMENTO 1: Membros já vinculados
     const membrosAtivos = equipeRes.data.map((item: any) => ({
       id: item.id,
       perfil_id: item.perfis?.id,
@@ -120,11 +100,10 @@ export class ClinicaService {
       telefone: item.perfis?.telefone || '',
       papel: item.papel,
       crmv: item.crmv,
-      status: item.ativo ? 'ativo' : 'inativo', // Status baseado na coluna ativo
+      status: item.ativo ? 'ativo' : 'inativo',
       isConvite: false,
     }));
 
-    // MAPEAMENTO 2: Convites que ainda não foram aceitos
     const convitesPendentes = convitesRes.data.map((item: any) => ({
       id: item.id,
       perfil_id: item.perfis?.id,
@@ -133,20 +112,62 @@ export class ClinicaService {
       telefone: item.perfis?.telefone || '',
       papel: item.papel,
       crmv: '---',
-      status: 'pendente', // Status fixo como pendente
+      status: 'pendente',
       token: item.token,
       isConvite: true,
     }));
 
-    // UNIFICAÇÃO: Junta as duas listas e ordena por nome
     const listaUnificada = [...membrosAtivos, ...convitesPendentes].sort((a, b) =>
       a.nome.localeCompare(b.nome),
     );
 
     this.membrosEquipe.set(listaUnificada);
+
+    // NOVO: Inicia o realtime da equipe após o carregamento inicial
+    this.iniciarEscutaEquipe(clinicaId);
   }
 
-  // 2. Envia os dados para a Edge Function de cadastro/convite
+  // ==========================================
+  // NOVO: WEBSOCKET PARA EQUIPE E CONVITES
+  // ==========================================
+  private iniciarEscutaEquipe(clinicaId: string) {
+    if (this.realtimeEquipeChannel) return;
+
+    // Diferente das consultas, a view de equipe depende de tabelas cruzadas (convites e equipe).
+    // A forma mais segura de garantir dados consistentes de equipe é recarregar a lista caso haja mudança.
+    this.realtimeEquipeChannel = this.supabase
+      .channel('public:equipe')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'equipe_clinica',
+          filter: `clinica_id=eq.${clinicaId}`,
+        },
+        () => {
+          this.carregarMembrosEquipe(true); // Força recarregamento silêncioso
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'convites_clinica',
+          filter: `clinica_id=eq.${clinicaId}`,
+        },
+        () => {
+          this.carregarMembrosEquipe(true); // Força recarregamento silêncioso
+        },
+      )
+      .subscribe();
+
+    this.destroyRef.onDestroy(() => {
+      this.supabase.removeChannel(this.realtimeEquipeChannel);
+    });
+  }
+
   async cadastrarMembroEquipe(
     dadosMembro: any,
   ): Promise<{ acao: string; mensagem: string; token?: string }> {
@@ -167,7 +188,6 @@ export class ClinicaService {
       crmv: dadosMembro.crmv,
     };
 
-    // Invoca a função segura na nuvem
     const { data, error } = await this.supabase.functions.invoke('cadastrar-membro', {
       body: payload,
     });
@@ -178,19 +198,10 @@ export class ClinicaService {
     return data;
   }
 
-  // ==========================================
-  // MÉTODOS ANTIGOS DE WORKSPACE
-  // ==========================================
-
   async getClinicasDoUsuario(userId: string): Promise<WorkspaceClinica[]> {
     const { data, error } = await this.supabase
       .from('equipe_clinica')
-      .select(
-        `
-        papel,
-        clinicas ( id, nome_fantasia, razao_social )
-      `,
-      )
+      .select(`papel, clinicas ( id, nome_fantasia, razao_social )`)
       .eq('perfil_id', userId)
       .eq('ativo', true);
 
@@ -231,16 +242,13 @@ export class ClinicaService {
 
     if (equipeError) {
       console.warn('Erro ao vincular dono. Iniciando rollback da clínica...', equipeError);
-
       const { error: rollbackError } = await this.supabase
         .from('clinicas')
         .delete()
         .eq('id', clinica.id);
-
       if (rollbackError) {
         console.error('Falha CRÍTICA no rollback. Clínica fantasma gerada:', clinica.id);
       }
-
       throw new Error(
         'Ocorreu um problema ao criar seu acesso. O processo foi cancelado por segurança. Tente novamente.',
       );
@@ -250,18 +258,14 @@ export class ClinicaService {
   }
 
   async aceitarConvite(userId: string, tokenFormatado: string): Promise<string> {
-    // Chamada única ao banco - Máxima economia de recursos e latência
     const { data, error } = await this.supabase.rpc('aceitar_convite_clinica', {
       p_token: tokenFormatado,
       p_user_id: userId,
     });
 
     if (error) {
-      // O erro levantado pelo RAISE EXCEPTION no Postgres vem parar aqui
       throw new Error(error.message);
     }
-
-    // Retorna o clinica_id (UUID)
     return data as string;
   }
 }
