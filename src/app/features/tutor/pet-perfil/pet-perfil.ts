@@ -24,7 +24,6 @@ export class PetPerfilComponent {
     tutor: 'Pedro Brum'
   });
 
-  // Novo Histórico de Peso (Focado em Evolução/Decadência)
   public historicoPeso = signal([
     { data: 'Hoje', peso: 25.5, variacao: '+0.5', status: 'aumento' },
     { data: 'Mar/26', peso: 25.0, variacao: '-1.2', status: 'reducao' },
@@ -40,9 +39,13 @@ export class PetPerfilComponent {
     { nome: 'Raiva', dataAplicacao: '15/05/2025', proximaDose: '15/05/2026', status: 'Em dia' }
   ]);
 
+  // Controles dos Modais
   public isMedicineModalOpen = signal(false);
   public isCarteirinhaOpen = signal(false);
+  public isShareModalOpen = signal(false); // NOVO: Controle do Compartilhamento
+  
   public selectedMedicine = signal<any>(null);
+  public codigoGerado = signal<string | null>(null); // NOVO: Guarda o código gerado
 
   public voltar(): void { this.location.back(); }
 
@@ -54,6 +57,33 @@ export class PetPerfilComponent {
 
   public abrirCarteirinha(): void { this.isCarteirinhaOpen.set(true); }
   public fecharCarteirinha(): void { this.isCarteirinhaOpen.set(false); }
+
+  // --- Funções de Compartilhamento de Emergência ---
+  public abrirCompartilhamento(): void { 
+    this.isShareModalOpen.set(true); 
+  }
+  
+  public fecharCompartilhamento(): void { 
+    this.isShareModalOpen.set(false); 
+    this.codigoGerado.set(null); // Reseta o código ao fechar
+  }
+
+  public gerarCodigoAuth(): void {
+    // Simula a geração de um código aleatório alfanumérico de 6 dígitos
+    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let codigo = '';
+    for (let i = 0; i < 6; i++) {
+      codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+    }
+    this.codigoGerado.set(codigo);
+  }
+
+  public copiarCodigo(): void {
+    if (this.codigoGerado()) {
+      navigator.clipboard.writeText(this.codigoGerado()!);
+      alert('Código copiado com sucesso!');
+    }
+  }
 
   public aoEscolherFoto(event: any): void {
     const file = event.target.files[0];
