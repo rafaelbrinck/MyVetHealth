@@ -1,4 +1,6 @@
+import { importProvidersFrom } from '@angular/core';
 import { Routes } from '@angular/router';
+import { LucideAngularModule, Moon, Sun } from 'lucide-angular';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role-guard';
@@ -112,6 +114,7 @@ export const routes: Routes = [
     path: 'clinica',
     loadComponent: () =>
       import('./features/admin/layout/admin-layout.component').then((m) => m.AdminLayoutComponent),
+    providers: [importProvidersFrom(LucideAngularModule.pick({ Sun, Moon }))],
     canActivate: [authGuard, roleGuard],
     data: { roles: ['admin_clinica', 'veterinario', 'recepcionista'] },
     children: [

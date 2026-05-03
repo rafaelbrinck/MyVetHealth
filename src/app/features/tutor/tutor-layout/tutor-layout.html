@@ -1,28 +1,28 @@
 <!-- Container Principal: Ocupa a tela inteira (w-full) -->
-<div class="h-screen w-full bg-neutral-50 dark:bg-neutral-950 transition-colors duration-300 flex overflow-hidden">
+<div class="h-screen w-full bg-neutral-50 dark:bg-slate-950 transition-colors duration-300 flex overflow-hidden">
 
   <!-- ========================================== -->
   <!-- SIDEBAR (MENU LATERAL) PARA PC             -->
   <!-- Oculto no celular (hidden), Visível no PC (md:flex) -->
   <!-- ========================================== -->
-  <aside class="hidden md:flex flex-col w-72 bg-white dark:bg-neutral-900 border-r border-neutral-100 dark:border-neutral-800 transition-colors duration-300 z-40 shadow-sm">
-    <div class="p-8">
-      <h1 class="text-2xl font-extrabold text-[#0da193] flex items-center gap-3">
-        <span class="text-3xl">🐾</span> MyVetHealth
+  <aside class="hidden md:flex flex-col w-72 bg-white dark:bg-slate-900 border-r border-neutral-100 dark:border-slate-800 transition-colors duration-300 z-40 shadow-sm">
+    <div class="p-8 border-b border-transparent dark:border-emerald-500/15">
+      <h1 class="text-2xl font-extrabold text-[#0da193] dark:text-emerald-400 flex items-center gap-3">
+        <span class="text-3xl" aria-hidden="true">🐾</span> MyVetHealth
       </h1>
     </div>
 
     <!-- Botões do Menu Lateral -->
     <nav class="flex-1 px-4 space-y-2 mt-4">
-      <a routerLink="/tutor/dashboard" routerLinkActive="bg-teal-50 dark:bg-teal-900/30 text-[#0da193] dark:text-teal-400" [routerLinkActiveOptions]="{exact: true}" class="flex items-center gap-4 px-4 py-4 rounded-2xl text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors font-bold">
+      <a routerLink="/tutor/dashboard" routerLinkActive="bg-teal-50 dark:bg-teal-900/30 text-[#0da193] dark:text-emerald-400 ring-1 ring-emerald-200/60 dark:ring-emerald-500/20" [routerLinkActiveOptions]="{exact: true}" class="flex items-center gap-4 px-4 py-4 rounded-2xl text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-slate-800 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors font-bold">
         <span class="text-2xl">🏠</span> Início
       </a>
 
-      <a routerLink="/tutor/pets" routerLinkActive="bg-teal-50 dark:bg-teal-900/30 text-[#0da193] dark:text-teal-400" class="flex items-center gap-4 px-4 py-4 rounded-2xl text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors font-bold">
+      <a routerLink="/tutor/pets" routerLinkActive="bg-teal-50 dark:bg-teal-900/30 text-[#0da193] dark:text-emerald-400 ring-1 ring-emerald-200/60 dark:ring-emerald-500/20" class="flex items-center gap-4 px-4 py-4 rounded-2xl text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-slate-800 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors font-bold">
         <span class="text-2xl">🐾</span> Meus Pets
       </a>
 
-      <a routerLink="/tutor/perfil" routerLinkActive="bg-teal-50 dark:bg-teal-900/30 text-[#0da193] dark:text-teal-400" class="flex items-center gap-4 px-4 py-4 rounded-2xl text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors font-bold">
+      <a routerLink="/tutor/perfil" routerLinkActive="bg-teal-50 dark:bg-teal-900/30 text-[#0da193] dark:text-emerald-400 ring-1 ring-emerald-200/60 dark:ring-emerald-500/20" class="flex items-center gap-4 px-4 py-4 rounded-2xl text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-slate-800 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors font-bold">
         <span class="text-2xl">👤</span> Meu Perfil
       </a>
     </nav>
@@ -35,7 +35,7 @@
 
     <!-- No PC (md:), damos um respiro (padding) e alargamos a tela (max-w-4xl) -->
     <main class="flex-1 overflow-y-auto pb-24 md:pb-8 p-0 md:p-8">
-      <div class="max-w-md md:max-w-4xl mx-auto w-full bg-transparent md:bg-white md:dark:bg-neutral-900 md:shadow-xl md:rounded-3xl md:border border-neutral-100 dark:border-neutral-800 min-h-full md:min-h-0 transition-all duration-300 overflow-hidden relative">
+      <div class="max-w-md md:max-w-4xl mx-auto w-full bg-transparent md:bg-white md:dark:bg-slate-900 md:shadow-xl md:rounded-3xl md:border border-neutral-100 dark:border-slate-800 min-h-full md:min-h-0 transition-all duration-300 overflow-hidden relative">
         <router-outlet></router-outlet>
       </div>
     </main>
@@ -44,16 +44,16 @@
     <!-- BARRA INFERIOR MOBILE                      -->
     <!-- Visível no celular, Oculta no PC (md:hidden)-->
     <!-- ========================================== -->
-    <nav class="md:hidden bg-white dark:bg-neutral-900 border-t border-neutral-100 dark:border-neutral-800 transition-colors duration-300 fixed bottom-0 w-full flex justify-around items-center h-16 px-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] rounded-t-2xl">
-      <a routerLink="/tutor/dashboard" routerLinkActive="text-[#0da193] dark:text-teal-400" [routerLinkActiveOptions]="{exact: true}" class="flex flex-col items-center text-neutral-400 dark:text-neutral-600 hover:text-[#0da193] dark:hover:text-teal-400 transition-colors w-16">
+    <nav class="md:hidden bg-white dark:bg-slate-900 border-t border-neutral-100 dark:border-slate-800 transition-colors duration-300 fixed bottom-0 w-full flex justify-around items-center h-16 px-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)] rounded-t-2xl">
+      <a routerLink="/tutor/dashboard" routerLinkActive="text-[#0da193] dark:text-emerald-400" [routerLinkActiveOptions]="{exact: true}" class="flex flex-col items-center text-neutral-400 dark:text-neutral-500 hover:text-[#0da193] dark:hover:text-emerald-400 transition-colors w-16">
         <span class="text-2xl mb-0.5">🏠</span>
         <span class="text-[10px] font-bold tracking-wide">Início</span>
       </a>
-      <a routerLink="/tutor/pets" routerLinkActive="text-[#0da193] dark:text-teal-400" class="flex flex-col items-center text-neutral-400 dark:text-neutral-600 hover:text-[#0da193] dark:hover:text-teal-400 transition-colors w-16">
+      <a routerLink="/tutor/pets" routerLinkActive="text-[#0da193] dark:text-emerald-400" class="flex flex-col items-center text-neutral-400 dark:text-neutral-500 hover:text-[#0da193] dark:hover:text-emerald-400 transition-colors w-16">
         <span class="text-2xl mb-0.5">🐾</span>
         <span class="text-[10px] font-bold tracking-wide">Pets</span>
       </a>
-      <a routerLink="/tutor/perfil" routerLinkActive="text-[#0da193] dark:text-teal-400" class="flex flex-col items-center text-neutral-400 dark:text-neutral-600 hover:text-[#0da193] dark:hover:text-teal-400 transition-colors w-16">
+      <a routerLink="/tutor/perfil" routerLinkActive="text-[#0da193] dark:text-emerald-400" class="flex flex-col items-center text-neutral-400 dark:text-neutral-500 hover:text-[#0da193] dark:hover:text-emerald-400 transition-colors w-16">
         <span class="text-2xl mb-0.5">👤</span>
         <span class="text-[10px] font-bold tracking-wide">Perfil</span>
       </a>

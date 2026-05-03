@@ -20,6 +20,7 @@
     "@supabase/supabase-js": "^2.101.1",
     "angular-calendar": "^0.32.2",
     "date-fns": "^4.1.0",
+    "lucide-angular": "^1.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

@@ -1,18 +1,18 @@
-<div class="pb-24 dark:text-neutral-100 transition-colors duration-300">
+<div class="pb-24 bg-white dark:bg-slate-950 text-neutral-800 dark:text-neutral-100 transition-colors duration-300">
   
-  <div class="p-6 text-center border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 transition-colors duration-300">
+  <div class="p-6 text-center border-b border-neutral-100 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors duration-300">
     
-    <div class="relative w-24 h-24 mx-auto mb-4">
-      <div class="w-full h-full bg-teal-100 dark:bg-teal-900/50 text-[#0da193] dark:text-teal-400 rounded-full flex items-center justify-center text-4xl font-black shadow-inner border-4 border-white dark:border-neutral-800 transition-colors">
+    <div class="relative w-24 h-24 mx-auto mb-4 ring-4 ring-emerald-100 dark:ring-emerald-500/25 rounded-full">
+      <div class="w-full h-full bg-teal-100 dark:bg-teal-900/50 text-[#0da193] dark:text-emerald-300 rounded-full flex items-center justify-center text-4xl font-black shadow-inner border-4 border-white dark:border-slate-800 transition-colors">
         {{ usuario().foto }}
       </div>
-      <button (click)="fileInput.click()" class="absolute bottom-0 right-0 bg-white dark:bg-neutral-700 p-2 rounded-full shadow-md border border-neutral-100 dark:border-neutral-600 text-neutral-600 dark:text-neutral-200 hover:text-[#0da193] dark:hover:text-teal-400 hover:scale-110 transition-transform active:scale-95">
+      <button (click)="fileInput.click()" class="absolute bottom-0 right-0 bg-white dark:bg-neutral-700 p-2 rounded-full shadow-md border border-neutral-100 dark:border-neutral-600 text-neutral-600 dark:text-neutral-200 hover:text-[#0da193] dark:hover:text-emerald-400 hover:scale-110 transition-transform active:scale-95">
         📷
       </button>
       <input #fileInput type="file" accept="image/*" class="hidden" (change)="aoEscolherFoto($event)">
     </div>
 
-    <h2 class="text-2xl font-extrabold text-neutral-800 dark:text-white">{{ usuario().nome }}</h2>
+    <h2 class="text-2xl font-extrabold text-neutral-800 dark:text-neutral-100">{{ usuario().nome }}</h2>
     <p class="text-neutral-500 dark:text-neutral-400 text-sm font-medium">Membro desde {{ usuario().membroDesde }}</p>
   </div>
 
@@ -21,13 +21,13 @@
     <div>
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">Dados da Conta</h3>
-        <button (click)="abrirEdicao()" class="text-[#0da193] dark:text-teal-400 text-sm font-bold flex items-center gap-1 hover:underline">
+        <button (click)="abrirEdicao()" class="text-[#0da193] dark:text-emerald-400 text-sm font-bold flex items-center gap-1 hover:underline">
           ✏️ Editar
         </button>
       </div>
       
-      <div class="bg-white dark:bg-neutral-800 rounded-3xl border border-neutral-100 dark:border-neutral-700 overflow-hidden shadow-sm transition-colors duration-300">
-        <div class="p-4 flex items-center gap-4 border-b border-neutral-50 dark:border-neutral-700/50">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-neutral-100 dark:border-slate-700 overflow-hidden shadow-sm transition-colors duration-300">
+        <div class="p-4 flex items-center gap-4 border-b border-neutral-50 dark:border-slate-700/50">
           <span class="text-xl opacity-80">📧</span>
           <div class="flex-1">
             <p class="text-[10px] text-neutral-400 dark:text-neutral-500 font-bold uppercase">E-mail</p>
@@ -46,29 +46,29 @@
 
     <div>
       <h3 class="text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-4">Preferências</h3>
-      <div class="bg-white dark:bg-neutral-800 rounded-3xl border border-neutral-100 dark:border-neutral-700 overflow-hidden shadow-sm transition-colors duration-300">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-neutral-100 dark:border-slate-700 overflow-hidden shadow-sm transition-colors duration-300">
         
-        <button (click)="toggleNotificacoes()" class="w-full p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors border-b border-neutral-50 dark:border-neutral-700/50">
+        <button (click)="toggleNotificacoes()" class="w-full p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-slate-800/80 transition-colors border-b border-neutral-50 dark:border-slate-700/50">
           <div class="flex items-center gap-4">
             <span class="text-xl opacity-80">🔔</span>
             <span class="text-neutral-700 dark:text-neutral-200 font-bold">Notificações Push</span>
           </div>
-          <div class="w-12 h-6 rounded-full relative transition-colors duration-300" [ngClass]="notificacoesAtivas() ? 'bg-[#0da193]' : 'bg-neutral-200 dark:bg-neutral-600'">
-            <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300" [ngClass]="notificacoesAtivas() ? 'translate-x-6' : 'translate-x-0'"></div>
+          <div class="w-12 h-6 rounded-full relative transition-colors duration-300 shadow-inner" [ngClass]="notificacoesAtivas() ? 'bg-[#0da193] ring-2 ring-emerald-300/40 dark:ring-emerald-400/30' : 'bg-neutral-200 dark:bg-slate-600'">
+            <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm" [ngClass]="notificacoesAtivas() ? 'translate-x-6' : 'translate-x-0'"></div>
           </div>
         </button>
 
-        <button (click)="toggleTema()" class="w-full p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors border-b border-neutral-50 dark:border-neutral-700/50">
+        <button type="button" (click)="themeService.toggleTheme()" class="w-full p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-slate-800/80 transition-colors border-b border-neutral-50 dark:border-slate-700/50">
           <div class="flex items-center gap-4">
-            <span class="text-xl opacity-80">{{ temaEscuro() ? '🌙' : '☀️' }}</span>
+            <span class="text-xl opacity-80">{{ themeService.theme() === 'dark' ? '🌙' : '☀️' }}</span>
             <span class="text-neutral-700 dark:text-neutral-200 font-bold">Modo Escuro</span>
           </div>
-          <div class="w-12 h-6 rounded-full relative transition-colors duration-300" [ngClass]="temaEscuro() ? 'bg-[#0da193]' : 'bg-neutral-200 dark:bg-neutral-600'">
-            <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300" [ngClass]="temaEscuro() ? 'translate-x-6' : 'translate-x-0'"></div>
+          <div class="w-12 h-6 rounded-full relative transition-colors duration-300 shadow-inner" [ngClass]="themeService.theme() === 'dark' ? 'bg-[#0da193] ring-2 ring-emerald-300/40 dark:ring-emerald-400/30' : 'bg-neutral-200 dark:bg-slate-600'">
+            <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm" [ngClass]="themeService.theme() === 'dark' ? 'translate-x-6' : 'translate-x-0'"></div>
           </div>
         </button>
         
-        <button class="w-full p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors">
+        <button class="w-full p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-slate-800/80 transition-colors">
           <div class="flex items-center gap-4">
             <span class="text-xl opacity-80">🔒</span>
             <span class="text-neutral-700 dark:text-neutral-200 font-bold">Alterar Senha</span>
@@ -85,9 +85,9 @@
   </div>
 
   <div *ngIf="isEditModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-md transition-opacity duration-300 p-6">
-    <div class="bg-white dark:bg-neutral-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all border border-white/10">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all border border-white/10 dark:border-slate-700">
       
-      <div class="bg-[#0da193] dark:bg-teal-700 p-5 flex justify-between items-center text-white">
+      <div class="bg-gradient-to-r from-[#0da193] to-emerald-600 dark:from-teal-700 dark:to-emerald-800 p-5 flex justify-between items-center text-white shadow-md">
         <h3 class="font-bold text-lg">Editar Dados ✏️</h3>
         <button (click)="fecharEdicao()" class="text-teal-100 hover:text-white text-2xl font-bold leading-none">&times;</button>
       </div>
