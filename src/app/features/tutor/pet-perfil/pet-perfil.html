@@ -11,8 +11,14 @@
       <button (click)="fileInput.click()" class="absolute bottom-0 right-0 bg-white dark:bg-neutral-700 p-2.5 rounded-full shadow-md border border-neutral-100 dark:border-neutral-600 text-neutral-600 dark:text-neutral-200 hover:text-[#0da193] hover:scale-110 transition-transform active:scale-95">📷</button>
       <input #fileInput type="file" accept="image/*" class="hidden" (change)="aoEscolherFoto($event)">
     </div>
+    
     <h2 class="text-3xl font-extrabold text-neutral-800 dark:text-white">{{ pet().nome }}</h2>
     <p class="text-neutral-500 dark:text-neutral-400 font-medium mt-1">{{ pet().raca }}</p>
+
+    <!-- Botão da Carteirinha Digital -->
+    <button (click)="abrirCarteirinha()" class="mt-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-6 py-2.5 rounded-full font-bold text-sm shadow-md hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors flex items-center gap-2">
+      <span class="text-lg">🪪</span> Carteirinha Digital
+    </button>
     
     <div class="flex gap-3 mt-6 w-full">
       <div class="flex-1 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl p-3 flex flex-col items-center shadow-sm">
@@ -20,12 +26,63 @@
         <span class="font-bold text-neutral-700 dark:text-white mt-1">{{ pet().idade }}</span>
       </div>
       <div class="flex-1 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl p-3 flex flex-col items-center shadow-sm">
-        <span class="text-xs text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider">Peso</span>
-        <span class="font-bold text-neutral-700 dark:text-white mt-1">{{ pet().peso }}</span>
+        <span class="text-xs text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider">Peso Atual</span>
+        <span class="font-bold text-neutral-700 dark:text-white mt-1">{{ pet().pesoAtual }}</span>
       </div>
     </div>
   </div>
 
+  <!-- NOVO: Histórico de Evolução de Peso Premium -->
+  <div class="px-6 mt-10">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">⚖️</span>
+        <h3 class="text-xl font-bold text-neutral-800 dark:text-white">Evolução de Peso</h3>
+      </div>
+    </div>
+    
+    <div class="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+      
+      <!-- Curva SVG de fundo (Estética de app de saúde) -->
+      <div class="absolute bottom-0 left-0 w-full opacity-5 dark:opacity-10 pointer-events-none">
+        <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-24 text-[#0da193]" fill="currentColor">
+          <path d="M0 40 Q 25 10 50 20 T 100 0 L 100 40 Z"></path>
+        </svg>
+      </div>
+
+      <div class="relative z-10 space-y-4">
+        <!-- Itens da Linha do Tempo -->
+        <div *ngFor="let item of historicoPeso(); let ultimo = last" class="flex items-center justify-between relative pb-4" [ngClass]="{'border-b border-neutral-100 dark:border-neutral-800/50': !ultimo, 'pb-0': ultimo}">
+          
+          <div class="flex items-center gap-4">
+            <!-- Ponto na linha -->
+            <div class="w-2.5 h-2.5 rounded-full ring-4 ring-white dark:ring-neutral-900" 
+                 [ngClass]="item.status === 'aumento' ? 'bg-rose-400' : (item.status === 'reducao' ? 'bg-emerald-400' : 'bg-neutral-300')">
+            </div>
+            
+            <div>
+              <p class="font-bold text-neutral-800 dark:text-white text-base">{{ item.peso }} kg</p>
+              <p class="text-[10px] text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider">{{ item.data }}</p>
+            </div>
+          </div>
+
+          <!-- Badges de Evolução/Decadência -->
+          <div *ngIf="item.variacao !== '0'">
+            <span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm"
+              [ngClass]="item.status === 'aumento' ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-800/50' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/50'">
+              {{ item.status === 'aumento' ? '📈' : '📉' }} {{ item.variacao }} kg
+            </span>
+          </div>
+          <div *ngIf="item.variacao === '0'">
+            <span class="text-xs font-bold text-neutral-400 dark:text-neutral-500">Peso Inicial</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seção: Receituário Ativo -->
   <div class="px-6 mt-10">
     <div class="flex items-center gap-2 mb-4">
       <span class="text-xl">💊</span>
@@ -52,6 +109,7 @@
     </div>
   </div>
 
+  <!-- Seção: Carteirinha de Vacinação -->
   <div class="px-6 mt-10">
     <div class="flex items-center gap-2 mb-4">
       <span class="text-xl">💉</span>
@@ -71,10 +129,60 @@
     </div>
   </div>
 
+  <!-- Modal: Carteirinha Digital -->
+  <div *ngIf="isCarteirinhaOpen()" class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/80 backdrop-blur-md p-6 transition-opacity duration-300">
+    <div class="w-full max-w-sm bg-gradient-to-br from-[#0da193] to-teal-800 rounded-[2rem] overflow-hidden shadow-2xl relative border border-white/20 transform transition-all">
+      <div class="p-6 flex justify-between items-center text-white border-b border-white/20">
+        <h3 class="font-black tracking-widest uppercase text-sm opacity-90">MyVetHealth</h3>
+        <button (click)="fecharCarteirinha()" class="text-teal-100 hover:text-white text-2xl font-bold leading-none focus:outline-none">&times;</button>
+      </div>
+      <div class="p-6 bg-white/10 backdrop-blur-sm m-2 rounded-3xl">
+        <div class="flex gap-4 items-center mb-6">
+          <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center text-4xl shadow-inner border-2 border-white/50">{{ pet().foto }}</div>
+          <div>
+            <h2 class="text-3xl font-black text-white">{{ pet().nome }}</h2>
+            <p class="text-teal-100 font-medium">{{ pet().especie }}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-y-4 gap-x-2 text-white">
+          <div>
+            <p class="text-[9px] font-bold text-teal-200 uppercase tracking-widest">Raça</p>
+            <p class="font-bold text-sm">{{ pet().raca }}</p>
+          </div>
+          <div>
+            <p class="text-[9px] font-bold text-teal-200 uppercase tracking-widest">Cor</p>
+            <p class="font-bold text-sm">{{ pet().cor }}</p>
+          </div>
+          <div>
+            <p class="text-[9px] font-bold text-teal-200 uppercase tracking-widest">Nascimento</p>
+            <p class="font-bold text-sm">{{ pet().nascimento }}</p>
+          </div>
+          <div>
+            <p class="text-[9px] font-bold text-teal-200 uppercase tracking-widest">Tutor Responsável</p>
+            <p class="font-bold text-sm">{{ pet().tutor }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-5 bg-white flex justify-between items-center">
+        <div>
+          <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">ID do Paciente</p>
+          <p class="font-mono font-bold text-neutral-800 text-sm">#MVH-{{ pet().nome.toUpperCase() }}-2026</p>
+        </div>
+        <div class="w-12 h-12 bg-neutral-800 rounded p-1 flex flex-wrap gap-[2px]">
+           <div class="w-[45%] h-[45%] bg-white rounded-sm"></div>
+           <div class="w-[45%] h-[45%] bg-white rounded-sm"></div>
+           <div class="w-[45%] h-[45%] bg-white rounded-sm"></div>
+           <div class="w-[45%] h-[45%] bg-neutral-400 rounded-sm"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes da Receita -->
   <div *ngIf="isMedicineModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-md p-6 transition-opacity duration-300">
     <div class="bg-white dark:bg-neutral-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-white/10">
       <div class="bg-[#0da193] p-6 text-white text-center relative">
-        <button (click)="fecharModalMedicamento()" class="absolute top-4 right-4 text-teal-100 hover:text-white text-2xl font-bold leading-none focus:outline-none">&times;</button>
+        <button (click)="fecharModalMedicamento()" class="absolute top-4 right-4 text-teal-100 hover:text-white text-2xl font-bold leading-none">&times;</button>
         <div class="text-4xl mb-2">💊</div>
         <h3 class="text-xl font-bold">{{ selectedMedicine()?.medicamento }}</h3>
       </div>
@@ -83,12 +191,9 @@
           <p class="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">Posologia completa</p>
           <p class="text-neutral-700 dark:text-white font-medium mt-1">{{ selectedMedicine()?.posologia }}</p>
         </div>
-        <div class="bg-neutral-50 dark:bg-neutral-800 p-4 rounded-2xl border border-neutral-100 dark:border-neutral-700">
-          <p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium italic">"Lembre-se de oferecer o medicamento sempre após as refeições para evitar desconforto gástrico."</p>
-          <p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">Prescrito por: <br><strong class="text-neutral-700 dark:text-white">{{ selectedMedicine()?.veterinario }}</strong></p>
-        </div>
-        <button (click)="fecharModalMedicamento()" class="w-full py-4 bg-[#0da193] hover:bg-[#006064] text-white font-bold rounded-2xl transition-colors">Entendido</button>
+        <button (click)="fecharModalMedicamento()" class="w-full py-4 bg-[#0da193] text-white font-bold rounded-2xl">Entendido</button>
       </div>
     </div>
   </div>
+
 </div>

@@ -16,20 +16,23 @@ export class PetPerfilComponent {
     nome: 'Max',
     especie: 'Cachorro',
     raca: 'Golden Retriever',
+    cor: 'Caramelo',
     idade: '3 anos',
-    peso: '25.5 kg',
-    foto: '🐕'
+    nascimento: '15/02/2023',
+    pesoAtual: '25.5 kg',
+    foto: '🐕',
+    tutor: 'Pedro Brum'
   });
 
-  // Array de receitas garantido
+  // Novo Histórico de Peso (Focado em Evolução/Decadência)
+  public historicoPeso = signal([
+    { data: 'Hoje', peso: 25.5, variacao: '+0.5', status: 'aumento' },
+    { data: 'Mar/26', peso: 25.0, variacao: '-1.2', status: 'reducao' },
+    { data: 'Fev/26', peso: 26.2, variacao: '0', status: 'inicial' }
+  ]);
+
   public receitasAtivas = signal([
-    { 
-      medicamento: 'Bravecto 10-20kg', 
-      dosagem: '1 Comprimido', 
-      posologia: 'Fornecer via oral a cada 12 semanas junto com alimento.', 
-      data: 'Hoje',
-      veterinario: 'Dra. Eduarda Toppor'
-    }
+    { medicamento: 'Bravecto 10-20kg', dosagem: '1 Comprimido', posologia: 'Fornecer via oral a cada 12 semanas junto com alimento.', data: 'Hoje', veterinario: 'Dra. Eduarda Toppor' }
   ]);
 
   public vacinas = signal([
@@ -37,30 +40,23 @@ export class PetPerfilComponent {
     { nome: 'Raiva', dataAplicacao: '15/05/2025', proximaDose: '15/05/2026', status: 'Em dia' }
   ]);
 
-  // Controles do Modal de Medicamento
   public isMedicineModalOpen = signal(false);
+  public isCarteirinhaOpen = signal(false);
   public selectedMedicine = signal<any>(null);
 
-  public voltar(): void {
-    this.location.back();
-  }
+  public voltar(): void { this.location.back(); }
 
-  // --- Funções da Receita ---
   public abrirDetalhesMedicamento(receita: any): void {
     this.selectedMedicine.set(receita);
     this.isMedicineModalOpen.set(true);
   }
+  public fecharModalMedicamento(): void { this.isMedicineModalOpen.set(false); }
 
-  public fecharModalMedicamento(): void {
-    this.isMedicineModalOpen.set(false);
-  }
+  public abrirCarteirinha(): void { this.isCarteirinhaOpen.set(true); }
+  public fecharCarteirinha(): void { this.isCarteirinhaOpen.set(false); }
 
-  // --- Função de Trocar Foto ---
   public aoEscolherFoto(event: any): void {
     const file = event.target.files[0];
-    if (file) {
-      alert(`Você selecionou o arquivo: ${file.name}.\n\nO Rafael vai usar essa função para enviar a foto para o Supabase Storage!`);
-      this.pet.update(p => ({ ...p, foto: '🖼️' }));
-    }
+    if (file) this.pet.update(p => ({ ...p, foto: '🖼️' }));
   }
 }
