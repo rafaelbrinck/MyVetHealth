@@ -1,28 +1,93 @@
 <div class="pb-8">
-  <div class="px-6 py-4 flex items-center justify-between sticky top-0 bg-neutral-50/90 dark:bg-neutral-950/90 backdrop-blur-md z-40 border-b border-neutral-100 dark:border-neutral-800">
+  <!-- Cabeçalho -->
+  <div class="px-6 py-4 flex items-center justify-between sticky top-0 bg-neutral-50/90 dark:bg-neutral-950/90 backdrop-blur-md z-40 border-b border-neutral-100 dark:border-neutral-800 transition-colors">
     <button (click)="voltar()" class="w-10 h-10 flex items-center justify-center bg-white dark:bg-neutral-800 rounded-full shadow-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors font-bold text-xl">←</button>
     <h1 class="text-lg font-bold text-neutral-800 dark:text-white">Minhas Consultas</h1>
     <div class="w-10"></div> 
   </div>
 
   <div class="p-6 space-y-4">
-    <div *ngFor="let consulta of consultas()" class="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-3xl p-5 shadow-sm relative overflow-hidden">
-      <div class="absolute left-0 top-0 bottom-0 w-1.5" [ngClass]="consulta.status === 'Agendada' ? 'bg-[#0da193]' : 'bg-neutral-300 dark:bg-neutral-700'"></div>
+    <!-- Lista de Consultas Clicável -->
+    <div *ngFor="let consulta of consultas()" 
+         (click)="abrirDetalhes(consulta)"
+         class="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden cursor-pointer group active:scale-95">
+      
+      <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-colors" [ngClass]="consulta.status === 'Agendada' ? 'bg-[#0da193]' : 'bg-neutral-300 dark:bg-neutral-700'"></div>
+      
       <div class="flex justify-between items-start mb-2">
         <div>
-          <span class="text-xs font-bold px-2 py-1 rounded-md mb-2 inline-block" [ngClass]="consulta.status === 'Agendada' ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'">
+          <span class="text-xs font-bold px-2 py-1 rounded-md mb-2 inline-block transition-colors" [ngClass]="consulta.status === 'Agendada' ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'">
             {{ consulta.status }}
           </span>
-          <h3 class="text-lg font-bold text-neutral-800 dark:text-white">Consulta {{ consulta.pet }}</h3>
+          <h3 class="text-lg font-bold text-neutral-800 dark:text-white group-hover:text-[#0da193] dark:group-hover:text-teal-400 transition-colors">Consulta {{ consulta.pet }}</h3>
         </div>
         <div class="text-right">
           <p class="font-bold text-neutral-800 dark:text-white">{{ consulta.data }}</p>
           <p class="text-sm text-neutral-500 dark:text-neutral-400 font-medium">{{ consulta.hora }}</p>
         </div>
       </div>
-      <div class="pt-3 border-t border-neutral-50 dark:border-neutral-800/50 flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 font-medium">
-        <span>👨‍⚕️</span>
-        <span>Veterinário: {{ consulta.vet }}</span>
+      
+      <div class="pt-3 border-t border-neutral-50 dark:border-neutral-800/50 flex justify-between items-center text-sm text-neutral-600 dark:text-neutral-400 font-medium">
+        <div class="flex items-center gap-2">
+          <span>👨‍⚕️</span>
+          <span>{{ consulta.vet }}</span>
+        </div>
+        <span class="text-[#0da193] dark:text-teal-400 font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0">➔</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: DETALHES DA CONSULTA                -->
+  <!-- ========================================== -->
+  <div *ngIf="isModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-md transition-opacity duration-300 p-6">
+    <div class="bg-white dark:bg-neutral-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-white/10 transform transition-all">
+      
+      <!-- Topo do Modal (Muda de cor conforme o status) -->
+      <div class="p-6 text-white text-center relative" [ngClass]="consultaSelecionada()?.status === 'Agendada' ? 'bg-[#0da193]' : 'bg-neutral-700 dark:bg-neutral-800'">
+        <button (click)="fecharModal()" class="absolute top-4 right-4 text-white/70 hover:text-white text-2xl font-bold leading-none">&times;</button>
+        <div class="text-4xl mb-2">{{ consultaSelecionada()?.status === 'Agendada' ? '📅' : '🩺' }}</div>
+        <h3 class="text-xl font-bold">Consulta {{ consultaSelecionada()?.pet }}</h3>
+        <p class="text-white/80 text-sm mt-1 font-medium">{{ consultaSelecionada()?.data }} às {{ consultaSelecionada()?.hora }}</p>
+      </div>
+
+      <div class="p-6 space-y-5">
+        
+        <!-- Bloco: Profissional -->
+        <div class="flex items-center gap-3 border-b border-neutral-100 dark:border-neutral-800 pb-4">
+          <div class="w-10 h-10 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center text-xl">👨‍⚕️</div>
+          <div>
+            <p class="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">Atendimento com</p>
+            <p class="text-sm font-bold text-neutral-800 dark:text-white">{{ consultaSelecionada()?.vet }}</p>
+          </div>
+        </div>
+
+        <!-- Bloco: Motivo / Sintomas (Vem de consultas.sintomas) -->
+        <div>
+          <p class="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+            <span class="text-amber-500">⚠️</span> Motivo / Sintomas Relatados
+          </p>
+          <div class="bg-amber-50 dark:bg-amber-900/10 text-amber-900 dark:text-amber-200 p-3 rounded-xl text-sm font-medium border border-amber-100 dark:border-amber-900/30">
+            {{ consultaSelecionada()?.sintomas }}
+          </div>
+        </div>
+
+        <!-- Bloco: Resumo da Consulta (Vem de resumo_consultas.conteudo_publico) -->
+        <div *ngIf="consultaSelecionada()?.status === 'Concluída'">
+          <p class="text-[10px] font-bold text-[#0da193] dark:text-teal-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+            <span class="text-[#0da193]">📋</span> Parecer do Veterinário
+          </p>
+          <div class="bg-neutral-50 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 p-4 rounded-xl text-sm font-medium leading-relaxed border border-neutral-200 dark:border-neutral-700 shadow-inner">
+            "{{ consultaSelecionada()?.resumo_publico }}"
+          </div>
+        </div>
+
+        <!-- Alerta se estiver agendada -->
+        <div *ngIf="consultaSelecionada()?.status === 'Agendada'" class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-xl text-center border border-teal-100 dark:border-teal-800/50">
+          <p class="text-teal-700 dark:text-teal-400 text-sm font-bold">O parecer médico estará disponível após o atendimento.</p>
+        </div>
+
+        <button (click)="fecharModal()" class="w-full py-4 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-white font-bold rounded-2xl transition-colors mt-2">Fechar Detalhes</button>
       </div>
     </div>
   </div>
