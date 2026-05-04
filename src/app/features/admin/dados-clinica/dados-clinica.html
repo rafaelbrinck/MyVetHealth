@@ -1,4 +1,4 @@
-<div class="p-8 max-w-4xl mx-auto min-h-screen animate-fade-in">
+<div class="p-8 max-w-7xl mx-auto min-h-screen animate-fade-in">
   
   <div class="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
     <div>
@@ -9,7 +9,7 @@
     <button (click)="toggleEdit()" 
             class="font-bold py-3 px-8 rounded-full transition-all shadow-md transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
             [ngClass]="editMode() ? 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300' : 'bg-[#0da193] text-white hover:bg-[#006064]'">
-      <lucide-icon [name]="editMode() ? 'x' : 'edit-2'" class="w-5 h-5"></lucide-icon>
+      <i class="bi bi-pencil-square"></i>
       {{ editMode() ? 'Cancelar' : 'Editar Informações' }}
     </button>
   </div>
@@ -25,7 +25,7 @@
         
         <div class="mb-12">
           <h4 class="font-bold text-lg text-[#0da193] border-b pb-3 mb-6 flex items-center gap-2">
-            <lucide-icon name="building-2" class="w-5 h-5"></lucide-icon> Registro Jurídico
+            <i class="bi bi-building-fill w-5 h-5 mb-2"></i> Registro Jurídico
           </h4>
           
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -54,7 +54,7 @@
 
         <div>
           <h4 class="font-bold text-lg text-[#0da193] border-b pb-3 mb-6 flex items-center gap-2">
-            <lucide-icon name="map-pin" class="w-5 h-5"></lucide-icon> Endereço e Contato
+            <i class="bi bi-map w-5 h-5 mb-2"></i> Endereço e Contato
           </h4>
 
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6">

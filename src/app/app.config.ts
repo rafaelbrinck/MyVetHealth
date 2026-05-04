@@ -1,38 +1,40 @@
-import {
-  ApplicationConfig,
-  importProvidersFrom,
-  provideBrowserGlobalErrorListeners,
-} from '@angular/core';
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 import { routes } from './app.routes';
-import { provideCalendar } from 'angular-calendar';
-import { DateAdapter } from 'angular-calendar';
-import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
+// Importe os ícones necessários aqui
 import {
   Building2,
-  Edit2,
-  Hash,
-  Info,
-  LucideAngularModule,
-  Mail,
-  MapPin,
-  Phone,
+  Edit2, // Esse é o "edit-2"
   Save,
   X,
+  MapPin,
+  Phone,
+  Mail,
+  Hash,
+  Info,
+  ChevronLeft, // Caso use em algum lugar
 } from 'lucide-angular';
+import { LucideAngularModule } from 'lucide-angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideCalendar({
-      provide: DateAdapter,
-      useFactory: adapterFactory,
-    }),
-    // app.config.ts
+    provideAnimationsAsync('animations'),
     importProvidersFrom(
-      LucideAngularModule.pick({ Building2, Edit2, Save, X, MapPin, Phone, Mail, Hash, Info }),
+      // O segredo está em colocar TODOS os ícones que você usa no HTML aqui dentro
+      LucideAngularModule.pick({
+        Building2,
+        Edit2, // REGISTRADO!
+        Save,
+        X,
+        MapPin,
+        Phone,
+        Mail,
+        Hash,
+        Info,
+      }),
     ),
   ],
 };

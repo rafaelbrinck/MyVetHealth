@@ -1,30 +1,42 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  NgZone,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
+import { Clinica } from '../../../core/models/clinica.model';
+import { ClinicaService } from '../../../core/services/clinica.service';
 
 @Component({
   selector: 'app-dados-clinica',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   templateUrl: './dados-clinica.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DadosClinicaComponent implements OnInit {
   editMode = signal(false);
   loading = signal(false);
 
-  // Mapeamento idêntico ao HTML e ao banco
-  clinicaData = signal({
+  clinicaService = inject(ClinicaService);
+
+  clinicaData = signal<Clinica>({} as Clinica);
+
+  clinicaDataMock = signal({
     razao_social: 'My Pet Health Serviços Vet Ltda',
     nome_fantasia: 'Clínica Veterinária Central',
     cnpj: '12.345.678/0001-99',
     email_contato: 'contato@mypethealth.com',
     telefone_contato: '(11) 99999-8888',
-    cep: '01000-000',
+    cep: '01001-000',
     logradouro: 'Rua das Patas',
     numero: '123',
-    complemento: 'Sala 01',
     bairro: 'Centro',
     cidade: 'São Paulo',
     uf: 'SP',
@@ -32,7 +44,12 @@ export class DadosClinicaComponent implements OnInit {
 
   clinicaForm!: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone,
+  ) {
+    this.clinicaData.set(this.clinicaService.clinica() || this.clinicaDataMock());
     this.initForm();
   }
 
@@ -49,7 +66,6 @@ export class DadosClinicaComponent implements OnInit {
       cep: [data.cep, [Validators.required]],
       logradouro: [data.logradouro, [Validators.required]],
       numero: [data.numero, [Validators.required]],
-      complemento: [data.complemento],
       bairro: [data.bairro, [Validators.required]],
       cidade: [data.cidade, [Validators.required]],
       uf: [data.uf, [Validators.required, Validators.maxLength(2)]],
@@ -57,21 +73,40 @@ export class DadosClinicaComponent implements OnInit {
   }
 
   toggleEdit() {
-    if (this.editMode()) {
+    this.editMode.update((v) => !v);
+    if (!this.editMode()) {
       this.clinicaForm.patchValue(this.clinicaData());
     }
-    this.editMode.set(!this.editMode());
+    this.cdr.markForCheck();
   }
 
-  salvarAlteracoes() {
+  async salvarAlteracoes() {
     if (this.clinicaForm.valid) {
-      this.loading.set(true);
-      // Aqui simula a atualização. No futuro usaremos o SupabaseService
-      setTimeout(() => {
-        this.clinicaData.set(this.clinicaForm.value);
-        this.editMode.set(false);
-        this.loading.set(false);
-      }, 800);
+      this.zone.run(() => {
+        this.loading.set(true);
+        this.cdr.detectChanges();
+      });
+
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        const novosDados = this.clinicaForm.value;
+
+        this.zone.run(() => {
+          this.clinicaData.set(novosDados);
+          this.editMode.set(false);
+          this.loading.set(false);
+
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
+      } catch (error) {
+        console.error('Erro ao salvar:', error);
+        this.zone.run(() => {
+          this.loading.set(false);
+          this.cdr.detectChanges();
+        });
+      }
     }
   }
 }

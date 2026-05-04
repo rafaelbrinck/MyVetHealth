@@ -2,18 +2,20 @@
 // 1. DOMAIN MODELS (Representam as tabelas do banco)
 // ==========================================
 export interface Clinica {
-  id: string;
+  id?: string;
   razao_social: string;
   nome_fantasia: string;
   cnpj: string;
+  email_contato: string;
   telefone_contato: string;
-  cep?: string;
-  cidade?: string;
-  uf?: string;
-  ativo: boolean;
-  matriz_id?: string | null;
-  criado_em: string;
-  atualizado_em?: string;
+  cep: string;
+  logradouro: string;
+  numero: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  logo_url?: string;
+  updated_at?: string;
 }
 
 export type PapelEquipe = 'admin_clinica' | 'veterinario' | 'recepcionista';

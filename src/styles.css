@@ -1,8 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
-@config "../tailwind.config.js";
 
+@config "../tailwind.config.js";
+/* No topo do seu arquivo styles.css */
 /* Class-based dark mode (Tailwind v4: overrides default prefers-color-scheme) */
 @custom-variant dark (&:where(.dark, .dark *));
 
