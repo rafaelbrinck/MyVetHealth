@@ -1,7 +1,8 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Auth } from '../../../core/services/auth';
+import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-tutor-perfil',
@@ -9,9 +10,10 @@ import { Auth } from '../../../core/services/auth';
   imports: [CommonModule],
   templateUrl: './tutor-perfil.html',
 })
-export class TutorPerfilComponent implements OnInit {
+export class TutorPerfilComponent {
   private router = inject(Router);
   private auth = inject(Auth);
+  readonly themeService = inject(ThemeService);
   public usuario = signal({
     nome: 'Pedro Brum',
     email: 'pedro.brum@exemplo.com',
@@ -21,36 +23,7 @@ export class TutorPerfilComponent implements OnInit {
   });
 
   public notificacoesAtivas = signal(true);
-  public temaEscuro = signal(false);
   public isEditModalOpen = signal(false);
-
-  ngOnInit() {
-    // Busca a preferência salva no navegador
-    const temaSalvo = localStorage.getItem('tema');
-    if (
-      temaSalvo === 'dark' ||
-      (!temaSalvo && document.documentElement.classList.contains('dark'))
-    ) {
-      this.temaEscuro.set(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      this.temaEscuro.set(false);
-      document.documentElement.classList.remove('dark');
-    }
-  }
-
-  public toggleTema(): void {
-    const isDark = !this.temaEscuro();
-    this.temaEscuro.set(isDark);
-
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('tema', 'dark'); // Salva no navegador
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('tema', 'light'); // Salva no navegador
-    }
-  }
 
   public toggleNotificacoes(): void {
     this.notificacoesAtivas.update((v) => !v);

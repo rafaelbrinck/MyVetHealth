@@ -1,100 +1,103 @@
-<div class="p-8 max-w-7xl mx-auto min-h-screen">
-  
-  <div class="mb-10 flex justify-between items-end">
-    <div>
-      <h1 class="text-3xl font-extrabold text-[#0da193]">Visão Geral 📊</h1>
-      <p class="text-neutral-500 mt-2 font-medium">Acompanhe o movimento da clínica hoje.</p>
+<div class="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto min-h-screen">
+
+  <div class="mb-8 sm:mb-10 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end">
+    <div class="min-w-0">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0da193] dark:text-emerald-400">Visão Geral 📊</h1>
+      <p class="text-neutral-600 dark:text-neutral-300 mt-2 font-medium text-sm sm:text-base">Acompanhe o movimento da clínica hoje.</p>
     </div>
-    <p class="text-neutral-400 font-semibold hidden sm:block">
+    <p class="text-neutral-500 dark:text-neutral-400 font-semibold text-sm shrink-0 sm:text-right">
       Hoje, {{ metricas().consultasHoje }} consultas programadas
     </p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    
-    <div class="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100 flex items-center gap-5 transition-transform hover:-translate-y-1">
-      <div class="bg-teal-50 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl text-[#0da193]">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm dark:shadow-none dark:ring-1 dark:ring-slate-800 p-6 sm:p-8 border border-neutral-100 dark:border-slate-800 flex items-center gap-4 sm:gap-5 transition-transform hover:-translate-y-0.5">
+      <div class="bg-teal-50 dark:bg-teal-950/60 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl text-[#0da193] dark:text-emerald-400 shrink-0" aria-hidden="true">
         🩺
       </div>
-      <div>
-        <p class="text-neutral-500 font-semibold text-sm">Consultas Hoje</p>
-        <h3 class="text-3xl font-bold text-neutral-800">{{ metricas().consultasHoje }}</h3>
+      <div class="min-w-0">
+        <p class="text-neutral-600 dark:text-neutral-400 font-semibold text-xs sm:text-sm">Consultas Hoje</p>
+        <h3 class="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-50 tabular-nums">{{ metricas().consultasHoje }}</h3>
       </div>
     </div>
 
-    <div class="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100 flex items-center gap-5 transition-transform hover:-translate-y-1">
-      <div class="bg-emerald-50 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl text-emerald-600">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm dark:shadow-none dark:ring-1 dark:ring-slate-800 p-6 sm:p-8 border border-neutral-100 dark:border-slate-800 flex items-center gap-4 sm:gap-5 transition-transform hover:-translate-y-0.5">
+      <div class="bg-emerald-50 dark:bg-emerald-950/50 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true">
         💰
       </div>
-      <div>
-        <p class="text-neutral-500 font-semibold text-sm">Faturamento</p>
-        <h3 class="text-3xl font-bold text-neutral-800">{{ metricas().faturamentoDia }}</h3>
+      <div class="min-w-0">
+        <p class="text-neutral-600 dark:text-neutral-400 font-semibold text-xs sm:text-sm">Faturamento</p>
+        <h3 class="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-50 tabular-nums">{{ metricas().faturamentoDia }}</h3>
       </div>
     </div>
 
-    <div class="bg-white rounded-3xl shadow-sm p-8 border border-[#ffb7b9] flex items-center gap-5 transition-transform hover:-translate-y-1 relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-2 h-full bg-[#e62b4c]"></div>
-      <div class="bg-[#ffebef] w-16 h-16 rounded-2xl flex items-center justify-center text-3xl text-[#e62b4c]">
+    <div class="sm:col-span-2 md:col-span-1 bg-white dark:bg-slate-900 rounded-3xl shadow-sm dark:shadow-none dark:ring-1 dark:ring-rose-900/30 p-6 sm:p-8 border border-[#ffb7b9] dark:border-rose-800/50 flex items-center gap-4 sm:gap-5 transition-transform hover:-translate-y-0.5 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-2 h-full bg-[#e62b4c] dark:bg-rose-500" aria-hidden="true"></div>
+      <div class="bg-[#ffebef] dark:bg-rose-950/50 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl text-[#e62b4c] dark:text-rose-400 shrink-0" aria-hidden="true">
         📦
       </div>
-      <div>
-        <p class="text-[#e62b4c] font-semibold text-sm">Estoque Baixo</p>
-        <h3 class="text-3xl font-bold text-neutral-800">{{ metricas().alertasEstoque }} Itens</h3>
+      <div class="min-w-0">
+        <p class="text-[#e62b4c] dark:text-rose-400 font-semibold text-xs sm:text-sm">Estoque Baixo</p>
+        <h3 class="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-50 tabular-nums">{{ metricas().alertasEstoque }} Itens</h3>
       </div>
     </div>
 
   </div>
 
-  <div class="bg-white rounded-3xl shadow-sm border border-neutral-100 overflow-hidden">
-    <div class="p-8 border-b border-neutral-100 flex justify-between items-center">
-      <h2 class="text-xl font-bold text-[#0da193]">Fila de Atendimento</h2>
-      <button (click)="verAgendaCompleta()" class="text-sm font-bold text-[#0da193] hover:underline focus:outline-none">
+  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm dark:shadow-none dark:ring-1 dark:ring-slate-800 border border-neutral-100 dark:border-slate-800 overflow-hidden">
+    <div class="p-5 sm:p-8 border-b border-neutral-100 dark:border-slate-800 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+      <h2 class="text-lg sm:text-xl font-bold text-[#0da193] dark:text-emerald-400">Fila de Atendimento</h2>
+      <button type="button" (click)="verAgendaCompleta()" class="text-sm font-bold text-[#0da193] dark:text-emerald-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded self-start sm:self-auto">
         Ver Agenda Completa
       </button>
     </div>
-    
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
+
+    <div class="overflow-x-auto -mx-px">
+      <table class="w-full text-left border-collapse min-w-[640px]">
         <thead>
-          <tr class="bg-neutral-50 text-neutral-500 text-sm">
-            <th class="py-4 px-8 font-semibold">Horário</th>
-            <th class="py-4 px-8 font-semibold">Paciente</th>
-            <th class="py-4 px-8 font-semibold">Tutor</th>
-            <th class="py-4 px-8 font-semibold">Status</th>
-            <th class="py-4 px-8 font-semibold text-right">Ação</th>
+          <tr class="bg-neutral-50 dark:bg-slate-800/90 text-neutral-600 dark:text-neutral-300 text-xs sm:text-sm">
+            <th scope="col" class="py-3 sm:py-4 px-4 sm:px-8 font-semibold whitespace-nowrap">Horário</th>
+            <th scope="col" class="py-3 sm:py-4 px-4 sm:px-8 font-semibold">Paciente</th>
+            <th scope="col" class="py-3 sm:py-4 px-4 sm:px-8 font-semibold">Tutor</th>
+            <th scope="col" class="py-3 sm:py-4 px-4 sm:px-8 font-semibold">Status</th>
+            <th scope="col" class="py-3 sm:py-4 px-4 sm:px-8 font-semibold text-right">Ação</th>
           </tr>
         </thead>
-        <tbody class="text-neutral-700">
-          
-          <tr *ngFor="let item of consultaService.filaHoje()" class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
-            <td class="py-5 px-8 font-bold text-neutral-800">{{ item.horario }}</td>
-            <td class="py-5 px-8">
-              <div class="flex items-center gap-3">
-                <span class="text-2xl">{{ item.especie === 'Cachorro' ? '🐕' : '🐈' }}</span>
-                <span class="font-bold">{{ item.pet }}</span>
-              </div>
-            </td>
-            <td class="py-5 px-8 font-medium">{{ item.tutor }}</td>
-            <td class="py-5 px-8">
-              <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
-                [ngClass]="{
-                  'bg-teal-100 text-[#0da193]': item.status === 'em_andamento',
-                  'bg-orange-100 text-orange-600': item.status === 'agendada',
-                  'bg-blue-100 text-blue-600': item.status === 'aguardando'
-                }">
-                {{ item.status === 'em_andamento' ? 'Em Sala' : item.status === 'aguardando' ? 'Aguardando' : 'Agendada' }}
-              </span>
-              <div *ngIf="item.veterinario" class="text-[10px] text-neutral-400 font-bold mt-1">
-                Com: {{ item.veterinario }}
-              </div>
-            </td>
-            <td class="py-5 px-8 text-right">
-              <button (click)="abrirFicha(item.pet)" class="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors shadow-sm">
-                Abrir Ficha
-              </button>
-            </td>
-          </tr>
-
+        <tbody class="text-neutral-800 dark:text-neutral-200">
+          @for (item of consultaService.filaHoje(); track item.id) {
+            <tr class="border-b border-neutral-100 dark:border-slate-800 hover:bg-neutral-50/80 dark:hover:bg-slate-800/50 transition-colors">
+              <td class="py-4 sm:py-5 px-4 sm:px-8 font-bold text-neutral-900 dark:text-neutral-50 whitespace-nowrap">{{ item.horario }}</td>
+              <td class="py-4 sm:py-5 px-4 sm:px-8">
+                <div class="flex items-center gap-2 sm:gap-3">
+                  <span class="text-xl sm:text-2xl shrink-0" aria-hidden="true">{{ item.especie === 'Cachorro' ? '🐕' : '🐈' }}</span>
+                  <span class="font-bold truncate">{{ item.pet }}</span>
+                </div>
+              </td>
+              <td class="py-4 sm:py-5 px-4 sm:px-8 font-medium text-neutral-700 dark:text-neutral-300">{{ item.tutor }}</td>
+              <td class="py-4 sm:py-5 px-4 sm:px-8">
+                <span class="inline-flex px-3 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider" [class]="badgeClasses(item.status)">
+                  {{ labelStatus(item.status) }}
+                </span>
+                @if (item.veterinario) {
+                  <div class="text-[10px] text-neutral-500 dark:text-neutral-400 font-bold mt-1">
+                    Com: {{ item.veterinario }}
+                  </div>
+                }
+              </td>
+              <td class="py-4 sm:py-5 px-4 sm:px-8 text-right whitespace-nowrap">
+                <button type="button" (click)="abrirFicha(item.pet)" class="bg-neutral-100 dark:bg-slate-800 hover:bg-neutral-200 dark:hover:bg-slate-700 text-neutral-800 dark:text-neutral-100 font-bold py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm transition-colors shadow-sm border border-transparent dark:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500">
+                  Abrir Ficha
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="py-12 px-6 text-center text-neutral-500 dark:text-neutral-400 font-medium">
+                Nenhuma consulta na fila para hoje.
+              </td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>

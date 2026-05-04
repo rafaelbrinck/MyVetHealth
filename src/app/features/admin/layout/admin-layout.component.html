@@ -1,29 +1,30 @@
-<div class="min-h-screen bg-slate-100 flex overflow-hidden">
+<div class="min-h-screen bg-slate-100 dark:bg-slate-950 flex overflow-hidden transition-colors duration-200">
 
   @if (isMobileMenuOpen()) {
-    <div 
-      class="fixed inset-0 bg-slate-900/50 z-20 md:hidden transition-opacity" 
-      (click)="closeMenu()">
+    <div
+      class="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-20 md:hidden transition-opacity"
+      (click)="closeMenu()"
+      aria-hidden="true">
     </div>
   }
 
-  <aside 
-    class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-white flex flex-col z-30 transition-transform duration-300 ease-in-out md:translate-x-0"
+  <aside
+    class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-white flex flex-col z-30 transition-transform duration-300 ease-in-out md:translate-x-0 border-r border-slate-800 dark:border-slate-800/80"
     [class.-translate-x-full]="!isMobileMenuOpen()">
-    
+
     <div class="flex items-center justify-between p-6 border-b border-slate-800">
       <h1 class="text-xl font-bold text-teal-400">Painel Clínica</h1>
-      <button (click)="toggleMenu()" class="md:hidden text-slate-400 hover:text-white">
+      <button type="button" (click)="toggleMenu()" class="md:hidden text-slate-400 hover:text-white p-1 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400" aria-label="Fechar menu">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
     </div>
-    
+
     <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-      
+
       <a routerLink="/clinica/dashboard" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
         📊 Dashboard
       </a>
-      
+
       <a routerLink="/clinica/pacientes" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
         🐾 Pacientes
       </a>
@@ -38,20 +39,21 @@
         <a routerLink="/clinica/prontuarios" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
           🩺 Prontuários
         </a>
-        
+
         <a routerLink="/clinica/vacinas" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
           💉 Vacinas
         </a>
       }
 
       @if (podeAcessar(['admin_clinica'])) {
-    <div class="space-y-1">
-      <button 
-        (click)="toggleSettings()"
-        class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-800 transition-colors text-left">
-        <span class="flex items-center gap-2">⚙️ Configurações</span>
-        <span [class.rotate-180]="isSettingsOpen()" class="transition-transform text-xs text-slate-600">▼</span>
-      </button>
+        <div class="space-y-1">
+          <button
+            type="button"
+            (click)="toggleSettings()"
+            class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-800 transition-colors text-left">
+            <span class="flex items-center gap-2">⚙️ Configurações</span>
+            <span [class.rotate-180]="isSettingsOpen()" class="transition-transform text-xs text-slate-600">▼</span>
+          </button>
 
       @if (isSettingsOpen()) {
         <div class="pl-8 space-y-1 animate-fade-in">
@@ -63,26 +65,57 @@
           </a>
         </div>
       }
-    </div>
-  }
 
     </nav>
 
-    <div class="p-4 border-t border-slate-800 text-sm">
-      <button class="flex items-center w-full p-2 text-slate-400 hover:text-white transition-colors" (click)="logout()">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+    <div class="p-4 border-t border-slate-800 space-y-2">
+      <div class="hidden md:block px-1">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Aparência</p>
+        <button
+          type="button"
+          role="switch"
+          [attr.aria-checked]="themeService.theme() === 'dark'"
+          (click)="themeService.toggleTheme()"
+          [attr.aria-label]="themeService.theme() === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'"
+          class="w-full flex items-center justify-between gap-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 px-3 py-2.5 text-left text-sm text-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">
+          <span class="font-medium">Modo escuro</span>
+          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-700/80 text-amber-200" aria-hidden="true">
+            @if (themeService.theme() === 'dark') {
+              <lucide-icon [img]="lucideSun" [size]="20" class="text-amber-300" />
+            } @else {
+              <lucide-icon [img]="lucideMoon" [size]="20" class="text-slate-200" />
+            }
+          </span>
+        </button>
+      </div>
+
+      <button type="button" class="flex items-center w-full p-2 text-slate-400 hover:text-white transition-colors rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400" (click)="logout()">
+        <svg class="w-5 h-5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
         Sair do sistema
       </button>
     </div>
   </aside>
 
   <main class="flex-1 flex flex-col w-full md:ml-64 transition-all duration-300 min-h-screen">
-    
-    <header class="bg-white shadow-sm p-4 md:hidden flex items-center sticky top-0 z-10">
-      <button (click)="toggleMenu()" class="p-2 mr-4 text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded-md">
+
+    <header class="bg-white dark:bg-slate-900 shadow-sm border-b border-slate-200/80 dark:border-slate-800 p-3 sm:p-4 md:hidden flex items-center gap-2 sticky top-0 z-10">
+      <button type="button" (click)="toggleMenu()" class="p-2 text-slate-600 dark:text-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-md shrink-0" aria-label="Abrir menu de navegação">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
       </button>
-      <h2 class="font-bold text-slate-800">My Pet Health</h2>
+      <h2 class="font-bold text-slate-800 dark:text-slate-100 min-w-0 flex-1 text-base sm:text-lg truncate text-center sm:text-left px-1">My Pet Health</h2>
+      <button
+        type="button"
+        role="switch"
+        [attr.aria-checked]="themeService.theme() === 'dark'"
+        (click)="themeService.toggleTheme()"
+        class="ml-auto shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-amber-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+        [attr.aria-label]="themeService.theme() === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'">
+        @if (themeService.theme() === 'dark') {
+          <lucide-icon [img]="lucideSun" [size]="20" />
+        } @else {
+          <lucide-icon [img]="lucideMoon" [size]="20" />
+        }
+      </button>
     </header>
 
     <div class="p-4 md:p-8 flex-1">
