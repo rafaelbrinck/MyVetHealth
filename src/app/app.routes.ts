@@ -156,10 +156,13 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['admin_clinica'] }, // 👑 Apenas Admin acessa o agrupador
         children: [
-          // {
-          //   path: 'clinic',
-          //   loadComponent: () => import('./features/admin/settings/clinic-data').then(m => m.ClinicDataComponent)
-          // },
+          {
+            path: 'dados-clinica',
+            loadComponent: () =>
+              import('./features/admin/dados-clinica/dados-clinica').then(
+                (m) => m.DadosClinicaComponent,
+              ),
+          },
           {
             path: 'equipe',
             loadComponent: () =>

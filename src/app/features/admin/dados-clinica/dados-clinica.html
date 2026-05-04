@@ -1,0 +1,135 @@
+<div class="p-8 max-w-4xl mx-auto min-h-screen animate-fade-in">
+  
+  <div class="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-extrabold text-[#0da193]">Dados da Clínica 🏢</h1>
+      <p class="text-neutral-500 mt-2 font-medium">Gerencie as informações oficiais e de localização da sua unidade.</p>
+    </div>
+    
+    <button (click)="toggleEdit()" 
+            class="font-bold py-3 px-8 rounded-full transition-all shadow-md transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            [ngClass]="editMode() ? 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300' : 'bg-[#0da193] text-white hover:bg-[#006064]'">
+      <lucide-icon [name]="editMode() ? 'x' : 'edit-2'" class="w-5 h-5"></lucide-icon>
+      {{ editMode() ? 'Cancelar' : 'Editar Informações' }}
+    </button>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-neutral-100">
+    <div class="bg-[#0da193] p-8 text-white">
+      <h3 class="text-2xl font-extrabold">Informações da Empresa 📋</h3>
+      <p class="text-teal-50 text-base mt-1 font-medium">Dados jurídicos e de contato público da clínica.</p>
+    </div>
+
+    <form [formGroup]="clinicaForm" (ngSubmit)="salvarAlteracoes()">
+      <div class="p-10">
+        
+        <div class="mb-12">
+          <h4 class="font-bold text-lg text-[#0da193] border-b pb-3 mb-6 flex items-center gap-2">
+            <lucide-icon name="building-2" class="w-5 h-5"></lucide-icon> Registro Jurídico
+          </h4>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 space-y-1.5">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Razão Social</label>
+              <input formControlName="razao_social" type="text" [readonly]="!editMode()"
+                     class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50 disabled:opacity-70"
+                     [ngClass]="{'bg-white': editMode()}">
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">CNPJ</label>
+              <input formControlName="cnpj" type="text" [readonly]="!editMode()"
+                     class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50"
+                     [ngClass]="{'bg-white': editMode()}">
+            </div>
+
+            <div class="md:col-span-3 space-y-1.5">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Nome Fantasia</label>
+              <input formControlName="nome_fantasia" type="text" [readonly]="!editMode()"
+                     class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-bold text-lg bg-neutral-50 text-[#0da193]"
+                     [ngClass]="{'bg-white': editMode()}">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-lg text-[#0da193] border-b pb-3 mb-6 flex items-center gap-2">
+            <lucide-icon name="map-pin" class="w-5 h-5"></lucide-icon> Endereço e Contato
+          </h4>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="md:col-span-2 space-y-1.5">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">E-mail de Contato</label>
+              <input formControlName="email_contato" type="email" [readonly]="!editMode()"
+                     class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50"
+                     [ngClass]="{'bg-white': editMode()}">
+            </div>
+
+            <div class="md:col-span-2 space-y-1.5">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Telefone</label>
+              <input formControlName="telefone_contato" type="text" [readonly]="!editMode()"
+                     class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50"
+                     [ngClass]="{'bg-white': editMode()}">
+            </div>
+
+            <div class="md:col-span-1">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">CEP</label>
+              <input formControlName="cep" type="text" [readonly]="!editMode()"
+                     class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50"
+                     [ngClass]="{'bg-white': editMode()}">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Logradouro / Número</label>
+              <div class="flex gap-2">
+                <input formControlName="logradouro" type="text" [readonly]="!editMode()" placeholder="Rua"
+                       class="flex-1 border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50"
+                       [ngClass]="{'bg-white': editMode()}">
+                <input formControlName="numero" type="text" [readonly]="!editMode()" placeholder="Nº"
+                       class="w-24 border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50 text-center"
+                       [ngClass]="{'bg-white': editMode()}">
+              </div>
+            </div>
+
+            <div class="md:col-span-1">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Bairro</label>
+              <input formControlName="bairro" type="text" [readonly]="!editMode()"
+                     class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50"
+                     [ngClass]="{'bg-white': editMode()}">
+            </div>
+
+            <div class="md:col-span-3">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5">Cidade</label>
+              <input formControlName="cidade" type="text" [readonly]="!editMode()"
+                     class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50"
+                     [ngClass]="{'bg-white': editMode()}">
+            </div>
+
+            <div class="md:col-span-1">
+              <label class="block text-sm font-semibold text-neutral-800 mb-1.5 text-center">UF</label>
+              <input formControlName="uf" type="text" maxlength="2" [readonly]="!editMode()"
+                     class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-bold text-base bg-neutral-50 text-center uppercase"
+                     [ngClass]="{'bg-white': editMode()}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="editMode()" class="bg-neutral-50 p-8 flex justify-end gap-4 border-t border-neutral-100 animate-fade-in">
+        <button type="button" (click)="toggleEdit()" 
+                class="px-6 py-3 text-neutral-600 font-bold hover:bg-neutral-200 rounded-xl transition-all text-base">
+          Cancelar
+        </button>
+        
+        <button type="submit" [disabled]="clinicaForm.invalid || loading()"
+                class="bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2 text-base disabled:opacity-70">
+          
+          <div *ngIf="loading()" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+          <lucide-icon *ngIf="!loading()" name="save" class="w-5 h-5"></lucide-icon>
+          
+          {{ loading() ? 'Salvando...' : '🚀 Salvar Alterações' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
