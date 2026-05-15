@@ -38,29 +38,6 @@ export const routes: Routes = [
   {
     path: 'tutor',
     loadComponent: () =>
-      import('./features/tutor/layout/tutor-layout.component').then((m) => m.TutorLayoutComponent),
-    // canActivate: [authGuard],
-    data: { roles: ['tutor'] }, // O Guard usará isso para validar o acesso
-    children: [
-      //   {
-      //     path: 'meus-pets',
-      //     loadComponent: () =>
-      //       import('./features/tutor/pets/meus-pets.component').then((m) => m.MeusPetsComponent),
-      //   },
-      { path: '', redirectTo: 'meus-pets', pathMatch: 'full' },
-    ],
-  },
-  {
-    path: 'tutor',
-    loadComponent: () =>
-      import('./features/tutor/tutor-layout/tutor-layout').then((m) => m.TutorLayoutComponent),
-    children: [
-      // Aqui vão entrar as páginas do Dashboard do Tutor, Meus Pets, etc.
-    ],
-  },
-  {
-    path: 'tutor',
-    loadComponent: () =>
       import('./features/tutor/tutor-layout/tutor-layout').then((m) => m.TutorLayoutComponent),
     children: [
       {

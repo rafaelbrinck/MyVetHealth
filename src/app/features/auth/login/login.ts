@@ -40,7 +40,7 @@ export class Login {
       const role = this.authService.getUserRoleValue();
 
       if (role === 'tutor') {
-        this.router.navigate(['/tutor/meus-pets']);
+        this.router.navigate(['/tutor/dashboard']);
       } else {
         this.router.navigate(['/hub']);
       }
