@@ -53,7 +53,7 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'pet-perfil',
+        path: 'pet-perfil/:id',
         loadComponent: () =>
           import('./features/tutor/pet-perfil/pet-perfil').then((m) => m.PetPerfilComponent),
       },

@@ -4,12 +4,12 @@ export interface Pet {
   nome: string;
   especie: string;
   raca: string;
-  data_nascimento: Date;
-  peso_atual: string;
+  data_nascimento?: Date;
+  peso_atual: number;
   foto_url?: string;
   criado_em: Date;
   atualizado_em?: Date;
-  clinica_id: string;
+  clinica_id?: string;
   cor?: string;
 }
 

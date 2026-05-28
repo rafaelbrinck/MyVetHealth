@@ -1,23 +1,42 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { CriarPetDTO } from '../../../core/models/pet.model';
+import { PetService } from '../../../core/services/pet.service';
+import { SupabaseService } from '../../../core/services/supabase';
 
 @Component({
   selector: 'app-tutor-pets',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './tutor-pets.html'
+  templateUrl: './tutor-pets.html',
 })
-export class TutorPetsComponent {
-  
-  public meusPets = signal([
-    { id: 1, nome: 'Max', especie: 'Cachorro', raca: 'Golden Retriever', foto: '🐕', proximaVacina: 'V10 em 10/04/2026', status: 'Saudável' },
-    { id: 2, nome: 'Mia', especie: 'Gato', raca: 'Siamês', foto: '🐈', proximaVacina: 'V4 em 12/03/2027', status: 'Tratamento ativo' },
-    { id: 3, nome: 'Thor', especie: 'Cachorro', raca: 'Bulldog Francês', foto: '🐶', proximaVacina: 'Raiva em 15/10/2026', status: 'Saudável' }
-  ]);
+export class TutorPetsComponent implements OnInit {
+  // petService deve ser PUBLIC para o HTML conseguir enxergar o Signal lá dentro
+  public petService = inject(PetService);
+  private supabaseService = inject(SupabaseService);
 
-  // Controles do Modal
   public isModalOpen = signal(false);
+  public isLoading = signal(true);
+
+  private authTutorId: string | null = null;
+
+  async ngOnInit() {
+    this.isLoading.set(true);
+    try {
+      const { data: sessionData } = await this.supabaseService.client.auth.getSession();
+      this.authTutorId = sessionData.session?.user?.id || null;
+
+      if (this.authTutorId) {
+        // Carrega os dados via Service (ele decide se bate no banco ou usa cache)
+        await this.petService.carregarPetsDoTutor(this.authTutorId);
+      }
+    } catch (error) {
+      console.error('Erro ao inicializar pets na tela:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
 
   public abrirModal(): void {
     this.isModalOpen.set(true);
@@ -27,29 +46,41 @@ export class TutorPetsComponent {
     this.isModalOpen.set(false);
   }
 
-  public salvarPet(nome: string, especie: string, raca: string): void {
+  public async salvarPet(
+    nome: string,
+    especie: string,
+    raca: string,
+    dataNascimentoString: string,
+    pesoAtual: number,
+  ): Promise<void> {
     if (!nome.trim()) {
       alert('Por favor, preencha o nome do pet!');
       return;
     }
 
-    // Define um emoji padrão dependendo da espécie
-    let fotoEmoji = '🐾';
-    if (especie.toLowerCase() === 'cachorro') fotoEmoji = '🐕';
-    if (especie.toLowerCase() === 'gato') fotoEmoji = '🐈';
+    if (!this.authTutorId) {
+      alert('Sessão inválida. Por favor, faça login novamente.');
+      return;
+    }
 
-    const novoPet = {
-      id: Math.random(),
+    const dataNascimento = dataNascimentoString ? new Date(dataNascimentoString) : undefined;
+
+    const novoPetData: CriarPetDTO = {
       nome: nome,
       especie: especie || 'Não informada',
       raca: raca || 'Sem raça definida',
-      foto: fotoEmoji,
-      proximaVacina: 'A definir',
-      status: 'Saudável'
+      tutor_id: this.authTutorId,
+      data_nascimento: dataNascimento,
+      peso_atual: pesoAtual,
     };
 
-    // Adiciona o novo pet na lista e fecha o modal
-    this.meusPets.update(lista => [...lista, novoPet]);
-    this.fecharModal();
+    try {
+      // O service salva no banco e já atualiza o Signal reativo da tela
+      await this.petService.addPet(novoPetData);
+      this.fecharModal();
+    } catch (error) {
+      console.error('Erro no componente ao salvar pet:', error);
+      alert('Ocorreu um erro ao salvar seu companheiro. Tente novamente.');
+    }
   }
 }
