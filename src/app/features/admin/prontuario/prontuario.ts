@@ -1,6 +1,7 @@
-import { Component, signal, inject } from '@angular/core'; // Adicionamos o inject
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router'; // Importamos o Router
+import { Router, ActivatedRoute } from '@angular/router'; // 🔄 Injetado ActivatedRoute para parâmetros
+import { ConsultaService } from '../../../core/services/consulta.service'; // 🔄 Injetado o Serviço Centralizado
 
 interface Medicamento {
   nome: string;
@@ -13,23 +14,75 @@ interface Medicamento {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './prontuario.html',
-  styleUrl: './prontuario.css'
+  styleUrl: './prontuario.css',
 })
-export class ProntuarioComponent {
-  
-  // Injeta o roteador para a navegação final
+export class ProntuarioComponent implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute); // 🔄 Capturador de rotas ativas
+  private consultaService = inject(ConsultaService); // 🔄 Motor de dados
 
+  // Guarda o identificador do atendimento ativo
+  public consultaId: string | null = null;
+
+  // 🔄 Estado reativo inicializado dinamicamente limpo
   public paciente = signal({
-    nome: 'Max',
-    especie: 'Cachorro',
-    raca: 'Golden Retriever',
-    tutor: 'João da Silva',
-    idade: '3 anos'
+    nome: '',
+    especie: '',
+    raca: '',
+    tutor: '',
+    idade: 'Idade não informada', // Será alimentada pelas tabelas estendidas futuramente
   });
 
   public medicamentosReceita = signal<Medicamento[]>([]);
   public isModalOpen = signal(false);
+
+  ngOnInit(): void {
+    // 1. Extrai o ID contido no parâmetro da URL (/clinica/prontuarios/:id)
+    this.consultaId = this.route.snapshot.paramMap.get('id');
+
+    if (this.consultaId) {
+      // 2. Tenta recuperar a consulta direto do cache central de Signals
+      const consultaAtiva = this.consultaService.consultas().find((c) => c.id === this.consultaId);
+
+      if (consultaAtiva) {
+        this.mapearDadosPaciente(consultaAtiva);
+      } else {
+        // 3. Fallback anticrash: se o profissional der F5, recarrega a base do Supabase
+        this.executarCargaDeSeguranca(this.consultaId);
+      }
+    } else {
+      alert('⚠️ Nenhum atendimento foi selecionado.');
+      this.router.navigate(['/clinica/dashboard']);
+    }
+  }
+
+  /** Mapeia a estrutura vinda do Banco Supabase para os sinais de tela */
+  private mapearDadosPaciente(consulta: any): void {
+    this.paciente.set({
+      nome: consulta.pet,
+      especie: consulta.especie,
+      raca: consulta.raca || 'Sem raça definida',
+      tutor: consulta.tutor,
+      idade: '3 anos', // Mock estrutural até plugar a data de nascimento do Pet table
+    });
+  }
+
+  /** Método auxiliar executado em caso de recarregamento brusco de tela (F5) */
+  private async executarCargaDeSeguranca(id: string): Promise<void> {
+    try {
+      await this.consultaService.carregarConsultasDaClinica(true);
+      const consultaAtiva = this.consultaService.consultas().find((c) => c.id === id);
+
+      if (consultaAtiva) {
+        this.mapearDadosPaciente(consultaAtiva);
+      } else {
+        alert('⚠️ Ficha médica ou consulta não localizada no Supabase.');
+        this.router.navigate(['/clinica/dashboard']);
+      }
+    } catch (error) {
+      console.error('Falha crítica na recuperação do prontuário:', error);
+    }
+  }
 
   // ==========================================
   // CONTROLES DO MODAL DE RECEITUÁRIO
@@ -49,12 +102,12 @@ export class ProntuarioComponent {
       return;
     }
     const novoMed: Medicamento = { nome, dosagem, posologia };
-    this.medicamentosReceita.update(lista => [...lista, novoMed]);
+    this.medicamentosReceita.update((lista) => [...lista, novoMed]);
     this.fecharModal();
   }
 
   public removerMedicamento(index: number): void {
-    this.medicamentosReceita.update(lista => lista.filter((_, i) => i !== index));
+    this.medicamentosReceita.update((lista) => lista.filter((_, i) => i !== index));
   }
 
   // ==========================================
@@ -62,30 +115,53 @@ export class ProntuarioComponent {
   // ==========================================
 
   /**
-   * Empacota os dados da tela e simula o envio para o Supabase
+   * Empacota as anotações clínicas e fecha o atendimento médico
    */
-  public finalizarAtendimento(peso: string, temp: string, sintomas: string, diagnostico: string, notas: string): void {
-    // 1. Validação básica de segurança
+  public async finalizarAtendimento(
+    peso: string,
+    temp: string,
+    sintomas: string,
+    diagnostico: string,
+    notas: string,
+  ): Promise<void> {
     if (!sintomas.trim() || !diagnostico.trim()) {
-      alert('⚠️ Por favor, preencha pelo menos os Sintomas e o Diagnóstico para salvar o prontuário.');
+      alert(
+        '⚠️ Por favor, preencha pelo menos os Sintomas e o Diagnóstico para salvar o prontuário.',
+      );
       return;
     }
 
-    // 2. Monta o Objeto (Payload) que o Rafael vai usar para salvar no Supabase depois
     const payloadConsulta = {
+      idConsulta: this.consultaId,
       pet: this.paciente().nome,
       sinaisVitais: { peso, temperatura: temp },
       avaliacao: { sintomas, diagnostico, notasPrivadas: notas },
-      receituario: this.medicamentosReceita()
+      receituario: this.medicamentosReceita(),
     };
 
-    // 3. Simula a comunicação com o banco no console para vocês debugarem depois
-    console.log('🚀 Enviando para o Supabase...', payloadConsulta);
+    console.log('🚀 Gravando informações no banco e notificando tutor...', payloadConsulta);
 
-    // 4. Feedback de Sucesso e Navegação
-    alert(`✅ Consulta do ${this.paciente().nome} finalizada com sucesso!\n\nO receituário digital já está disponível no App do tutor.`);
-    
-    // 5. Limpa a mesa e volta para a recepção/dashboard
-    this.router.navigate(['/clinica/dashboard']);
+    try {
+      if (this.consultaId) {
+        // 1. PRIMEIRO: Gravamos o histórico clínico com todos os dados da tela
+        await this.consultaService.salvarProntuario(payloadConsulta);
+
+        // 2. SEGUNDO: Transiciona o status final da consulta no banco para liberar a sala da recepção
+        await this.consultaService.atualizarStatus(this.consultaId, 'finalizada');
+      }
+
+      // 3. Feedback visual para o Veterinário
+      alert(
+        `✅ Consulta do ${this.paciente().nome} finalizada com sucesso!\n\nO receituário digital já está disponível no App do tutor.`,
+      );
+
+      // 4. Limpa o painel e retorna o médico à listagem principal do Dashboard
+      this.router.navigate(['/clinica/dashboard']);
+    } catch (error) {
+      console.error('Erro ao encerrar atendimento clínico:', error);
+      alert(
+        '⚠️ Houve um problema ao tentar salvar a ficha no banco de dados. Verifique sua conexão ou as permissões do Supabase.',
+      );
+    }
   }
 }

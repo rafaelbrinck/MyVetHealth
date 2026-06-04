@@ -54,7 +54,7 @@
     </div>
 
     <div class="overflow-x-auto -mx-px">
-      <table class="w-full text-left border-collapse min-w-[640px]">
+      <table class="w-full text-left border-collapse min-w-160">
         <thead>
           <tr class="bg-neutral-50 dark:bg-slate-800/90 text-neutral-600 dark:text-neutral-300 text-xs sm:text-sm">
             <th scope="col" class="py-3 sm:py-4 px-4 sm:px-8 font-semibold whitespace-nowrap">Horário</th>
@@ -86,7 +86,7 @@
                 }
               </td>
               <td class="py-4 sm:py-5 px-4 sm:px-8 text-right whitespace-nowrap">
-                <button type="button" (click)="abrirFicha(item.pet)" class="bg-neutral-100 dark:bg-slate-800 hover:bg-neutral-200 dark:hover:bg-slate-700 text-neutral-800 dark:text-neutral-100 font-bold py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm transition-colors shadow-sm border border-transparent dark:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500">
+                <button type="button" (click)="abrirFicha(item.id, item.status)" class="bg-neutral-100 dark:bg-slate-800 hover:bg-neutral-200 dark:hover:bg-slate-700 text-neutral-800 dark:text-neutral-100 font-bold py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm transition-colors shadow-sm border border-transparent dark:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500">
                   Abrir Ficha
                 </button>
               </td>

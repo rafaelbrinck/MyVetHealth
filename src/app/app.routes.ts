@@ -117,6 +117,15 @@ export const routes: Routes = [
       {
         path: 'prontuarios',
         loadComponent: () =>
+          import('./features/admin/historico-prontuarios/historico-prontuarios').then(
+            (m) => m.HistoricoProntuariosComponent,
+          ),
+        canActivate: [roleGuard],
+        data: { roles: ['admin_clinica', 'veterinario'] },
+      },
+      {
+        path: 'prontuario/:id',
+        loadComponent: () =>
           import('./features/admin/prontuario/prontuario').then((m) => m.ProntuarioComponent),
         canActivate: [roleGuard],
         data: { roles: ['admin_clinica', 'veterinario'] },

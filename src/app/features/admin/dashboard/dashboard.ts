@@ -13,42 +13,46 @@ export class DashboardComponent implements OnInit {
   private router = inject(Router);
   public consultaService = inject(ConsultaService);
 
-  // ==========================================
-  // A MÁGICA ACONTECE AQUI:
-  // Trocamos 'signal' por 'computed'.
-  // Agora, toda vez que o WebSocket alterar a fila no Service,
-  // essa variável é recalculada instantaneamente!
-  // ==========================================
   public metricas = computed(() => {
-    // Lemos a fila de hoje do service em tempo real
     const totalConsultasHoje = this.consultaService.filaHoje().length;
 
     return {
       consultasHoje: totalConsultasHoje,
-      faturamentoDia: 'R$ 0,00', // Futuramente você vai plugar seu FinanceiroService aqui
-      alertasEstoque: 0, // Futuramente plugar seu EstoqueService aqui
+      faturamentoDia: 'R$ 0,00',
+      alertasEstoque: 0,
     };
   });
 
   async ngOnInit() {
     try {
-      // Apenas mandamos carregar. Não precisamos mais calcular as métricas manualmente aqui!
       await this.consultaService.carregarConsultasDaClinica();
     } catch (error) {
       console.error('Falha ao carregar dashboard', error);
     }
   }
 
-  public abrirFicha(nomePet: string): void {
-    console.log(`Iniciando atendimento para: ${nomePet}`);
-    this.router.navigate(['/clinica/prontuarios']);
+  // 🔄 Atualizado: Processa o início do atendimento médico em tempo real
+  public async abrirFicha(consultaId: string, status: string): Promise<void> {
+    try {
+      console.log(`Iniciando atendimento clínico para a consulta ID: ${consultaId}`);
+
+      if (status != 'em_andamento') {
+        // 1. Altera o status para 'em_andamento' no Supabase. O canal websocket vai refletir isso na UI.
+        await this.consultaService.atualizarStatus(consultaId, 'em_andamento');
+      }
+
+      // 2. Transiciona o veterinário para o prontuário injetando o id na URL
+      this.router.navigate(['/clinica/prontuario', consultaId]);
+    } catch (error) {
+      console.error('Falha ao transicionar status da consulta:', error);
+      alert('Não foi possível iniciar o atendimento médico. Verifique sua conexão.');
+    }
   }
 
   public verAgendaCompleta(): void {
     this.router.navigate(['/clinica/calendario']);
   }
 
-  /** Tailwind utility classes for queue status chips (readable in light and dark). */
   badgeClasses(status: StatusConsulta): string {
     switch (status) {
       case 'em_andamento':

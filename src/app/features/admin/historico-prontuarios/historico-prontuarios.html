@@ -1,0 +1,164 @@
+<div class="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto min-h-screen flex flex-col lg:flex-row gap-8 relative overflow-hidden">
+  
+  <div class="flex-1 min-w-0 transition-all duration-300">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0da193] dark:text-emerald-400">Histórico de Prontuários 🗂️</h1>
+      <p class="text-neutral-600 dark:text-neutral-300 mt-1 font-medium text-sm">Consulte e analise os atendimentos médicos finalizados na clínica.</p>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 mb-6">
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-xl pointer-events-none">🔍</span>
+        <input 
+          type="text" 
+          [ngModel]="filtroTexto()" 
+          (ngModelChange)="filtroTexto.set($event)"
+          placeholder="Buscar pelo nome do pet, tutor ou diagnóstico..." 
+          class="w-full bg-neutral-50 dark:bg-slate-800 border border-transparent rounded-2xl pl-12 pr-4 py-3.5 focus:border-[#0da193] focus:bg-white dark:focus:bg-slate-900 dark:text-white outline-none transition-all text-sm font-semibold shadow-inner"
+        />
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 overflow-hidden">
+      @if (isLoading()) {
+        <div class="py-16 text-center text-neutral-500 font-bold animate-pulse">
+          ⏳ Carregando arquivos clínicos...
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-160">
+            <thead>
+              <tr class="bg-neutral-50 dark:bg-slate-800 text-neutral-600 dark:text-neutral-300 text-xs sm:text-sm">
+                <th scope="col" class="py-4 px-6 font-bold whitespace-nowrap">Data / Hora</th>
+                <th scope="col" class="py-4 px-6 font-bold">Paciente (Pet)</th>
+                <th scope="col" class="py-4 px-6 font-bold">Tutor Responsável</th>
+                <th scope="col" class="py-4 px-6 font-bold">Diagnóstico Emitido</th>
+                <th scope="col" class="py-4 px-6 font-bold text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody class="text-neutral-800 dark:text-neutral-200">
+              @for (item of prontuariosFiltrados(); track item.id) {
+                <tr class="border-b border-neutral-100 dark:border-slate-800 hover:bg-neutral-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                  <td class="py-4 px-6 font-bold text-neutral-900 dark:text-neutral-50 whitespace-nowrap text-sm">
+                    {{ item.data_resumo | date:'dd/MM/yyyy • HH:mm' }}
+                  </td>
+                  <td class="py-4 px-6">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-xl shrink-0">{{ item.pets.especie === 'Cachorro' ? '🐕' : '🐈' }}</span>
+                      <div class="min-w-0">
+                        <span class="font-extrabold text-neutral-900 dark:text-neutral-100 block truncate">{{ item.pets.nome }}</span>
+                        <span class="text-[11px] font-bold text-neutral-400 block truncate">{{ item.pets.raca || 'Sem Raça Definida' }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6 font-semibold text-neutral-700 dark:text-neutral-300 text-sm">
+                    {{ item.pets.perfis.nome_completo }}
+                  </td>
+                  <td class="py-4 px-6 text-sm font-medium truncate max-w-45 text-neutral-600 dark:text-neutral-300">
+                    {{ item.diagnostico }}
+                  </td>
+                  <td class="py-4 px-6 text-right whitespace-nowrap">
+                    <button 
+                      type="button" 
+                      (click)="abrirDetalhes(item)" 
+                      class="bg-teal-50 dark:bg-slate-800 hover:bg-[#0da193] hover:text-white dark:hover:bg-teal-900 text-[#0da193] dark:text-teal-400 font-extrabold py-2 px-4 rounded-xl text-xs transition-all shadow-sm border border-transparent focus:outline-none"
+                    >
+                      Analisar 📄
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="py-16 px-6 text-center text-neutral-500 dark:text-neutral-400 font-medium">
+                    Nenhum prontuário médico finalizado foi encontrado.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (prontuarioSelecionado(); as selecionado) {
+    <div class="w-full lg:w-112.5 bg-white dark:bg-slate-900 rounded-3xl shadow-xl dark:shadow-none border border-neutral-100 dark:border-slate-800 p-6 flex flex-col sticky top-6 max-h-[calc(100vh-4rem)] overflow-y-auto shrink-0 animate-slide-in">
+      
+      <div class="flex items-center justify-between border-b border-neutral-100 dark:border-slate-800 pb-4 mb-5">
+        <div>
+          <h2 class="text-lg font-extrabold text-neutral-900 dark:text-neutral-50">Análise do Atendimento</h2>
+          <p class="text-xs text-neutral-400 font-bold uppercase tracking-wider mt-0.5">Ficha: #{{ selecionado.id.slice(0,8) }}</p>
+        </div>
+        <button (click)="fecharDetalhes()" class="w-8 h-8 rounded-full bg-neutral-100 dark:bg-slate-800 flex items-center justify-center font-bold text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200">
+          ✕
+        </button>
+      </div>
+
+      <div class="bg-neutral-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-neutral-100 dark:border-slate-800/80 mb-5 flex justify-around text-center">
+        <div>
+          <span class="text-xs text-neutral-400 font-bold block uppercase">Peso</span>
+          <span class="font-extrabold text-neutral-800 dark:text-neutral-100 text-base">{{ selecionado.peso }} kg</span>
+        </div>
+        <div class="w-px bg-neutral-200 dark:bg-slate-700"></div>
+        <div>
+          <span class="text-xs text-neutral-400 font-bold block uppercase">Temperatura</span>
+          <span class="font-extrabold text-neutral-800 dark:text-neutral-100 text-base">{{ selecionado.temperatura }} °C</span>
+        </div>
+      </div>
+
+      <div class="space-y-5 flex-1 text-sm">
+        <div>
+          <h4 class="font-bold text-[#0da193] dark:text-emerald-400 text-xs uppercase tracking-wider mb-1">🐾 Paciente & Tutor</h4>
+          <p class="text-neutral-800 dark:text-neutral-200 font-semibold bg-neutral-50/50 dark:bg-slate-800/30 p-3 rounded-xl">
+            Pet: <span class="font-extrabold">{{ selecionado.pets.nome }}</span> ({{ selecionado.pets.raca }})<br>
+            Tutor: <span class="font-extrabold">{{ selecionado.pets.perfis.nome_completo }}</span>
+          </p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-[#0da193] dark:text-emerald-400 text-xs uppercase tracking-wider mb-1">🩺 Queixa & Sintomas</h4>
+          <p class="text-neutral-700 dark:text-neutral-300 font-medium whitespace-pre-wrap leading-relaxed border-l-4 border-teal-200 dark:border-teal-800 pl-3">
+            {{ selecionado.sintomas }}
+          </p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-[#0da193] dark:text-emerald-400 text-xs uppercase tracking-wider mb-1">📋 Diagnóstico Clínico</h4>
+          <p class="text-neutral-700 dark:text-neutral-300 font-medium whitespace-pre-wrap leading-relaxed border-l-4 border-teal-200 dark:border-teal-800 pl-3">
+            {{ selecionado.diagnostico }}
+          </p>
+        </div>
+
+        @if (selecionado.notas_privadas) {
+          <div>
+            <h4 class="font-bold text-rose-500 dark:text-rose-400 text-xs uppercase tracking-wider mb-1">🔒 Notas Médicas Privadas</h4>
+            <p class="text-neutral-600 dark:text-neutral-400 italic bg-rose-50/40 dark:bg-rose-950/20 p-3 rounded-xl border border-rose-100/50 dark:border-rose-900/30 leading-relaxed">
+              {{ selecionado.notas_privadas }}
+            </p>
+          </div>
+        }
+
+        <div>
+          <h4 class="font-bold text-[#0da193] dark:text-emerald-400 text-xs uppercase tracking-wider mb-2">💊 Receituário Digital</h4>
+          @if (selecionado.receituario && selecionado.receituario.length > 0) {
+            <div class="space-y-2 max-h-50 overflow-y-auto pr-1">
+              @for (med of selecionado.receituario; track med.nome) {
+                <div class="bg-neutral-50 dark:bg-slate-800 p-3 rounded-xl border border-neutral-100 dark:border-slate-800/80 flex flex-col">
+                  <span class="font-extrabold text-neutral-900 dark:text-neutral-50 text-sm">{{ med.nome }}</span>
+                  <span class="text-xs font-bold text-neutral-500 dark:text-neutral-400 mt-0.5">Dosagem: {{ med.dosagem }}</span>
+                  <p class="text-xs text-neutral-600 dark:text-neutral-300 mt-1 italic leading-relaxed">{{ med.posologia }}</p>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-xs text-neutral-400 font-bold bg-neutral-50 dark:bg-slate-800 p-3 text-center rounded-xl">
+              Nenhum medicamento foi prescrito nesta consulta.
+            </p>
+          }
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

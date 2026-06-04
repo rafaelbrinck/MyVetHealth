@@ -252,6 +252,20 @@ export class ConsultaService {
     // O sinal será atualizado via WebSocket automaticamente após o update no banco!
   }
 
+  public async salvarProntuario(payload: any): Promise<void> {
+    const { error } = await this.supabase.rpc('finalizar_atendimento', {
+      p_consulta_id: payload.idConsulta,
+      p_peso: payload.sinaisVitais.peso,
+      p_temperatura: payload.sinaisVitais.temperatura,
+      p_sintomas: payload.avaliacao.sintomas,
+      p_diagnostico: payload.avaliacao.diagnostico,
+      p_notas_privadas: payload.avaliacao.notasPrivadas,
+      p_receituario: payload.receituario,
+    });
+
+    if (error) throw error;
+  }
+
   private definirCorPorStatus(status: StatusConsulta) {
     switch (status) {
       case 'agendada':
