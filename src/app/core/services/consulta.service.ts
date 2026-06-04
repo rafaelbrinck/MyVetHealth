@@ -228,11 +228,12 @@ export class ConsultaService {
       status: dados.status,
       data_consulta: dados.dataHora,
       sintomas: dados.sintomas || null,
+      veterinario_id: dados.veterinarioId || null,
     };
 
-    if (dados.veterinarioId) {
-      payload.veterinario_id = dados.veterinarioId;
-    }
+    // if (dados.veterinarioId) {
+    //   payload.veterinario_id = dados.veterinarioId;
+    // }
 
     const { error } = await this.supabase.from('consultas').insert(payload);
     if (error) throw error;

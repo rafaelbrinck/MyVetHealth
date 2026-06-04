@@ -18,6 +18,7 @@
           type="text" 
           placeholder="Digite o CPF (ex: 123) ou Nome do Tutor..." 
           class="flex-1 bg-white border border-neutral-200 text-neutral-700 rounded-full px-6 py-4 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-all font-medium text-lg placeholder:text-neutral-400 placeholder:font-normal"
+          maxlength="11"
         >
         <button 
           (click)="buscarTutor(inputBusca.value)"
@@ -135,6 +136,13 @@
                 </label>
                 <input formControlName="email" type="email" placeholder="joao@email.com" class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50" [ngClass]="{'border-red-400': cadastroForm.get('email')?.invalid && cadastroForm.get('email')?.touched}">
               </div>
+              <div>
+                <label class="text-sm font-semibold text-neutral-800 mb-1.5 flex justify-between">
+                  Telefone *
+                  <span class="text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded font-bold">Acesso ao App</span>
+                </label>
+                <input formControlName="telefone" type="tel" placeholder="(00) 00000-0000" class="w-full border border-neutral-200 rounded-xl px-5 py-3 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-base bg-neutral-50" [ngClass]="{'border-red-400': cadastroForm.get('telefone')?.invalid && cadastroForm.get('telefone')?.touched}">
+              </div>
             </div>
 
             <div class="space-y-6">
@@ -207,7 +215,7 @@
           <label class="block text-sm font-bold text-neutral-800 mb-2">Veterinário Responsável</label>
           <select formControlName="veterinarioId" class="w-full border border-neutral-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-teal-200 outline-none transition-all font-medium text-neutral-700 bg-white shadow-sm appearance-none cursor-pointer">
             <option value="">Aberto (O primeiro que liberar)</option>
-            <option *ngFor="let vet of veterinariosClinica()" [value]="vet.perfil_id">
+            <option *ngFor="let vet of veterinariosClinica()" [value]="vet.id">
               👨‍⚕️ Dr(a). {{ vet.nome }}
             </option>
           </select>
