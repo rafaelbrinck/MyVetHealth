@@ -157,6 +157,13 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/admin/equipe/equipe').then((m) => m.EquipeComponent),
           },
+          {
+            path: 'catalogo-servicos',
+            loadComponent: () =>
+              import('./features/admin/catalogo-servicos/catalogo-servicos').then(
+                (m) => m.CatalogoServicosComponent,
+              ),
+          },
           { path: '', redirectTo: 'clinic', pathMatch: 'full' },
         ],
       },
