@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { CriarPetDTO } from '../../../core/models/pet.model';
+import { CriarPetDTO, GeneroPet } from '../../../core/models/pet.model';
 import { PetService } from '../../../core/services/pet.service';
 import { SupabaseService } from '../../../core/services/supabase';
 
@@ -52,6 +52,7 @@ export class TutorPetsComponent implements OnInit {
     raca: string,
     dataNascimentoString: string,
     pesoAtual: number,
+    genero: string,
   ): Promise<void> {
     if (!nome.trim()) {
       alert('Por favor, preencha o nome do pet!');
@@ -72,6 +73,7 @@ export class TutorPetsComponent implements OnInit {
       tutor_id: this.authTutorId,
       data_nascimento: dataNascimento,
       peso_atual: pesoAtual,
+      genero: genero == 'M' ? GeneroPet.Macho : GeneroPet.Femea,
     };
 
     try {

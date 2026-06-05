@@ -1,8 +1,19 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { PetService } from '../../../core/services/pet.service'; // Ajuste o caminho
-import { SupabaseService } from '../../../core/services/supabase'; // Ajuste o caminho
+import { PetService } from '../../../core/services/pet.service';
+import { SupabaseService } from '../../../core/services/supabase';
+import { GeneroPet } from '../../../core/models/pet.model';
+
+interface ConsultaTutor {
+  id: string;
+  data_resumo: string;
+  peso: number;
+  temperatura: number;
+  sintomas: string;
+  diagnostico: string;
+  receituario: any[];
+}
 
 @Component({
   selector: 'app-pet-perfil',
@@ -11,54 +22,59 @@ import { SupabaseService } from '../../../core/services/supabase'; // Ajuste o c
   templateUrl: './pet-perfil.html',
 })
 export class PetPerfilComponent implements OnInit {
+  public GeneroPet = GeneroPet;
   private location = inject(Location);
   private route = inject(ActivatedRoute);
   private petService = inject(PetService);
   private supabaseService = inject(SupabaseService);
 
-  // O pet será carregado dinamicamente
+  // Estados Centrais
   public pet = signal<any | null>(null);
   public isLoading = signal(true);
 
-  // Dados mocados mantidos para histórico e receitas (Até implementarmos o BD deles)
-  public historicoPeso = signal([
-    { data: 'Hoje', peso: 25.5, variacao: '+0.5', status: 'aumento' },
-    { data: 'Mar/26', peso: 25.0, variacao: '-1.2', status: 'reducao' },
-    { data: 'Fev/26', peso: 26.2, variacao: '0', status: 'inicial' },
-  ]);
+  // Histórico Clínico Blindado
+  public historicoClinico = signal<ConsultaTutor[]>([]);
 
-  public receitasAtivas = signal([
-    {
-      medicamento: 'Bravecto 10-20kg',
-      dosagem: '1 Comprimido',
-      posologia: 'A cada 3 meses',
-      dr: 'Dra. Ana',
-    },
-    {
-      medicamento: 'Apoquel 16mg',
-      dosagem: '1/2 Comprimido',
-      posologia: '1x ao dia (Uso contínuo)',
-      dr: 'Dra. Ana',
-    },
-  ]);
+  // ==========================================
+  // 🚀 NOVOS SINAIS COMPUTADOS PARA PESAGEM
+  // ==========================================
+
+  // 1. Filtra apenas as consultas que tiveram pesagem registrada e formata
+  public historicoPesagens = computed(() => {
+    return this.historicoClinico()
+      .filter((consulta) => consulta.peso != null)
+      .map((consulta) => ({
+        id: consulta.id,
+        data: this.formatarDataBr(consulta.data_resumo),
+        peso: consulta.peso,
+      }));
+  });
+
+  // 2. Descobre o peso mais recente para atualizar o Card Superior automaticamente
+  public pesoMaisRecente = computed(() => {
+    const pesagens = this.historicoPesagens();
+    if (pesagens.length > 0) {
+      return `${pesagens[0].peso} kg`;
+    }
+    // Fallback caso não tenha consulta, usa o peso inicial do cadastro do pet
+    return this.pet()?.pesoAtual || 'Não registrado';
+  });
 
   // Controles de Modais
   public isMedicineModalOpen = signal(false);
-  public selectedMedicine = signal<any>(null);
+  public selectedMedicine = signal<any | null>(null);
   public isCarteirinhaOpen = signal(false);
   public isShareModalOpen = signal(false);
   public codigoGerado = signal<string | null>(null);
 
   async ngOnInit() {
     this.isLoading.set(true);
-    // Pega o ID do Pet que veio na URL
     const petId = this.route.snapshot.paramMap.get('id');
 
     if (petId) {
-      // Tenta buscar do cache do nosso Service (caso venha da Home/Lista)
+      // 1. Tenta buscar o Pet do cache ou do banco
       let petEncontrado = this.petService.meusPets().find((p) => p.id === petId);
 
-      // Se não achou (ex: usuário deu F5 na página), recarrega do banco
       if (!petEncontrado) {
         const { data: session } = await this.supabaseService.client.auth.getSession();
         const tutorId = session.session?.user?.id;
@@ -69,25 +85,48 @@ export class PetPerfilComponent implements OnInit {
         }
       }
 
-      // Se achou o pet com sucesso, injeta no Signal para desenhar a tela
+      // Se achou o pet, formata os dados para a tela
       if (petEncontrado) {
         this.pet.set({
           ...petEncontrado,
-          // Garante fallback de imagem e calcula idade
           foto:
             petEncontrado.foto || (petEncontrado.especie?.toLowerCase() === 'gato' ? '🐈' : '🐕'),
           idade: this.calcularIdade(petEncontrado.data_nascimento),
           pesoAtual: petEncontrado.peso_atual ? `${petEncontrado.peso_atual} kg` : 'Não registrado',
           nascimento: this.formatarDataBr(petEncontrado.data_nascimento),
+          genero: petEncontrado.genero,
+          especie: petEncontrado.especie,
+          raca: petEncontrado.raca,
         });
       }
+
+      // 2. Busca o histórico de prontuários (Os Sinais Computados se atualizarão sozinhos aqui)
+      await this.carregarHistoricoMedico(petId);
     }
 
     this.isLoading.set(false);
   }
 
+  /**
+   * Puxa os dados da View Segura (sem notas privadas)
+   */
+  private async carregarHistoricoMedico(petId: string): Promise<void> {
+    const { data, error } = await this.supabaseService.client
+      .from('vw_historico_tutor')
+      .select('*')
+      .eq('pet_id', petId)
+      .order('data_resumo', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao carregar histórico médico:', error);
+      return;
+    }
+
+    this.historicoClinico.set((data as ConsultaTutor[]) || []);
+  }
+
   // Cálculos utilitários
-  private calcularIdade(dataNascimento: string): string {
+  public calcularIdade(dataNascimento: string): string {
     if (!dataNascimento) return 'Idade não informada';
     const nasc = new Date(dataNascimento);
     const hoje = new Date();
@@ -99,9 +138,9 @@ export class PetPerfilComponent implements OnInit {
     return anos === 1 ? '1 ano' : `${anos} anos`;
   }
 
-  private formatarDataBr(data: string): string {
+  public formatarDataBr(data: string): string {
     if (!data) return 'Não informada';
-    const [ano, mes, dia] = data.split('-');
+    const [ano, mes, dia] = data.split('T')[0].split('-');
     return `${dia}/${mes}/${ano}`;
   }
 
@@ -114,6 +153,7 @@ export class PetPerfilComponent implements OnInit {
     this.selectedMedicine.set(receita);
     this.isMedicineModalOpen.set(true);
   }
+
   public fecharModalMedicamento(): void {
     this.isMedicineModalOpen.set(false);
   }
@@ -121,6 +161,7 @@ export class PetPerfilComponent implements OnInit {
   public abrirCarteirinha(): void {
     this.isCarteirinhaOpen.set(true);
   }
+
   public fecharCarteirinha(): void {
     this.isCarteirinhaOpen.set(false);
   }
@@ -128,6 +169,7 @@ export class PetPerfilComponent implements OnInit {
   public abrirCompartilhamento(): void {
     this.isShareModalOpen.set(true);
   }
+
   public fecharCompartilhamento(): void {
     this.isShareModalOpen.set(false);
     this.codigoGerado.set(null);

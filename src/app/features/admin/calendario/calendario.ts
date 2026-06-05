@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, effect } from '@angular/core';
+import { Component, inject, signal, OnInit, effect, Injectable } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import {
   CalendarView,
@@ -6,6 +6,9 @@ import {
   CalendarDayViewComponent,
   CalendarMonthViewComponent,
   CalendarWeekViewComponent,
+  CalendarDateFormatter,
+  CalendarNativeDateFormatter,
+  DateFormatterParams,
 } from 'angular-calendar';
 
 import {
@@ -27,6 +30,16 @@ import { ConsultaService, ConsultaView } from '../../../core/services/consulta.s
 import { ConsultaDetalheComponent } from '../../../shared/consulta-detalhes/consulta-detalhes';
 
 registerLocaleData(localePt);
+@Injectable()
+class CustomDateFormatter extends CalendarNativeDateFormatter {
+  public override weekViewHour({ date, locale }: DateFormatterParams): string {
+    return new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(date);
+  }
+
+  public override dayViewHour({ date, locale }: DateFormatterParams): string {
+    return new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(date);
+  }
+}
 
 @Component({
   selector: 'app-calendario',
@@ -38,9 +51,15 @@ registerLocaleData(localePt);
     CalendarDayViewComponent,
     ConsultaDetalheComponent,
   ],
+  providers: [
+    {
+      provide: CalendarDateFormatter,
+      useClass: CustomDateFormatter,
+    },
+  ],
   templateUrl: './calendario.html',
 })
-export class CalendarioComponent implements OnInit {
+export class CalendarioComponent {
   public consultaService = inject(ConsultaService);
 
   // Controle de Estado da UI usando Signals
@@ -55,12 +74,6 @@ export class CalendarioComponent implements OnInit {
       this.carregarDadosDoPeriodo(this.viewDate(), this.view());
     });
   }
-
-  ngOnInit(): void {
-    // A carga inicial já será disparada pelo effect
-  }
-
-  // --- Métodos de Navegação ---
 
   mudarVisao(novaVisao: CalendarView) {
     this.view.set(novaVisao);
@@ -83,8 +96,6 @@ export class CalendarioComponent implements OnInit {
     else if (this.view() === CalendarView.Week) this.viewDate.set(subWeeks(atual, 1));
     else this.viewDate.set(subDays(atual, 1));
   }
-
-  // --- Lógica Anticorrupção & Performance ---
 
   private carregarDadosDoPeriodo(data: Date, visao: CalendarView) {
     let inicio: Date;
@@ -109,8 +120,6 @@ export class CalendarioComponent implements OnInit {
     // Busca apenas as consultas que estão na tela atual, poupando processamento e banco
     this.consultaService.carregarAgendaPorPeriodo(inicio, fim);
   }
-
-  // --- Interação do Usuário ---
 
   aoClicarNoEvento({ event }: { event: CalendarEvent }): void {
     const consultaOriginal = event.meta?.consultaOriginal;

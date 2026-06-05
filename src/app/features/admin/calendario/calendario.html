@@ -67,8 +67,7 @@
           [viewDate]="viewDate()"
           [events]="consultaService.eventosCalendario()"
           locale="pt-BR"
-          [dayStartHour]="7" 
-          [dayEndHour]="20"
+          [weekStartsOn]="1"
           (eventClicked)="aoClicarNoEvento($event)">
         </mwl-calendar-week-view>
       }
@@ -77,8 +76,6 @@
           [viewDate]="viewDate()"
           [events]="consultaService.eventosCalendario()"
           locale="pt-BR"
-          [dayStartHour]="7"
-          [dayEndHour]="20"
           (eventClicked)="aoClicarNoEvento($event)">
         </mwl-calendar-day-view>
       }

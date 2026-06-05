@@ -37,6 +37,8 @@ export class Auth {
       raca: dados.raca,
       cor: dados.cor,
       dataNascimento: dados.dataNascimento,
+      genero: dados.genero,
+      telefone: dados.telefone,
     };
 
     // Chamamos a Edge Function que está rodando segura na nuvem do Supabase

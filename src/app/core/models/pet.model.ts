@@ -11,8 +11,12 @@ export interface Pet {
   atualizado_em?: Date;
   clinica_id?: string;
   cor?: string;
+  genero?: GeneroPet;
 }
-
+export enum GeneroPet {
+  Macho = 'M',
+  Femea = 'F',
+}
 export type CriarPetDTO = Omit<Pet, 'id' | 'criado_em' | 'atualizado_em'>;
 
 export type AtualizarPetDTO = Partial<CriarPetDTO>;

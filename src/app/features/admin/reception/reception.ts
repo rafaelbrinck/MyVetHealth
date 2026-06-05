@@ -48,6 +48,8 @@ export class ReceptionComponent implements OnInit {
       raca: [''],
       cor: [''],
       dataNascimento: [''],
+      telefone: ['', [Validators.required, Validators.minLength(10)]],
+      genero: ['', Validators.required],
     });
 
     this.agendamentoForm = this.fb.group({

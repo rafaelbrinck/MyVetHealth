@@ -74,9 +74,17 @@
             <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">Peso Atual</label>
             <input #inputPeso type="nuumber" placeholder="Ex: 10 kg" class="w-full bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-400 outline-none text-neutral-800 dark:text-white font-medium">
           </div>
+          
+          <div>
+            <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">Gênero</label>
+            <select #inputGenero class="w-full bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-400 outline-none text-neutral-800 dark:text-white font-medium">
+              <option value="M">Macho</option>
+              <option value="F">Fêmea</option>
+            </select>
+          </div>
         </div>
         <div class="pt-2">
-          <button (click)="salvarPet(inputNome.value, inputEspecie.value, inputRaca.value, inputData.value, inputPeso.valueAsNumber)" class="w-full bg-[#0da193] hover:bg-[#006064] text-white font-bold py-4 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5">
+          <button (click)="salvarPet(inputNome.value, inputEspecie.value, inputRaca.value, inputData.value, inputPeso.valueAsNumber, inputGenero.value)" class="w-full bg-[#0da193] hover:bg-[#006064] text-white font-bold py-4 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5">
             Salvar Pet
           </button>
         </div>
