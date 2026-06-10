@@ -230,6 +230,33 @@
           </select>
           <p class="text-xs text-neutral-500 mt-2 font-medium">Deixe em branco para o paciente cair na fila geral da clínica.</p>
         </div>
+        <div class="mb-5">
+            <label class="block text-sm font-bold text-neutral-800 mb-2">Serviço / Procedimento *</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-neutral-400 pointer-events-none text-lg">📋</span>
+              
+              <select formControlName="servicoId" 
+                      class="w-full bg-white border border-neutral-200 rounded-xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-teal-200 outline-none font-medium text-neutral-700 shadow-sm appearance-none cursor-pointer transition-all" 
+                      [ngClass]="{'border-red-400': agendamentoForm.get('servicoId')?.invalid && agendamentoForm.get('servicoId')?.touched}">
+                <option value="" disabled selected>Selecione o serviço...</option>
+                
+                @for (servico of this.servicosClinica(); track servico.id) {
+                  @if (servico.ativo) {
+                    <option [value]="servico.id">
+                      {{ servico.nome }} - {{ servico.valor | currency:'BRL' }}
+                    </option>
+                  }
+                }
+              </select>
+              
+              <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-neutral-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+            @if (agendamentoForm.get('servicoId')?.invalid && agendamentoForm.get('servicoId')?.touched) {
+              <p class="text-red-500 text-xs mt-1 font-semibold">Obrigatório selecionar um serviço.</p>
+            }
+          </div>
 
         <div class="flex gap-4">
           <div class="w-1/2">

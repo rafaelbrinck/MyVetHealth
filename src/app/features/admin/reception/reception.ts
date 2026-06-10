@@ -6,6 +6,7 @@ import { TutorService } from '../../../core/services/tutor.service';
 import { ClinicaService } from '../../../core/services/clinica.service';
 import { ConsultaService } from '../../../core/services/consulta.service';
 import { Tutor } from '../../../core/models/tutor.model';
+import { ServicosService } from '../../../core/services/servicos-clinica';
 
 @Component({
   selector: 'app-reception',
@@ -15,6 +16,7 @@ import { Tutor } from '../../../core/models/tutor.model';
   styleUrl: './reception.css',
 })
 export class ReceptionComponent implements OnInit {
+  public servicosService = inject(ServicosService);
   private fb = inject(FormBuilder);
   private authService = inject(Auth);
   public tutorService = inject(TutorService);
@@ -38,6 +40,10 @@ export class ReceptionComponent implements OnInit {
       .filter((membro) => membro.papel === 'veterinario' && membro.status === 'ativo');
   });
 
+  public servicosClinica = computed(() => {
+    return this.servicosService.servicos().filter((servico) => servico.ativo);
+  });
+
   constructor() {
     this.cadastroForm = this.fb.group({
       nomeTutor: ['', [Validators.required, Validators.minLength(3)]],
@@ -56,6 +62,7 @@ export class ReceptionComponent implements OnInit {
       veterinarioId: [''],
       data: ['', Validators.required],
       hora: ['', Validators.required],
+      servicoId: ['', Validators.required],
       sintomas: [''],
     });
   }
@@ -64,6 +71,7 @@ export class ReceptionComponent implements OnInit {
     try {
       await this.tutorService.getTutoresComPets();
       await this.clinicaService.carregarMembrosEquipe();
+      await this.servicosService.carregarServicos();
     } catch (error) {
       console.error('Erro ao inicializar recepção:', error);
     }
@@ -161,6 +169,7 @@ export class ReceptionComponent implements OnInit {
         veterinarioId: valores.veterinarioId || null,
         dataHora: dataHoraCompleta,
         sintomas: valores.sintomas,
+        servicoId: valores.servicoId,
         status: 'aguardando',
       });
 

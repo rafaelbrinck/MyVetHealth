@@ -23,6 +23,8 @@ export interface ConsultaView {
   raca: string | null;
   tutor: string;
   veterinario?: string;
+  servico?: string; // Nome do serviço prestado
+  valor_servico?: number; // NOVO: Valor numérico do serviço vindo do banco
 }
 
 @Injectable({
@@ -31,13 +33,13 @@ export interface ConsultaView {
 export class ConsultaService {
   private supabase = inject(SupabaseService).client;
   private clinicaService = inject(ClinicaService);
-  private destroyRef = inject(DestroyRef); // NOVO: Gerenciador de ciclo de vida
+  private destroyRef = inject(DestroyRef); // Gerenciador de ciclo de vida
 
   // Estado central
   private _consultas = signal<ConsultaView[]>([]);
   public consultas = this._consultas.asReadonly();
 
-  private realtimeChannel!: RealtimeChannel; // NOVO: Referência do canal WebSocket
+  private realtimeChannel!: RealtimeChannel; // Referência do canal WebSocket
 
   // Fila do Dashboard
   public filaHoje = computed(() => {
@@ -58,6 +60,12 @@ export class ConsultaService {
   // Mapeamento reativo para o Angular Calendar
   public eventosCalendario = computed<CalendarEvent[]>(() => {
     return this._consultas().map((consulta) => {
+      // Formatação local do valor numérico para Moeda (BRL)
+      const valorFormatado = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+      }).format(consulta.valor_servico || 0);
+
       return {
         id: consulta.id,
         start: consulta.data_completa,
@@ -72,6 +80,9 @@ export class ConsultaService {
                 ${consulta.horario}
               </span>
             </div>
+            <span class="text-xs text-neutral-700 leading-none flex items-center gap-1">
+              📋 Serviço: <span class="font-bold text-neutral-800">${consulta.servico} <span class="text-neutral-500 font-normal">(${valorFormatado})</span></span>
+            </span>
             <span class="text-xs text-neutral-700 leading-none flex items-center gap-1">
               👤 Tutor: <span class="font-medium">${consulta.tutor}</span>
             </span>
@@ -98,8 +109,9 @@ export class ConsultaService {
         `
         id, status, data_consulta, pet_id,
         pets ( nome, especie, raca, perfis ( nome_completo ) ),
-        equipe_clinica ( perfis ( nome_completo ) ) 
-      `,
+        equipe_clinica ( perfis ( nome_completo ) ),
+        servicos_clinica ( nome, valor )
+      `, // Retorna o objeto completo do serviço com nome e valor
       )
       .eq('clinica_id', clinicaId)
       .gte('data_consulta', dataInicio.toISOString())
@@ -112,7 +124,7 @@ export class ConsultaService {
     }
 
     this.processarEAtualizarConsultas(data);
-    this.iniciarEscutaRealtime(clinicaId); // NOVO: Inicia WebSocket
+    this.iniciarEscutaRealtime(clinicaId); // Inicia WebSocket
   }
 
   async carregarConsultasDaClinica(force: boolean = false) {
@@ -126,19 +138,20 @@ export class ConsultaService {
         `
         id, status, data_consulta, pet_id,
         pets ( nome, especie, raca, perfis ( nome_completo ) ),
-        equipe_clinica ( perfis ( nome_completo ) ) 
-      `,
+        equipe_clinica ( perfis ( nome_completo ) ),
+        servicos_clinica ( nome, valor )
+      `, // Retorna o objeto completo do serviço com nome e valor
       )
       .eq('clinica_id', clinicaId)
       .order('data_consulta', { ascending: true });
 
     if (error) throw error;
     this.processarEAtualizarConsultas(data);
-    this.iniciarEscutaRealtime(clinicaId); // NOVO: Inicia WebSocket
+    this.iniciarEscutaRealtime(clinicaId); // Inicia WebSocket
   }
 
   // ==========================================
-  // NOVO: WEBSOCKET REALTIME
+  // WEBSOCKET REALTIME
   // ==========================================
   private iniciarEscutaRealtime(clinicaId: string) {
     if (this.realtimeChannel) return; // Evita múltiplas conexões
@@ -156,14 +169,15 @@ export class ConsultaService {
               ),
             );
           } else if (payload.eventType === 'INSERT') {
-            // Busca os dados completos da nova consulta para trazer os JOINs de pet e tutor
+            // Busca os dados completos da nova consulta para trazer os JOINs de pet, tutor e serviço completo
             const { data } = await this.supabase
               .from('consultas')
               .select(
                 `
                 id, status, data_consulta, pet_id,
                 pets ( nome, especie, raca, perfis ( nome_completo ) ),
-                equipe_clinica ( perfis ( nome_completo ) ) 
+                equipe_clinica ( perfis ( nome_completo ) ),
+                servicos_clinica ( nome, valor )
               `,
               )
               .eq('id', payload.new['id'])
@@ -209,12 +223,15 @@ export class ConsultaService {
       raca: item.pets?.raca || null,
       tutor: item.pets?.perfis?.nome_completo || 'Sem tutor vinculado',
       veterinario: item.equipe_clinica?.perfis?.nome_completo,
+      servico: item.servicos_clinica?.nome || 'Consulta',
+      valor_servico: item.servicos_clinica?.valor || 0, // Armazena o valor vindo do relacionamento do banco
     };
   }
 
   async agendarConsulta(dados: {
     petId: string;
     veterinarioId: string | null;
+    servicoId: string;
     dataHora: string;
     sintomas: string;
     status: StatusConsulta;
@@ -229,17 +246,11 @@ export class ConsultaService {
       data_consulta: dados.dataHora,
       sintomas: dados.sintomas || null,
       veterinario_id: dados.veterinarioId || null,
+      servico_id: dados.servicoId, // Chave estrangeira que conecta ao registro correspondente
     };
-
-    // if (dados.veterinarioId) {
-    //   payload.veterinario_id = dados.veterinarioId;
-    // }
 
     const { error } = await this.supabase.from('consultas').insert(payload);
     if (error) throw error;
-
-    // Opcional: Você pode remover essa linha abaixo pois o Realtime fará o papel de atualizar a lista!
-    // await this.carregarConsultasDaClinica(true);
   }
 
   async atualizarStatus(consultaId: string, novoStatus: StatusConsulta) {
@@ -249,7 +260,6 @@ export class ConsultaService {
       .eq('id', consultaId);
 
     if (error) throw error;
-    // O sinal será atualizado via WebSocket automaticamente após o update no banco!
   }
 
   public async salvarProntuario(payload: any): Promise<void> {

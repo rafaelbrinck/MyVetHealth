@@ -69,10 +69,10 @@
       
       <div class="p-6 border-b border-neutral-100 dark:border-slate-800 bg-neutral-50/50 dark:bg-slate-900 flex justify-between items-center">
         <h2 class="text-lg font-bold text-neutral-800 dark:text-white">Serviços Cadastrados</h2>
-        <span class="bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-400 text-xs font-bold px-3 py-1 rounded-full">{{ servicos().length }} Itens</span>
+        <span class="bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-400 text-xs font-bold px-3 py-1 rounded-full">{{ servicosService.servicos().length }} Itens</span>
       </div>
 
-      @if (isLoading()) {
+      @if (servicosService.isLoading()) {
         <div class="p-12 text-center">
           <div class="animate-pulse flex flex-col items-center gap-4">
             <div class="h-12 w-full bg-neutral-100 dark:bg-slate-800 rounded-2xl"></div>
@@ -82,7 +82,7 @@
         </div>
       } @else {
         <div class="divide-y divide-neutral-100 dark:divide-slate-800">
-          @for (servico of servicos(); track servico.id) {
+          @for (servico of servicosService.servicos(); track servico.id) {
             <div class="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-neutral-50/50 dark:hover:bg-slate-800/40 transition-colors"
                  [ngClass]="{'opacity-50 grayscale-50': !servico.ativo}">
               

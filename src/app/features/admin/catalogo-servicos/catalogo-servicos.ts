@@ -1,19 +1,10 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { SupabaseService } from '../../../core/services/supabase';
-import { ClinicaService } from '../../../core/services/clinica.service';
+import { ServicosService, ServicoClinica } from '../../../core/services/servicos-clinica';
 import localePt from '@angular/common/locales/pt';
 
 registerLocaleData(localePt);
-
-interface ServicoClinica {
-  id: string;
-  nome: string;
-  valor: number;
-  categoria: string;
-  ativo: boolean;
-}
 
 @Component({
   selector: 'app-catalogo-servicos',
@@ -22,17 +13,14 @@ interface ServicoClinica {
   templateUrl: './catalogo-servicos.html',
 })
 export class CatalogoServicosComponent implements OnInit {
-  private supabase = inject(SupabaseService).client;
-  private clinicaService = inject(ClinicaService);
+  // 1. Injetamos o Service Central ao invés do Supabase diretamente
+  public servicosService = inject(ServicosService);
   private fb = inject(FormBuilder);
 
-  // Sinais de Estado
-  public servicos = signal<ServicoClinica[]>([]);
-  public isLoading = signal<boolean>(true);
+  // Estados locais da tela
   public isSaving = signal<boolean>(false);
   public isEditing = signal<boolean>(false);
 
-  // Formulário Reativo
   public servicoForm = this.fb.nonNullable.group({
     id: [''],
     nome: ['', [Validators.required, Validators.minLength(3)]],
@@ -41,29 +29,8 @@ export class CatalogoServicosComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    await this.carregarServicos();
-  }
-
-  public async carregarServicos(): Promise<void> {
-    this.isLoading.set(true);
-    try {
-      const clinicaId = this.clinicaService.clinicaAtivaId;
-      if (!clinicaId) return;
-
-      const { data, error } = await this.supabase
-        .from('servicos_clinica')
-        .select('*')
-        .eq('clinica_id', clinicaId)
-        .order('ativo', { ascending: false }) // Ativos primeiro
-        .order('nome', { ascending: true });
-
-      if (error) throw error;
-      this.servicos.set(data as ServicoClinica[]);
-    } catch (error) {
-      console.error('Erro ao carregar serviços:', error);
-    } finally {
-      this.isLoading.set(false);
-    }
+    // 2. Chama o carregamento no Service
+    await this.servicosService.carregarServicos();
   }
 
   public async salvarServico(): Promise<void> {
@@ -74,33 +41,13 @@ export class CatalogoServicosComponent implements OnInit {
 
     this.isSaving.set(true);
     try {
-      const clinicaId = this.clinicaService.clinicaAtivaId;
       const formValues = this.servicoForm.getRawValue();
 
-      const payload = {
-        clinica_id: clinicaId,
-        nome: formValues.nome,
-        categoria: formValues.categoria,
-        valor: formValues.valor,
-      };
-
-      if (this.isEditing() && formValues.id) {
-        // Atualiza serviço existente
-        const { error } = await this.supabase
-          .from('servicos_clinica')
-          .update(payload)
-          .eq('id', formValues.id);
-        if (error) throw error;
-      } else {
-        // Insere novo serviço
-        const { error } = await this.supabase.from('servicos_clinica').insert(payload);
-        if (error) throw error;
-      }
+      // 3. O Service resolve se é insert ou update lá dentro
+      await this.servicosService.salvarServico(formValues);
 
       this.cancelarEdicao();
-      await this.carregarServicos();
     } catch (error) {
-      console.error('Erro ao salvar serviço:', error);
       alert('Falha ao salvar o serviço. Tente novamente.');
     } finally {
       this.isSaving.set(false);
@@ -115,7 +62,6 @@ export class CatalogoServicosComponent implements OnInit {
       categoria: servico.categoria,
       valor: servico.valor,
     });
-    // Rola para o topo no mobile para o usuário ver o form
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -126,24 +72,13 @@ export class CatalogoServicosComponent implements OnInit {
 
   public async alternarStatus(servico: ServicoClinica): Promise<void> {
     try {
-      const novoStatus = !servico.ativo;
-      const { error } = await this.supabase
-        .from('servicos_clinica')
-        .update({ ativo: novoStatus })
-        .eq('id', servico.id);
-
-      if (error) throw error;
-
-      // Atualiza o Signal otimisticamente
-      this.servicos.update((lista) =>
-        lista.map((s) => (s.id === servico.id ? { ...s, ativo: novoStatus } : s)),
-      );
+      await this.servicosService.alternarStatus(servico.id, servico.ativo);
     } catch (error) {
-      console.error('Erro ao alternar status do serviço:', error);
       alert('Não foi possível alterar o status do serviço.');
     }
   }
 
+  // Mantive a estilização de Badges aqui pois é regra puramente visual do HTML
   public getBadgeClasses(categoria: string): string {
     switch (categoria) {
       case 'consulta':

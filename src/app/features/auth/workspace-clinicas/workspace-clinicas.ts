@@ -68,7 +68,6 @@ export class WorkspaceClinicas implements OnInit {
   async acessarClinica(clinicaId: string) {
     localStorage.setItem('clinica_ativa', clinicaId);
     await this.clinicaService.setarClinicaAtiva(clinicaId);
-    console.log(this.clinicaService.clinica());
     this.router.navigate(['/clinica/dashboard']);
   }
 
