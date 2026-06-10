@@ -81,6 +81,20 @@ export const routes: Routes = [
             (m) => m.TutorReceitasComponent,
           ),
       },
+      { 
+        path: 'historico', 
+        loadComponent: () =>
+          import('./features/tutor/tutor-historico/tutor-historico').then(
+            (m) => m.TutorHistoricoComponent,
+          ),
+      },
+      { 
+        path: 'prontuario/:id', 
+        loadComponent: () =>
+          import('./features/tutor/tutor-prontuario/tutor-prontuario').then(
+            (m) => m.TutorProntuarioComponent,
+          ),
+      },
     ],
   },
 
@@ -106,8 +120,6 @@ export const routes: Routes = [
         path: 'calendario',
         loadComponent: () =>
           import('./features/admin/calendario/calendario').then((m) => m.CalendarioComponent),
-        // canActivate: [roleGuard],
-        // data: { roles: ['admin_clinica', 'recepcionista'] },
       },
       {
         path: 'dashboard',
@@ -143,7 +155,7 @@ export const routes: Routes = [
       {
         path: 'settings',
         canActivate: [roleGuard],
-        data: { roles: ['admin_clinica'] }, // 👑 Apenas Admin acessa o agrupador
+        data: { roles: ['admin_clinica'] },
         children: [
           {
             path: 'dados-clinica',
@@ -164,7 +176,7 @@ export const routes: Routes = [
                 (m) => m.CatalogoServicosComponent,
               ),
           },
-          { path: '', redirectTo: 'clinic', pathMatch: 'full' },
+          { path: '', redirectTo: 'dados-clinica', pathMatch: 'full' },
         ],
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
