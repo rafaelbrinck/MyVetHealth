@@ -58,8 +58,4 @@ export class TutorHistoricoComponent implements OnInit {
   public abrirProntuario(id: string): void {
     this.router.navigate(['/tutor/prontuario', id]);
   }
-
-  public voltar(): void {
-    this.location.back();
-  }
 }
