@@ -9,6 +9,7 @@ export type StatusConsulta =
   | 'agendada'
   | 'aguardando'
   | 'em_andamento'
+  | 'aguardando_pagamento'
   | 'finalizada'
   | 'cancelada';
 
@@ -51,7 +52,22 @@ export class ConsultaService {
           consulta.data_completa.getMonth() === hoje.getMonth() &&
           consulta.data_completa.getFullYear() === hoje.getFullYear() &&
           consulta.status !== 'finalizada' &&
-          consulta.status !== 'cancelada'
+          consulta.status !== 'cancelada' &&
+          consulta.status !== 'aguardando_pagamento'
+        );
+      })
+      .sort((a, b) => a.data_completa.getTime() - b.data_completa.getTime());
+  });
+
+  public filaAguardandoPagamento = computed(() => {
+    const hoje = new Date();
+    return this._consultas()
+      .filter((consulta) => {
+        return (
+          consulta.status === 'aguardando_pagamento' &&
+          consulta.data_completa.getDate() === hoje.getDate() &&
+          consulta.data_completa.getMonth() === hoje.getMonth() &&
+          consulta.data_completa.getFullYear() === hoje.getFullYear()
         );
       })
       .sort((a, b) => a.data_completa.getTime() - b.data_completa.getTime());
@@ -253,13 +269,28 @@ export class ConsultaService {
     if (error) throw error;
   }
 
+  public aplicarStatusLocal(consultaId: string, novoStatus: StatusConsulta): void {
+    this._consultas.update((consultas) =>
+      consultas.map((c) => (c.id === consultaId ? { ...c, status: novoStatus } : c)),
+    );
+  }
+
   async atualizarStatus(consultaId: string, novoStatus: StatusConsulta) {
+    const statusAnterior = this._consultas().find((c) => c.id === consultaId)?.status;
+
+    this.aplicarStatusLocal(consultaId, novoStatus);
+
     const { error } = await this.supabase
       .from('consultas')
       .update({ status: novoStatus })
       .eq('id', consultaId);
 
-    if (error) throw error;
+    if (error) {
+      if (statusAnterior) {
+        this.aplicarStatusLocal(consultaId, statusAnterior);
+      }
+      throw error;
+    }
   }
 
   public async salvarProntuario(payload: any): Promise<void> {
@@ -282,6 +313,8 @@ export class ConsultaService {
         return { primary: '#0da193', secondary: '#ccfbf1' };
       case 'em_andamento':
         return { primary: '#f59e0b', secondary: '#fef3c7' };
+      case 'aguardando_pagamento':
+        return { primary: '#8b5cf6', secondary: '#ede9fe' };
       case 'finalizada':
         return { primary: '#10b981', secondary: '#d1fae5' };
       case 'cancelada':

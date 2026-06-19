@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConsultaService, StatusConsulta } from '../../../core/services/consulta.service';
+import { FaturamentoService } from '../../../core/services/faturamento.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,20 +13,24 @@ import { ConsultaService, StatusConsulta } from '../../../core/services/consulta
 export class DashboardComponent implements OnInit {
   private router = inject(Router);
   public consultaService = inject(ConsultaService);
+  private faturamentoService = inject(FaturamentoService);
 
   public metricas = computed(() => {
     const totalConsultasHoje = this.consultaService.filaHoje().length;
 
     return {
       consultasHoje: totalConsultasHoje,
-      faturamentoDia: 'R$ 0,00',
+      faturamentoDia: this.faturamentoService.faturamentoDiaFormatado(),
       alertasEstoque: 0,
     };
   });
 
   async ngOnInit() {
     try {
-      await this.consultaService.carregarConsultasDaClinica();
+      await Promise.all([
+        this.consultaService.carregarConsultasDaClinica(),
+        this.faturamentoService.carregarFaturamentoDoDia(),
+      ]);
     } catch (error) {
       console.error('Falha ao carregar dashboard', error);
     }
@@ -61,6 +66,8 @@ export class DashboardComponent implements OnInit {
         return 'bg-blue-100 text-blue-800 dark:bg-blue-950/55 dark:text-blue-200 border border-blue-200/80 dark:border-blue-800/50';
       case 'agendada':
         return 'bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-200 border border-orange-200/80 dark:border-orange-800/50';
+      case 'aguardando_pagamento':
+        return 'bg-violet-100 text-violet-800 dark:bg-violet-950/50 dark:text-violet-200 border border-violet-200/80 dark:border-violet-800/50';
       default:
         return 'bg-neutral-100 text-neutral-700 dark:bg-slate-800 dark:text-neutral-200 border border-neutral-200 dark:border-slate-600';
     }
@@ -74,6 +81,8 @@ export class DashboardComponent implements OnInit {
         return 'Aguardando';
       case 'agendada':
         return 'Agendada';
+      case 'aguardando_pagamento':
+        return 'Aguardando Pagamento';
       default:
         return status;
     }

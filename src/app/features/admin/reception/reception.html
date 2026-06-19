@@ -1,5 +1,52 @@
 <div class="p-8 max-w-6xl mx-auto min-h-screen">
-  
+
+  @if (consultaService.filaAguardandoPagamento().length > 0) {
+    <div class="mb-10 animate-fade-in">
+      <div class="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-extrabold text-[#0da193]">Aguardando Pagamento 💳</h2>
+          <p class="text-neutral-500 mt-1 font-medium">Consultas com prontuário finalizado aguardando checkout na recepção.</p>
+        </div>
+        <span class="bg-violet-50 text-violet-700 px-4 py-2 rounded-xl text-sm font-bold border border-violet-100">
+          {{ consultaService.filaAguardandoPagamento().length }} pendente(s)
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        @for (consulta of consultaService.filaAguardandoPagamento(); track consulta.id) {
+          <div class="bg-white rounded-3xl shadow-lg border border-neutral-100 p-6 flex flex-col justify-between hover:border-teal-200 transition-colors">
+            <div class="flex items-start gap-4 mb-5">
+              <div class="w-14 h-14 bg-teal-50 rounded-2xl flex items-center justify-center text-3xl shrink-0">
+                {{ consulta.especie === 'Cachorro' ? '🐕' : '🐈' }}
+              </div>
+              <div class="min-w-0">
+                <h4 class="text-lg font-extrabold text-neutral-800 truncate">{{ consulta.pet }}</h4>
+                <p class="text-sm text-neutral-500 font-medium">{{ consulta.tutor }} • {{ consulta.horario }}</p>
+                <p class="text-sm font-bold text-neutral-700 mt-2">{{ consulta.servico || 'Consulta' }}</p>
+                <p class="text-xl font-extrabold text-[#0da193] mt-1">{{ consulta.valor_servico | currency:'BRL' }}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              (click)="abrirCheckout(consulta)"
+              class="w-full bg-[#0da193] hover:bg-[#006064] text-white font-bold py-3 rounded-xl transition-all shadow-sm"
+            >
+              Processar Pagamento
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (consultaCheckout(); as consulta) {
+    <app-checkout-consulta
+      [consulta]="consulta"
+      (fechar)="fecharCheckout()"
+      (pagamentoConcluido)="onPagamentoConcluido()"
+    />
+  }
+
   <div *ngIf="telaAtual() === 'busca'" class="animate-fade-in">
     <div class="mb-10 text-center sm:text-left">
       <h1 class="text-3xl font-extrabold text-[#0da193]">Recepção My Pet Health 🐾</h1>

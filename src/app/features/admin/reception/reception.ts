@@ -4,14 +4,16 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Auth } from '../../../core/services/auth';
 import { TutorService } from '../../../core/services/tutor.service';
 import { ClinicaService } from '../../../core/services/clinica.service';
-import { ConsultaService } from '../../../core/services/consulta.service';
+import { ConsultaService, ConsultaView } from '../../../core/services/consulta.service';
 import { Tutor } from '../../../core/models/tutor.model';
 import { ServicosService } from '../../../core/services/servicos-clinica';
+import { FaturamentoService } from '../../../core/services/faturamento.service';
+import { CheckoutConsultaComponent } from './checkout-consulta/checkout-consulta.component';
 
 @Component({
   selector: 'app-reception',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CheckoutConsultaComponent],
   templateUrl: './reception.html',
   styleUrl: './reception.css',
 })
@@ -22,8 +24,10 @@ export class ReceptionComponent implements OnInit {
   public tutorService = inject(TutorService);
   public clinicaService = inject(ClinicaService);
   public consultaService = inject(ConsultaService);
+  public faturamentoService = inject(FaturamentoService);
 
   public telaAtual = signal<'busca' | 'perfil_tutor' | 'novo_cadastro' | 'agendamento'>('busca');
+  public consultaCheckout = signal<ConsultaView | null>(null);
   public statusBusca = signal<'ocioso' | 'buscando' | 'nao_encontrado'>('ocioso');
   public isSubmitting = signal(false);
 
@@ -69,12 +73,29 @@ export class ReceptionComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      await this.tutorService.getTutoresComPets();
-      await this.clinicaService.carregarMembrosEquipe();
-      await this.servicosService.carregarServicos();
+      await Promise.all([
+        this.tutorService.getTutoresComPets(),
+        this.clinicaService.carregarMembrosEquipe(),
+        this.servicosService.carregarServicos(),
+        this.consultaService.carregarConsultasDaClinica(true),
+        this.faturamentoService.carregarFaturamentoDoDia(),
+      ]);
     } catch (error) {
       console.error('Erro ao inicializar recepção:', error);
     }
+  }
+
+  public abrirCheckout(consulta: ConsultaView): void {
+    this.consultaCheckout.set(consulta);
+  }
+
+  public fecharCheckout(): void {
+    this.consultaCheckout.set(null);
+  }
+
+  public onPagamentoConcluido(): void {
+    this.consultaCheckout.set(null);
+    alert('✅ Pagamento registrado com sucesso! A consulta foi finalizada.');
   }
 
   public buscarTutor(termo: string): void {

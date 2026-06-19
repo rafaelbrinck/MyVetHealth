@@ -1,7 +1,7 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router'; // 🔄 Injetado ActivatedRoute para parâmetros
-import { ConsultaService } from '../../../core/services/consulta.service'; // 🔄 Injetado o Serviço Centralizado
+import { ConsultaService, ConsultaView } from '../../../core/services/consulta.service';
 
 interface Medicamento {
   nome: string;
@@ -35,6 +35,7 @@ export class ProntuarioComponent implements OnInit {
 
   public medicamentosReceita = signal<Medicamento[]>([]);
   public isModalOpen = signal(false);
+  public consultaAtiva = signal<ConsultaView | null>(null);
 
   ngOnInit(): void {
     // 1. Extrai o ID contido no parâmetro da URL (/clinica/prontuarios/:id)
@@ -56,14 +57,14 @@ export class ProntuarioComponent implements OnInit {
     }
   }
 
-  /** Mapeia a estrutura vinda do Banco Supabase para os sinais de tela */
-  private mapearDadosPaciente(consulta: any): void {
+  private mapearDadosPaciente(consulta: ConsultaView): void {
+    this.consultaAtiva.set(consulta);
     this.paciente.set({
       nome: consulta.pet,
       especie: consulta.especie,
       raca: consulta.raca || 'Sem raça definida',
       tutor: consulta.tutor,
-      idade: '3 anos', // Mock estrutural até plugar a data de nascimento do Pet table
+      idade: '3 anos',
     });
   }
 
@@ -146,13 +147,11 @@ export class ProntuarioComponent implements OnInit {
         // 1. PRIMEIRO: Gravamos o histórico clínico com todos os dados da tela
         await this.consultaService.salvarProntuario(payloadConsulta);
 
-        // 2. SEGUNDO: Transiciona o status final da consulta no banco para liberar a sala da recepção
-        await this.consultaService.atualizarStatus(this.consultaId, 'finalizada');
+        await this.consultaService.atualizarStatus(this.consultaId, 'aguardando_pagamento');
       }
 
-      // 3. Feedback visual para o Veterinário
       alert(
-        `✅ Consulta do ${this.paciente().nome} finalizada com sucesso!\n\nO receituário digital já está disponível no App do tutor.`,
+        `✅ Prontuário do ${this.paciente().nome} salvo com sucesso!\n\nA consulta foi encaminhada para a recepção aguardando pagamento.`,
       );
 
       // 4. Limpa o painel e retorna o médico à listagem principal do Dashboard
