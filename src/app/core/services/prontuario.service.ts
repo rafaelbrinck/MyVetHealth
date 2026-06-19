@@ -35,6 +35,16 @@ export interface ProntuarioDetalheTutorView {
   prescricao: string;
 }
 
+export interface ReceitaTutorView {
+  id: string;
+  pet: string;
+  medicamento: string;
+  dosagem: string;
+  data: string;
+  uso: string;
+  vet: string;
+}
+
 interface ReceituarioItem {
   nome: string;
   dosagem: string;
@@ -81,16 +91,35 @@ export class ProntuarioService {
 
   private _clinicas = signal<ClinicaTutorView[]>([]);
   private _prontuarios = signal<ProntuarioResumoTutorView[]>([]);
+  private _receitas = signal<ReceitaTutorView[]>([]);
   private _registrosBrutos = signal<ResumoConsultaRow[]>([]);
   private _isLoading = signal(false);
   private _tutorIdCache = signal<string | null>(null);
 
   public clinicas = this._clinicas.asReadonly();
   public prontuarios = this._prontuarios.asReadonly();
+  public receitas = this._receitas.asReadonly();
   public isLoading = this._isLoading.asReadonly();
 
   async carregarHistoricoTutor(tutorId: string, forceReload = false): Promise<void> {
-    if (!forceReload && this._tutorIdCache() === tutorId && this._prontuarios().length > 0) {
+    if (!forceReload && this._tutorIdCache() === tutorId) {
+      return;
+    }
+
+    await this.sincronizarDadosTutor(tutorId, forceReload);
+  }
+
+  async carregarReceitasTutor(tutorId: string, forceReload = false): Promise<void> {
+    if (!forceReload && this._tutorIdCache() === tutorId) {
+      this._receitas.set(this.extrairReceitas(this._registrosBrutos()));
+      return;
+    }
+
+    await this.sincronizarDadosTutor(tutorId, forceReload);
+  }
+
+  private async sincronizarDadosTutor(tutorId: string, forceReload: boolean): Promise<void> {
+    if (!forceReload && this._tutorIdCache() === tutorId) {
       return;
     }
 
@@ -141,6 +170,7 @@ export class ProntuarioService {
       this._registrosBrutos.set(registros);
       this._prontuarios.set(registros.map((r) => this.mapearResumo(r)));
       this._clinicas.set(this.extrairClinicas(registros));
+      this._receitas.set(this.extrairReceitas(registros));
       this._tutorIdCache.set(tutorId);
     } finally {
       this._isLoading.set(false);
@@ -219,6 +249,43 @@ export class ProntuarioService {
     }
 
     return Array.from(mapa.values());
+  }
+
+  private extrairReceitas(registros: ResumoConsultaRow[]): ReceitaTutorView[] {
+    const receitas: ReceitaTutorView[] = [];
+
+    for (const registro of registros) {
+      if (!registro.receituario?.length) continue;
+
+      const dataObj = new Date(registro.data_resumo);
+      const dataFormatada = this.formatarDataReceita(dataObj);
+      const vet =
+        registro.consultas?.equipe_clinica?.perfis?.nome_completo ?? 'Veterinário não informado';
+
+      registro.receituario.forEach((med, index) => {
+        receitas.push({
+          id: `${registro.id}-${index}`,
+          pet: registro.pets.nome,
+          medicamento: med.nome,
+          dosagem: med.dosagem,
+          data: dataFormatada,
+          uso: med.posologia?.trim() || med.dosagem,
+          vet,
+        });
+      });
+    }
+
+    return receitas;
+  }
+
+  private formatarDataReceita(data: Date): string {
+    const hoje = new Date();
+    const mesmoDia =
+      data.getDate() === hoje.getDate() &&
+      data.getMonth() === hoje.getMonth() &&
+      data.getFullYear() === hoje.getFullYear();
+
+    return mesmoDia ? 'Hoje' : data.toLocaleDateString('pt-BR');
   }
 
   private mapearResumo(registro: ResumoConsultaRow): ProntuarioResumoTutorView {
