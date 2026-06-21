@@ -24,8 +24,11 @@ export interface ConsultaView {
   raca: string | null;
   tutor: string;
   veterinario?: string;
+  veterinario_id: string | null;
+  atualizado_em: Date | null;
   servico?: string; // Nome do serviço prestado
   valor_servico?: number; // NOVO: Valor numérico do serviço vindo do banco
+  sintomas?: string | null;
 }
 
 export interface ConsultaTutorView {
@@ -149,7 +152,7 @@ export class ConsultaService {
       .from('consultas')
       .select(
         `
-        id, status, data_consulta, pet_id,
+        id, status, data_consulta, pet_id, veterinario_id, atualizado_em, sintomas,
         pets ( nome, especie, raca, perfis ( nome_completo ) ),
         equipe_clinica ( perfis ( nome_completo ) ),
         servicos_clinica ( nome, valor )
@@ -178,7 +181,7 @@ export class ConsultaService {
       .from('consultas')
       .select(
         `
-        id, status, data_consulta, pet_id,
+        id, status, data_consulta, pet_id, veterinario_id, atualizado_em, sintomas,
         pets ( nome, especie, raca, perfis ( nome_completo ) ),
         equipe_clinica ( perfis ( nome_completo ) ),
         servicos_clinica ( nome, valor )
@@ -216,7 +219,7 @@ export class ConsultaService {
               .from('consultas')
               .select(
                 `
-                id, status, data_consulta, pet_id,
+                id, status, data_consulta, pet_id, veterinario_id, atualizado_em, sintomas,
                 pets ( nome, especie, raca, perfis ( nome_completo ) ),
                 equipe_clinica ( perfis ( nome_completo ) ),
                 servicos_clinica ( nome, valor )
@@ -254,6 +257,8 @@ export class ConsultaService {
 
   private formatarConsultaUnica(item: any): ConsultaView {
     const dataObj = new Date(item.data_consulta);
+    const atualizadoEm = item.atualizado_em ? new Date(item.atualizado_em) : null;
+
     return {
       id: item.id,
       status: item.status as StatusConsulta,
@@ -265,8 +270,11 @@ export class ConsultaService {
       raca: item.pets?.raca || null,
       tutor: item.pets?.perfis?.nome_completo || 'Sem tutor vinculado',
       veterinario: item.equipe_clinica?.perfis?.nome_completo,
+      veterinario_id: item.veterinario_id ?? null,
+      atualizado_em: atualizadoEm,
       servico: item.servicos_clinica?.nome || 'Consulta',
-      valor_servico: item.servicos_clinica?.valor || 0, // Armazena o valor vindo do relacionamento do banco
+      valor_servico: item.servicos_clinica?.valor || 0,
+      sintomas: item.sintomas ?? null,
     };
   }
 

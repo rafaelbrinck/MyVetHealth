@@ -13,6 +13,13 @@
     <div class="text-right hidden sm:block space-y-2">
       <p class="text-sm font-bold text-neutral-400">Status da Consulta</p>
       <span class="bg-[#0da193] text-white px-4 py-1.5 rounded-full text-sm font-bold inline-block">Em Andamento</span>
+      <button
+        type="button"
+        (click)="voltarParaFila()"
+        class="block ml-auto mt-2 text-sm font-bold text-neutral-500 hover:text-[#0da193] transition-colors"
+      >
+        ← Voltar para o dashboard
+      </button>
       @if (consultaAtiva(); as consulta) {
         <div class="mt-3 pt-3 border-t border-neutral-100">
           <p class="text-xs font-bold text-neutral-400 uppercase tracking-wider">Serviço</p>
@@ -32,11 +39,23 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <label class="block text-sm font-semibold text-neutral-600 mb-1">Peso Atual (kg)</label>
-            <input #inputPeso type="number" placeholder="Ex: 25.5" class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium">
+            <input
+              type="number"
+              placeholder="Ex: 25.5"
+              [ngModel]="rascunho().peso"
+              (ngModelChange)="atualizarCampo('peso', $event)"
+              class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium"
+            >
           </div>
           <div>
             <label class="block text-sm font-semibold text-neutral-600 mb-1">Temperatura (°C)</label>
-            <input #inputTemp type="number" placeholder="Ex: 38.5" class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium">
+            <input
+              type="number"
+              placeholder="Ex: 38.5"
+              [ngModel]="rascunho().temperatura"
+              (ngModelChange)="atualizarCampo('temperatura', $event)"
+              class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium"
+            >
           </div>
         </div>
       </div>
@@ -47,12 +66,24 @@
         <div class="space-y-5">
           <div>
             <label class="block text-sm font-semibold text-neutral-600 mb-1">Sintomas (Motivo da Consulta)</label>
-            <textarea #inputSintomas rows="3" placeholder="Descreva os sintomas relatados pelo tutor..." class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium resize-none"></textarea>
+            <textarea
+              rows="3"
+              placeholder="Descreva os sintomas relatados pelo tutor..."
+              [ngModel]="rascunho().sintomas"
+              (ngModelChange)="atualizarCampo('sintomas', $event)"
+              class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium resize-none"
+            ></textarea>
           </div>
           
           <div>
             <label class="block text-sm font-semibold text-neutral-600 mb-1">Diagnóstico (Visível para o Tutor)</label>
-            <textarea #inputDiagnostico rows="2" placeholder="Ex: Dermatite atópica leve." class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium resize-none"></textarea>
+            <textarea
+              rows="2"
+              placeholder="Ex: Dermatite atópica leve."
+              [ngModel]="rascunho().diagnostico"
+              (ngModelChange)="atualizarCampo('diagnostico', $event)"
+              class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium resize-none"
+            ></textarea>
           </div>
 
           <div>
@@ -60,7 +91,13 @@
               Notas Privadas
               <span class="text-xs text-[#e62b4c] font-bold bg-[#ffebef] px-2 py-0.5 rounded">Apenas Clínica</span>
             </label>
-            <textarea #inputNotas rows="2" placeholder="Observações internas que o tutor não terá acesso..." class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium resize-none bg-neutral-50"></textarea>
+            <textarea
+              rows="2"
+              placeholder="Observações internas que o tutor não terá acesso..."
+              [ngModel]="rascunho().notas"
+              (ngModelChange)="atualizarCampo('notas', $event)"
+              class="w-full border border-neutral-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-200 outline-none text-neutral-700 font-medium resize-none bg-neutral-50"
+            ></textarea>
           </div>
         </div>
       </div>
@@ -77,11 +114,11 @@
 
         <div class="space-y-4 mb-8">
           
-          <div *ngIf="medicamentosReceita().length === 0" class="text-center py-6 text-neutral-400 font-medium text-sm border border-neutral-100 rounded-xl">
+          <div *ngIf="rascunho().medicamentos.length === 0" class="text-center py-6 text-neutral-400 font-medium text-sm border border-neutral-100 rounded-xl">
             Nenhum medicamento prescrito ainda.
           </div>
 
-          <div *ngFor="let med of medicamentosReceita(); let i = index" class="bg-neutral-50 p-4 rounded-xl border border-neutral-100 relative group">
+          <div *ngFor="let med of rascunho().medicamentos; let i = index" class="bg-neutral-50 p-4 rounded-xl border border-neutral-100 relative group">
             <button (click)="removerMedicamento(i)" class="absolute top-2 right-2 text-neutral-400 hover:text-[#e62b4c] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
               &times;
             </button>
@@ -100,7 +137,7 @@
           </div>
         }
 
-        <button (click)="finalizarAtendimento(inputPeso.value, inputTemp.value, inputSintomas.value, inputDiagnostico.value, inputNotas.value)" class="w-full bg-[#0da193] hover:bg-[#006064] text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-md transform hover:-translate-y-0.5 active:translate-y-0 text-lg">
+        <button (click)="finalizarAtendimento()" class="w-full bg-[#0da193] hover:bg-[#006064] text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-md transform hover:-translate-y-0.5 active:translate-y-0 text-lg">
           Finalizar Atendimento
         </button>
       </div>

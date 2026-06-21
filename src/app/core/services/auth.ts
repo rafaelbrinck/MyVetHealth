@@ -121,6 +121,10 @@ export class Auth {
     return this.userRole.value;
   }
 
+  getCurrentUserId(): string | null {
+    return this.currentUser.value?.id ?? null;
+  }
+
   async login(email: string, password: string) {
     const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
 

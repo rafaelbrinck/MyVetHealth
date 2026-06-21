@@ -35,10 +35,10 @@
         </a>
       }
 
+      <a routerLink="/clinica/prontuarios" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
+        🩺 Prontuários
+      </a>
       @if (podeAcessar(['admin_clinica', 'veterinario'])) {
-        <a routerLink="/clinica/prontuarios" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
-          🩺 Prontuários
-        </a>
 
         <a routerLink="/clinica/vacinas" routerLinkActive="bg-slate-800 text-teal-400" (click)="closeMenu()" class="block p-3 rounded-lg hover:bg-slate-800 transition-colors">
           💉 Vacinas

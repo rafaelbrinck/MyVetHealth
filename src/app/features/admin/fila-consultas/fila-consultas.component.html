@@ -1,0 +1,277 @@
+<div class="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto min-h-screen pb-10">
+
+  <!-- Header -->
+  <div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div class="min-w-0">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0da193] dark:text-emerald-400">
+        Fila de Consultas
+      </h1>
+      <p class="text-neutral-600 dark:text-neutral-300 mt-2 font-medium text-sm sm:text-base">
+        Painel operacional da clínica — pacientes aguardando atendimento hoje.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        (click)="recarregar()"
+        [disabled]="carregando()"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border border-neutral-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
+      >
+        <lucide-icon [img]="lucideRefreshCw" [size]="16" [class.animate-spin]="carregando()" />
+        Atualizar
+      </button>
+      <button
+        type="button"
+        (click)="verAgendaCompleta()"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-[#0da193] dark:text-emerald-400 hover:bg-teal-50 dark:hover:bg-teal-950/30 transition-colors"
+      >
+        <lucide-icon [img]="lucideCalendar" [size]="16" />
+        Ver Agenda Completa
+      </button>
+    </div>
+  </div>
+
+  @if (erro()) {
+    <div class="mb-6 flex items-start gap-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/50 rounded-2xl p-4">
+      <lucide-icon [img]="lucideAlertTriangle" [size]="20" class="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+      <p class="text-sm font-bold text-rose-700 dark:text-rose-400">{{ erro() }}</p>
+    </div>
+  }
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+    @if (carregando()) {
+      @for (item of [1, 2, 3]; track item) {
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 p-6 animate-pulse">
+          <div class="h-12 w-12 bg-neutral-200 dark:bg-slate-700 rounded-2xl mb-4"></div>
+          <div class="h-4 w-28 bg-neutral-200 dark:bg-slate-700 rounded mb-2"></div>
+          <div class="h-8 w-16 bg-neutral-200 dark:bg-slate-700 rounded"></div>
+        </div>
+      }
+    } @else {
+      <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 p-6 flex items-start gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/50 flex items-center justify-center shrink-0">
+          <lucide-icon [img]="lucideClock" [size]="22" class="text-[#0da193] dark:text-emerald-400" />
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Aguardando</p>
+          <p class="text-3xl font-extrabold text-neutral-900 dark:text-neutral-50 tabular-nums mt-1">
+            {{ metricas().totalAguardando }}
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 p-6 flex items-start gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+          <lucide-icon [img]="lucideAlertTriangle" [size]="22" class="text-amber-600 dark:text-amber-400" />
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Espera Média</p>
+          <p class="text-3xl font-extrabold text-neutral-900 dark:text-neutral-50 tabular-nums mt-1">
+            {{ metricas().tempoMedioEsperaMinutos }}<span class="text-lg font-bold text-neutral-500 dark:text-neutral-400 ml-1">min</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 p-6 flex items-start gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
+          <lucide-icon [img]="lucideCheckCircle" [size]="22" class="text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Em Atendimento</p>
+          <p class="text-3xl font-extrabold text-neutral-900 dark:text-neutral-50 tabular-nums mt-1">
+            {{ metricas().consultasAtivas }}
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Atendimentos em andamento — retomar prontuário -->
+  @if (!carregando() && consultasAtivas().length > 0) {
+    <div class="mb-8 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-emerald-200 dark:border-emerald-800/40 overflow-hidden">
+      <div class="p-5 sm:p-6 border-b border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/60 dark:bg-emerald-950/20">
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="lucideCheckCircle" [size]="20" class="text-emerald-600 dark:text-emerald-400" />
+          <div>
+            <h2 class="text-lg font-bold text-emerald-800 dark:text-emerald-300">Atendimentos em andamento</h2>
+            <p class="text-sm text-emerald-700/80 dark:text-emerald-400/80 font-medium mt-0.5">
+              Retome o prontuário caso tenha saído da página durante o preenchimento.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+        @for (ativo of consultasAtivas(); track ativo.id) {
+          <article class="rounded-2xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/30 dark:bg-emerald-950/10 p-5 flex flex-col gap-4">
+            <div class="flex items-start justify-between gap-3">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60">
+                Em andamento
+              </span>
+              @if (temRascunhoSalvo(ativo.id)) {
+                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/40 px-2 py-1 rounded-lg">
+                  Rascunho salvo
+                </span>
+              }
+            </div>
+
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-3xl shrink-0" aria-hidden="true">{{ iconeEspecie(ativo.especie) }}</span>
+              <div class="min-w-0">
+                <h3 class="font-extrabold text-neutral-900 dark:text-neutral-50 truncate text-lg">
+                  {{ ativo.petNome }}
+                </h3>
+                <p class="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-300 font-medium mt-0.5 truncate">
+                  <lucide-icon [img]="lucideUser" [size]="14" class="shrink-0 text-neutral-400" />
+                  {{ ativo.tutorNome }}
+                </p>
+                <p class="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-300 font-medium mt-0.5 truncate">
+                  <lucide-icon [img]="lucideUser" [size]="14" class="shrink-0 text-neutral-400" />
+                  {{ ativo.veterinarioNome || "Veterinário em aberto"}}
+                </p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 font-semibold mt-1">
+                  {{ ativo.horarioAgendado }}
+                  @if (ativo.servico) {
+                    · {{ ativo.servico }}
+                  }
+                </p>
+              </div>
+            </div>
+
+            @if (podeGerenciarAtendimento()) {
+              <button
+                type="button"
+                (click)="continuarAtendimento(ativo)"
+                class="mt-auto w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+              >
+                <lucide-icon [img]="lucideFileText" [size]="16" />
+                Continuar Prontuário
+              </button>
+            }
+          </article>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Fila -->
+  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 overflow-hidden">
+    <div class="p-5 sm:p-6 border-b border-neutral-100 dark:border-slate-800">
+      <h2 class="text-lg sm:text-xl font-bold text-[#0da193] dark:text-emerald-400">
+        Pacientes na Fila
+      </h2>
+      <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1 font-medium">
+        Ordenados por urgência e tempo de espera.
+      </p>
+    </div>
+
+    @if (carregando()) {
+      <div class="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+          <div class="rounded-2xl border border-neutral-100 dark:border-slate-800 p-5 animate-pulse">
+            <div class="flex justify-between mb-4">
+              <div class="h-6 w-24 bg-neutral-200 dark:bg-slate-700 rounded-full"></div>
+              <div class="h-6 w-16 bg-neutral-200 dark:bg-slate-700 rounded-full"></div>
+            </div>
+            <div class="h-5 w-40 bg-neutral-200 dark:bg-slate-700 rounded mb-2"></div>
+            <div class="h-4 w-32 bg-neutral-200 dark:bg-slate-700 rounded mb-4"></div>
+            <div class="h-10 w-full bg-neutral-200 dark:bg-slate-700 rounded-xl"></div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+        @for (item of filaComEspera(); track item.id) {
+          <article
+            class="relative rounded-2xl border border-neutral-100 dark:border-slate-800 bg-neutral-50/50 dark:bg-slate-800/30 p-5 flex flex-col gap-4 transition-shadow hover:shadow-md dark:hover:shadow-none dark:hover:ring-1 dark:hover:ring-slate-700"
+            [class.ring-2]="item.urgencia === 'emergencia'"
+            [class.ring-red-300]="item.urgencia === 'emergencia'"
+            [class.dark:ring-red-800/60]="item.urgencia === 'emergencia'"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <span
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider border"
+                [class]="badgeUrgenciaClasses(item.urgencia)"
+              >
+                @if (item.urgencia === 'emergencia') {
+                  <lucide-icon [img]="lucideAlertTriangle" [size]="12" />
+                }
+                {{ labelUrgencia(item.urgencia) }}
+              </span>
+
+              <div class="text-right shrink-0">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Espera</p>
+                <p
+                  class="text-sm font-extrabold tabular-nums"
+                  [class.text-red-600]="item.minutosEspera >= 30"
+                  [class.dark:text-red-400]="item.minutosEspera >= 30"
+                  [class.text-amber-600]="item.minutosEspera >= 15 && item.minutosEspera < 30"
+                  [class.dark:text-amber-400]="item.minutosEspera >= 15 && item.minutosEspera < 30"
+                  [class.text-neutral-700]="item.minutosEspera < 15"
+                  [class.dark:text-neutral-200]="item.minutosEspera < 15"
+                >
+                  {{ formatarTempoEspera(item.minutosEspera) }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-3xl shrink-0" aria-hidden="true">{{ iconeEspecie(item.especie) }}</span>
+              <div class="min-w-0">
+                <h3 class="font-extrabold text-neutral-900 dark:text-neutral-50 truncate text-lg">
+                  {{ item.petNome }}
+                </h3>
+                <p class="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-300 font-medium mt-0.5 truncate">
+                  <lucide-icon [img]="lucideUser" [size]="14" class="shrink-0 text-neutral-400" />
+                  {{ item.tutorNome }}
+                </p>
+                @if (item.veterinarioNome) {
+                <p class="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-300 font-medium mt-0.5 truncate">
+                    <lucide-icon [img]="lucideUser" [size]="14" class="shrink-0 text-neutral-400" />
+                    {{ item.veterinarioNome }}
+                  </p>
+                }
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-sm pt-1 border-t border-neutral-200/80 dark:border-slate-700/80">
+              <span class="inline-flex items-center gap-1.5 font-bold text-neutral-700 dark:text-neutral-200">
+                <lucide-icon [img]="lucideClock" [size]="15" class="text-[#0da193] dark:text-emerald-400" />
+                {{ item.horarioAgendado }}
+              </span>
+              @if (item.veterinarioId === null) {
+                <span class="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-emerald-400 bg-teal-50 dark:bg-teal-950/40 px-2 py-1 rounded-lg">
+                  Livre
+                </span>
+              }
+            </div>
+
+            @if (podeGerenciarAtendimento()) {
+              <button
+                type="button"
+                (click)="iniciarAtendimento(item)"
+                [disabled]="estaProcessando(item.id)"
+                class="mt-auto w-full inline-flex items-center justify-center gap-2 bg-[#0da193] hover:bg-[#0b8a7a] disabled:opacity-60 text-white font-bold py-3 px-4 rounded-xl text-sm transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+              >
+                <lucide-icon [img]="lucidePlay" [size]="16" />
+                {{ estaProcessando(item.id) ? 'Iniciando...' : 'Iniciar Atendimento' }}
+              </button>
+            }
+          </article>
+        } @empty {
+          <div class="col-span-full py-16 px-6 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-teal-50 dark:bg-teal-950/40 mb-4">
+              <lucide-icon [img]="lucideCheckCircle" [size]="32" class="text-[#0da193] dark:text-emerald-400" />
+            </div>
+            <p class="text-neutral-600 dark:text-neutral-300 font-bold text-lg">Fila vazia</p>
+            <p class="text-neutral-500 dark:text-neutral-400 text-sm mt-2 font-medium">
+              Nenhum paciente aguardando atendimento no momento.
+            </p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

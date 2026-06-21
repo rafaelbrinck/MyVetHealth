@@ -81,15 +81,15 @@ export const routes: Routes = [
             (m) => m.TutorReceitasComponent,
           ),
       },
-      { 
-        path: 'historico', 
+      {
+        path: 'historico',
         loadComponent: () =>
           import('./features/tutor/tutor-historico/tutor-historico').then(
             (m) => m.TutorHistoricoComponent,
           ),
       },
-      { 
-        path: 'prontuario/:id', 
+      {
+        path: 'prontuario/:id',
         loadComponent: () =>
           import('./features/tutor/tutor-prontuario/tutor-prontuario').then(
             (m) => m.TutorProntuarioComponent,
@@ -139,15 +139,11 @@ export const routes: Routes = [
           import('./features/admin/historico-prontuarios/historico-prontuarios').then(
             (m) => m.HistoricoProntuariosComponent,
           ),
-        canActivate: [roleGuard],
-        data: { roles: ['admin_clinica', 'veterinario'] },
       },
       {
         path: 'prontuario/:id',
         loadComponent: () =>
           import('./features/admin/prontuario/prontuario').then((m) => m.ProntuarioComponent),
-        canActivate: [roleGuard],
-        data: { roles: ['admin_clinica', 'veterinario'] },
       },
       {
         path: 'pacientes',
