@@ -1,45 +1,60 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { PetService } from '../../../core/services/pet.service';
+import { LucideAngularModule, Building2 } from 'lucide-angular';
+import { PetService, ConsultaTutorHistorico } from '../../../core/services/pet.service';
 import { SupabaseService } from '../../../core/services/supabase';
 import { GeneroPet } from '../../../core/models/pet.model';
 
-interface ConsultaTutor {
+interface ConsultaTutor extends ConsultaTutorHistorico {}
+
+interface ClinicaFiltro {
   id: string;
-  data_resumo: string;
-  peso: number;
-  temperatura: number;
-  sintomas: string;
-  diagnostico: string;
-  receituario: any[];
+  nome_fantasia: string;
 }
 
 @Component({
   selector: 'app-pet-perfil',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './pet-perfil.html',
 })
 export class PetPerfilComponent implements OnInit {
   public GeneroPet = GeneroPet;
+  protected readonly lucideBuilding = Building2;
+
   private location = inject(Location);
   private route = inject(ActivatedRoute);
   private petService = inject(PetService);
   private supabaseService = inject(SupabaseService);
 
-  // Estados Centrais
   public pet = signal<any | null>(null);
   public isLoading = signal(true);
-
-  // Histórico Clínico Blindado
   public historicoClinico = signal<ConsultaTutor[]>([]);
+  public filtroClinica = signal<string | null>(null);
 
-  // ==========================================
-  // 🚀 NOVOS SINAIS COMPUTADOS PARA PESAGEM
-  // ==========================================
+  public clinicasDisponiveis = computed<ClinicaFiltro[]>(() => {
+    const mapa = new Map<string, ClinicaFiltro>();
 
-  // 1. Filtra apenas as consultas que tiveram pesagem registrada e formata
+    for (const item of this.historicoClinico()) {
+      if (!item.clinica_id || !item.clinica?.nome_fantasia) continue;
+      mapa.set(item.clinica_id, {
+        id: item.clinica_id,
+        nome_fantasia: item.clinica.nome_fantasia,
+      });
+    }
+
+    return Array.from(mapa.values()).sort((a, b) =>
+      a.nome_fantasia.localeCompare(b.nome_fantasia, 'pt-BR'),
+    );
+  });
+
+  public historicoFiltrado = computed(() => {
+    const clinicaId = this.filtroClinica();
+    if (!clinicaId) return this.historicoClinico();
+    return this.historicoClinico().filter((item) => item.clinica_id === clinicaId);
+  });
+
   public historicoPesagens = computed(() => {
     return this.historicoClinico()
       .filter((consulta) => consulta.peso != null)
@@ -50,17 +65,14 @@ export class PetPerfilComponent implements OnInit {
       }));
   });
 
-  // 2. Descobre o peso mais recente para atualizar o Card Superior automaticamente
   public pesoMaisRecente = computed(() => {
     const pesagens = this.historicoPesagens();
     if (pesagens.length > 0) {
       return `${pesagens[0].peso} kg`;
     }
-    // Fallback caso não tenha consulta, usa o peso inicial do cadastro do pet
     return this.pet()?.pesoAtual || 'Não registrado';
   });
 
-  // Controles de Modais
   public isMedicineModalOpen = signal(false);
   public selectedMedicine = signal<any | null>(null);
   public isCarteirinhaOpen = signal(false);
@@ -72,7 +84,6 @@ export class PetPerfilComponent implements OnInit {
     const petId = this.route.snapshot.paramMap.get('id');
 
     if (petId) {
-      // 1. Tenta buscar o Pet do cache ou do banco
       let petEncontrado = this.petService.meusPets().find((p) => p.id === petId);
 
       if (!petEncontrado) {
@@ -85,7 +96,6 @@ export class PetPerfilComponent implements OnInit {
         }
       }
 
-      // Se achou o pet, formata os dados para a tela
       if (petEncontrado) {
         this.pet.set({
           ...petEncontrado,
@@ -100,32 +110,25 @@ export class PetPerfilComponent implements OnInit {
         });
       }
 
-      // 2. Busca o histórico de prontuários (Os Sinais Computados se atualizarão sozinhos aqui)
       await this.carregarHistoricoMedico(petId);
     }
 
     this.isLoading.set(false);
   }
 
-  /**
-   * Puxa os dados da View Segura (sem notas privadas)
-   */
   private async carregarHistoricoMedico(petId: string): Promise<void> {
-    const { data, error } = await this.supabaseService.client
-      .from('vw_historico_tutor')
-      .select('*')
-      .eq('pet_id', petId)
-      .order('data_resumo', { ascending: false });
-
-    if (error) {
+    try {
+      const historico = await this.petService.carregarHistoricoMedicoPet(petId);
+      this.historicoClinico.set(historico);
+    } catch (error) {
       console.error('Erro ao carregar histórico médico:', error);
-      return;
     }
-
-    this.historicoClinico.set((data as ConsultaTutor[]) || []);
   }
 
-  // Cálculos utilitários
+  public definirFiltroClinica(clinicaId: string | null): void {
+    this.filtroClinica.set(clinicaId);
+  }
+
   public calcularIdade(dataNascimento: string): string {
     if (!dataNascimento) return 'Idade não informada';
     const nasc = new Date(dataNascimento);
@@ -144,7 +147,6 @@ export class PetPerfilComponent implements OnInit {
     return `${dia}/${mes}/${ano}`;
   }
 
-  // Navegação e Modais
   public voltar(): void {
     this.location.back();
   }

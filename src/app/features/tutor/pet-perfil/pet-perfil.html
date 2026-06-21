@@ -86,20 +86,58 @@
     }
 
     <div class="px-6 mt-8">
-      <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-extrabold text-neutral-800 dark:text-white">Histórico Médico</h3>
       </div>
 
+      @if (clinicasDisponiveis().length > 0) {
+        <div class="mb-5">
+          <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2.5">Filtrar por clínica</p>
+          <div class="flex gap-2 overflow-x-auto pb-1 snap-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+            <button
+              type="button"
+              (click)="definirFiltroClinica(null)"
+              class="snap-start shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold border transition-colors"
+              [ngClass]="filtroClinica() === null
+                ? 'bg-[#0da193] text-white border-[#0da193] shadow-sm'
+                : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:border-teal-300'"
+            >
+              Todas as Clínicas
+            </button>
+
+            @for (clinica of clinicasDisponiveis(); track clinica.id) {
+              <button
+                type="button"
+                (click)="definirFiltroClinica(clinica.id)"
+                class="snap-start shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold border transition-colors max-w-[12rem] truncate"
+                [ngClass]="filtroClinica() === clinica.id
+                  ? 'bg-[#0da193] text-white border-[#0da193] shadow-sm'
+                  : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:border-teal-300'"
+              >
+                {{ clinica.nome_fantasia }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
       <div class="space-y-5">
-        @for (consulta of historicoClinico(); track consulta.id) {
+        @for (consulta of historicoFiltrado(); track consulta.id) {
           <div class="bg-white dark:bg-neutral-900 rounded-3xl p-5 shadow-sm border border-neutral-100 dark:border-neutral-800 relative overflow-hidden">
             <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-400"></div>
             
-            <div class="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-800 pb-3 mb-3 ml-2">
-              <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/40 flex items-center justify-center text-lg">🩺</span>
+            <div class="flex justify-between items-start gap-3 border-b border-neutral-100 dark:border-neutral-800 pb-3 mb-3 ml-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/40 flex items-center justify-center text-lg shrink-0">🩺</span>
                 <span class="font-bold text-neutral-800 dark:text-white">{{ formatarDataBr(consulta.data_resumo) }}</span>
               </div>
+
+              @if (consulta.clinica?.nome_fantasia) {
+                <span class="inline-flex items-center gap-1 shrink-0 text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 rounded-md px-2 py-1 text-[10px] font-bold max-w-[45%] truncate">
+                  <lucide-icon [img]="lucideBuilding" [size]="11" class="shrink-0" />
+                  {{ consulta.clinica?.nome_fantasia }}
+                </span>
+              }
             </div>
 
             <div class="space-y-3 mb-4 ml-2">
@@ -136,7 +174,18 @@
         } @empty {
           <div class="bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 border-dashed rounded-3xl p-8 text-center">
             <div class="text-4xl mb-3 opacity-50">📋</div>
-            <p class="text-neutral-500 dark:text-neutral-400 font-bold text-sm">O histórico clínico do pet aparecerá aqui assim que o veterinário finalizar o primeiro atendimento.</p>
+            @if (filtroClinica()) {
+              <p class="text-neutral-500 dark:text-neutral-400 font-bold text-sm">Nenhum atendimento encontrado para esta clínica.</p>
+              <button
+                type="button"
+                (click)="definirFiltroClinica(null)"
+                class="mt-3 text-[#0da193] dark:text-teal-400 text-xs font-bold hover:underline"
+              >
+                Ver todas as clínicas
+              </button>
+            } @else {
+              <p class="text-neutral-500 dark:text-neutral-400 font-bold text-sm">O histórico clínico do pet aparecerá aqui assim que o veterinário finalizar o primeiro atendimento.</p>
+            }
           </div>
         }
       </div>

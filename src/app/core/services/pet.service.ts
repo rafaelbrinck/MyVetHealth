@@ -2,6 +2,36 @@ import { inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase'; // Ajuste o caminho se necessário
 import { CriarPetDTO, Pet } from '../models/pet.model'; // Ajuste o caminho se necessário
 
+export interface ReceituarioItemHistorico {
+  nome: string;
+  dosagem: string;
+  posologia?: string;
+}
+
+export interface ConsultaTutorHistorico {
+  id: string;
+  clinica_id?: string;
+  data_resumo: string;
+  peso: number;
+  temperatura: number;
+  sintomas: string;
+  diagnostico: string;
+  receituario: ReceituarioItemHistorico[];
+  clinica?: { nome_fantasia: string };
+}
+
+interface HistoricoPetRow {
+  id: string;
+  clinica_id: string;
+  data_resumo: string;
+  peso: number | null;
+  temperatura: number | null;
+  sintomas: string | null;
+  diagnostico: string | null;
+  receituario: ReceituarioItemHistorico[] | null;
+  clinica: { nome_fantasia: string } | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -94,5 +124,42 @@ export class PetService {
       return [];
     }
     return data;
+  }
+
+  async carregarHistoricoMedicoPet(petId: string): Promise<ConsultaTutorHistorico[]> {
+    const { data, error } = await this.supabase
+      .from('resumo_consultas')
+      .select(
+        `
+        id,
+        clinica_id,
+        data_resumo,
+        peso,
+        temperatura,
+        sintomas,
+        diagnostico,
+        receituario,
+        clinica:clinicas(nome_fantasia)
+      `,
+      )
+      .eq('pet_id', petId)
+      .order('data_resumo', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao carregar histórico médico do pet:', error);
+      throw error;
+    }
+
+    return ((data ?? []) as unknown as HistoricoPetRow[]).map((item) => ({
+      id: item.id,
+      clinica_id: item.clinica_id,
+      data_resumo: item.data_resumo,
+      peso: item.peso ?? 0,
+      temperatura: item.temperatura ?? 0,
+      sintomas: item.sintomas ?? '',
+      diagnostico: item.diagnostico ?? '',
+      receituario: item.receituario ?? [],
+      clinica: item.clinica ? { nome_fantasia: item.clinica.nome_fantasia } : undefined,
+    }));
   }
 }

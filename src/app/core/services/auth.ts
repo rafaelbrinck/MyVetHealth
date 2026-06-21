@@ -73,7 +73,8 @@ export class Auth {
   }
 
   private async carregarRole(userId: string) {
-    const [equipeData, validConvite] = await Promise.all([
+    const [perfilData, equipeData, validConvite] = await Promise.all([
+      this.supabase.from('perfis').select('papel').eq('id', userId).maybeSingle(),
       this.supabase
         .from('equipe_clinica')
         .select('papel')
@@ -94,10 +95,13 @@ export class Auth {
         .maybeSingle(),
     ]);
 
+    if (perfilData.error) throw perfilData.error;
     if (equipeData.error) throw equipeData.error;
     if (validConvite.error) throw validConvite.error;
 
-    if (equipeData.data) {
+    if (perfilData.data) {
+      this.userRole.next(perfilData.data.papel); // Se achou o perfil, é admin (o primeiro usuário de cada clínica é admin)
+    } else if (equipeData.data) {
       // Se achou, o usuário já está vinculado a uma clínica (é admin, vet ou recepcionista)
       this.userRole.next(equipeData.data.papel);
     } else if (validConvite.data) {
