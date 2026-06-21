@@ -2,6 +2,7 @@ import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClinicaService } from '../../../core/services/clinica.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-equipe',
@@ -13,6 +14,7 @@ import { ClinicaService } from '../../../core/services/clinica.service';
 export class EquipeComponent implements OnInit {
   private fb = inject(FormBuilder);
   public clinicaService = inject(ClinicaService);
+  private toastService = inject(ToastService);
 
   // 1. ATUALIZE A TIPAGEM DO SINAL
   public telaAtual = signal<'lista' | 'cadastro' | 'convite_gerado'>('lista'); // <--- NOVO ESTADO AQUI
@@ -72,7 +74,9 @@ export class EquipeComponent implements OnInit {
         // Troca para a nova tela de sucesso
         this.telaAtual.set('convite_gerado');
       } else {
-        alert(`${resposta.mensagem}\n\nO acesso é o e-mail cadastrado e a senha padrão é o CPF.`);
+        this.toastService.showSuccess(
+          `${resposta.mensagem}\n\nO acesso é o e-mail cadastrado e a senha padrão é o CPF.`,
+        );
         this.voltarParaLista();
       }
 
@@ -80,7 +84,7 @@ export class EquipeComponent implements OnInit {
       await this.clinicaService.carregarMembrosEquipe(true); // Força recarga ignorando cache
     } catch (error: any) {
       console.error('Erro ao cadastrar membro:', error);
-      alert('Erro: ' + (error.message || 'Falha ao processar o cadastro.'));
+      this.toastService.showError(error.message || 'Falha ao processar o cadastro.');
     } finally {
       this.isSubmitting.set(false);
     }
@@ -88,6 +92,6 @@ export class EquipeComponent implements OnInit {
 
   public copiarLink() {
     navigator.clipboard.writeText(this.linkConviteGerado());
-    alert('✅ Link copiado para a área de transferência!');
+    this.toastService.showSuccess('Link copiado para a área de transferência!');
   }
 }

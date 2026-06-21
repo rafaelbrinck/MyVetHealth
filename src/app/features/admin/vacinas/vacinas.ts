@@ -1,5 +1,6 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-vacinas',
@@ -9,7 +10,8 @@ import { CommonModule } from '@angular/common';
   styleUrl: './vacinas.css'
 })
 export class VacinasComponent {
-  
+  private toastService = inject(ToastService);
+
   public listaVacinas = signal([
     { id: 1, pet: 'Max', tutor: 'João da Silva', vacina: 'V10', dataAplicacao: '10/04/2025', proximaDose: '10/04/2026', status: 'Atrasada' },
     { id: 2, pet: 'Thor', tutor: 'Pedro', vacina: 'Gripe Canina', dataAplicacao: '15/10/2025', proximaDose: '15/04/2026', status: 'Vence em breve' },
@@ -70,7 +72,7 @@ export class VacinasComponent {
 
   public salvarVacina(pet: string, vacina: string, dataAplicacao: string, proximaDose: string): void {
     if (!pet.trim() || !vacina.trim()) {
-      alert('Preencha o nome do Pet e da Vacina!');
+      this.toastService.showError('Preencha o nome do Pet e da Vacina!');
       return;
     }
 
@@ -89,6 +91,8 @@ export class VacinasComponent {
   }
 
   public notificarTutor(tutor: string): void {
-    alert(`Notificação de lembrete de vacina enviada para o WhatsApp/App de: ${tutor} 📲`);
+    this.toastService.showSuccess(
+      `Notificação de lembrete de vacina enviada para o WhatsApp/App de: ${tutor}`,
+    );
   }
 }

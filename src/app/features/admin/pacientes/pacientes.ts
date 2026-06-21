@@ -7,6 +7,7 @@ import { Tutor } from '../../../core/models/tutor.model';
 import { Pet, CriarPetDTO } from '../../../core/models/pet.model';
 import { ClinicaService } from '../../../core/services/clinica.service';
 import { PetService } from '../../../core/services/pet.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-pacientes',
@@ -20,6 +21,7 @@ export class PacientesComponent implements OnInit {
   public tutorService = inject(TutorService);
   public clinicaService = inject(ClinicaService);
   public petService = inject(PetService);
+  private toastService = inject(ToastService);
   private fb = inject(FormBuilder); // <-- Injeção do FormBuilder
 
   // ==========================================
@@ -105,7 +107,7 @@ export class PacientesComponent implements OnInit {
   }
 
   public verHistorico(pet: any): void {
-    alert(`Preparando o histórico médico do paciente: ${pet.nome} 🐾`);
+    this.toastService.showSuccess(`Preparando o histórico médico do paciente: ${pet.nome}`);
   }
 
   public async salvarNovoPet(): Promise<void> {
@@ -119,7 +121,7 @@ export class PacientesComponent implements OnInit {
 
     if (!tutorId || !clinicaId) {
       console.error('Falha de segurança: Tutor ou Clínica não identificados.');
-      alert('Ocorreu um erro de contexto. Tente acessar o tutor novamente.');
+      this.toastService.showError('Ocorreu um erro de contexto. Tente acessar o tutor novamente.');
       return;
     }
 
@@ -148,7 +150,9 @@ export class PacientesComponent implements OnInit {
       this.voltarParaPets();
     } catch (error) {
       console.error('Erro na interface ao adicionar novo pet:', error);
-      alert('Houve uma falha ao salvar o paciente. Verifique sua conexão e tente novamente.');
+      this.toastService.showError(
+        'Houve uma falha ao salvar o paciente. Verifique sua conexão e tente novamente.',
+      );
     }
   }
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ConsultaService, ConsultaView } from '../../../core/services/consulta.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface Medicamento {
   nome: string;
@@ -34,6 +35,7 @@ export class ProntuarioComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private consultaService = inject(ConsultaService);
+  private toastService = inject(ToastService);
 
   public consultaId: string | null = null;
 
@@ -69,7 +71,7 @@ export class ProntuarioComponent implements OnInit, OnDestroy {
         this.executarCargaDeSeguranca(this.consultaId);
       }
     } else {
-      alert('⚠️ Nenhum atendimento foi selecionado.');
+      this.toastService.showError('Nenhum atendimento foi selecionado.');
       this.router.navigate(['/clinica/dashboard']);
     }
   }
@@ -154,7 +156,7 @@ export class ProntuarioComponent implements OnInit, OnDestroy {
       if (consultaAtiva) {
         this.inicializarComConsulta(consultaAtiva);
       } else {
-        alert('⚠️ Ficha médica ou consulta não localizada no Supabase.');
+        this.toastService.showError('Ficha médica ou consulta não localizada no Supabase.');
         this.router.navigate(['/clinica/dashboard']);
       }
     } catch (error) {
@@ -172,7 +174,7 @@ export class ProntuarioComponent implements OnInit, OnDestroy {
 
   public salvarMedicamento(nome: string, dosagem: string, posologia: string): void {
     if (!nome.trim() || !dosagem.trim()) {
-      alert('O Nome e a Dosagem são obrigatórios para a receita!');
+      this.toastService.showError('O Nome e a Dosagem são obrigatórios para a receita!');
       return;
     }
 
@@ -202,8 +204,8 @@ export class ProntuarioComponent implements OnInit, OnDestroy {
     const { peso, temperatura, sintomas, diagnostico, notas, medicamentos } = this.rascunho();
 
     if (!sintomas.trim() || !diagnostico.trim()) {
-      alert(
-        '⚠️ Por favor, preencha pelo menos os Sintomas e o Diagnóstico para salvar o prontuário.',
+      this.toastService.showError(
+        'Por favor, preencha pelo menos os Sintomas e o Diagnóstico para salvar o prontuário.',
       );
       return;
     }
@@ -223,15 +225,15 @@ export class ProntuarioComponent implements OnInit, OnDestroy {
         localStorage.removeItem(chaveRascunhoProntuario(this.consultaId));
       }
 
-      alert(
-        `✅ Prontuário do ${this.paciente().nome} salvo com sucesso!\n\nA consulta foi encaminhada para a recepção aguardando pagamento.`,
+      this.toastService.showSuccess(
+        `Prontuário do ${this.paciente().nome} salvo com sucesso! A consulta foi encaminhada para a recepção aguardando pagamento.`,
       );
 
       this.router.navigate(['/clinica/dashboard']);
     } catch (error) {
       console.error('Erro ao encerrar atendimento clínico:', error);
-      alert(
-        '⚠️ Houve um problema ao tentar salvar a ficha no banco de dados. Verifique sua conexão ou as permissões do Supabase.',
+      this.toastService.showError(
+        'Houve um problema ao tentar salvar a ficha no banco de dados. Verifique sua conexão ou as permissões do Supabase.',
       );
     }
   }

@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { CriarPetDTO, GeneroPet } from '../../../core/models/pet.model';
 import { PetService } from '../../../core/services/pet.service';
 import { SupabaseService } from '../../../core/services/supabase';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-tutor-pets',
@@ -15,6 +16,7 @@ export class TutorPetsComponent implements OnInit {
   // petService deve ser PUBLIC para o HTML conseguir enxergar o Signal lá dentro
   public petService = inject(PetService);
   private supabaseService = inject(SupabaseService);
+  private toastService = inject(ToastService);
 
   public isModalOpen = signal(false);
   public isLoading = signal(true);
@@ -55,12 +57,12 @@ export class TutorPetsComponent implements OnInit {
     genero: string,
   ): Promise<void> {
     if (!nome.trim()) {
-      alert('Por favor, preencha o nome do pet!');
+      this.toastService.showError('Por favor, preencha o nome do pet!');
       return;
     }
 
     if (!this.authTutorId) {
-      alert('Sessão inválida. Por favor, faça login novamente.');
+      this.toastService.showError('Sessão inválida. Por favor, faça login novamente.');
       return;
     }
 
@@ -82,7 +84,7 @@ export class TutorPetsComponent implements OnInit {
       this.fecharModal();
     } catch (error) {
       console.error('Erro no componente ao salvar pet:', error);
-      alert('Ocorreu um erro ao salvar seu companheiro. Tente novamente.');
+      this.toastService.showError('Ocorreu um erro ao salvar seu companheiro. Tente novamente.');
     }
   }
 }

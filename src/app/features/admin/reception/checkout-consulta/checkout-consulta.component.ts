@@ -20,6 +20,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ConsultaView } from '../../../../core/services/consulta.service';
 import { FaturamentoService, MetodoPagamento } from '../../../../core/services/faturamento.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 const METODOS_PAGAMENTO: { valor: MetodoPagamento; label: string }[] = [
   { valor: 'pix', label: 'PIX' },
@@ -42,6 +43,7 @@ export class CheckoutConsultaComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private faturamentoService = inject(FaturamentoService);
+  private toastService = inject(ToastService);
   private destroyRef = inject(DestroyRef);
 
   public metodosDisponiveis = METODOS_PAGAMENTO;
@@ -127,7 +129,7 @@ export class CheckoutConsultaComponent implements OnInit {
       console.error('Erro ao processar pagamento:', error);
       const mensagem =
         error instanceof Error ? error.message : 'Não foi possível registrar o pagamento.';
-      alert(`⚠️ ${mensagem}`);
+      this.toastService.showError(mensagem);
     }
   }
 }

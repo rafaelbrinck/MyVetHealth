@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Auth } from '../../../core/services/auth';
 import { ThemeService } from '../../../core/services/theme.service';
 import { SupabaseService } from '../../../core/services/supabase';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-tutor-perfil',
@@ -15,6 +16,7 @@ export class TutorPerfilComponent implements OnInit {
   private router = inject(Router);
   private auth = inject(Auth);
   private supabaseService = inject(SupabaseService);
+  private toastService = inject(ToastService);
   readonly themeService = inject(ThemeService);
 
   // Signals gerenciando os dados reais e estados visuais
@@ -130,7 +132,7 @@ export class TutorPerfilComponent implements OnInit {
       this.fecharEdicao();
     } catch (error) {
       console.error('Erro ao atualizar os dados do perfil:', error);
-      alert('Não foi possível salvar as alterações. Tente novamente.');
+      this.toastService.showError('Não foi possível salvar as alterações. Tente novamente.');
     }
   }
 

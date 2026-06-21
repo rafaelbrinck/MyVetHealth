@@ -29,6 +29,7 @@ import {
   FilaService,
   UrgenciaAgendamento,
 } from '../../../core/services/fila.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-fila-consultas',
@@ -39,6 +40,7 @@ import {
 })
 export class FilaConsultasComponent implements OnInit {
   private filaService = inject(FilaService);
+  private toastService = inject(ToastService);
   private auth = inject(Auth);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
@@ -98,7 +100,7 @@ export class FilaConsultasComponent implements OnInit {
       await this.router.navigate(['/clinica/prontuario', item.id]);
     } catch (error) {
       console.error('Falha ao iniciar atendimento', error);
-      alert('Não foi possível iniciar o atendimento. Tente novamente.');
+      this.toastService.showError('Não foi possível iniciar o atendimento. Tente novamente.');
     } finally {
       this.acaoConsultaId.set(null);
     }

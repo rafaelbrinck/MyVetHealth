@@ -2,6 +2,7 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ServicosService, ServicoClinica } from '../../../core/services/servicos-clinica';
+import { ToastService } from '../../../core/services/toast.service';
 import localePt from '@angular/common/locales/pt';
 
 registerLocaleData(localePt);
@@ -15,6 +16,7 @@ registerLocaleData(localePt);
 export class CatalogoServicosComponent implements OnInit {
   // 1. Injetamos o Service Central ao invés do Supabase diretamente
   public servicosService = inject(ServicosService);
+  private toastService = inject(ToastService);
   private fb = inject(FormBuilder);
 
   // Estados locais da tela
@@ -35,7 +37,7 @@ export class CatalogoServicosComponent implements OnInit {
 
   public async salvarServico(): Promise<void> {
     if (this.servicoForm.invalid) {
-      alert('Por favor, preencha todos os campos corretamente.');
+      this.toastService.showError('Por favor, preencha todos os campos corretamente.');
       return;
     }
 
@@ -48,7 +50,7 @@ export class CatalogoServicosComponent implements OnInit {
 
       this.cancelarEdicao();
     } catch (error) {
-      alert('Falha ao salvar o serviço. Tente novamente.');
+      this.toastService.showError('Falha ao salvar o serviço. Tente novamente.');
     } finally {
       this.isSaving.set(false);
     }
@@ -74,7 +76,7 @@ export class CatalogoServicosComponent implements OnInit {
     try {
       await this.servicosService.alternarStatus(servico.id, servico.ativo);
     } catch (error) {
-      alert('Não foi possível alterar o status do serviço.');
+      this.toastService.showError('Não foi possível alterar o status do serviço.');
     }
   }
 

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../../core/services/supabase';
 import { ClinicaService } from '../../../core/services/clinica.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface HistoricoRecord {
   id: string;
@@ -33,6 +34,7 @@ interface HistoricoRecord {
 export class HistoricoProntuariosComponent implements OnInit {
   private supabase = inject(SupabaseService).client;
   private clinicaService = inject(ClinicaService);
+  private toastService = inject(ToastService);
 
   // Estados Centrais Reativos com Signals
   public prontuarios = signal<HistoricoRecord[]>([]);
@@ -98,7 +100,7 @@ export class HistoricoProntuariosComponent implements OnInit {
       this.prontuarios.set((data as unknown as HistoricoRecord[]) || []);
     } catch (error) {
       console.error('Erro ao carregar histórico de prontuários:', error);
-      alert('Não foi possível obter a lista de prontuários.');
+      this.toastService.showError('Não foi possível obter a lista de prontuários.');
     } finally {
       this.isLoading.set(false);
     }

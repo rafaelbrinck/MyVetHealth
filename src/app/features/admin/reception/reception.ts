@@ -8,6 +8,7 @@ import { ConsultaService, ConsultaView } from '../../../core/services/consulta.s
 import { Tutor } from '../../../core/models/tutor.model';
 import { ServicosService } from '../../../core/services/servicos-clinica';
 import { FaturamentoService } from '../../../core/services/faturamento.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { CheckoutConsultaComponent } from './checkout-consulta/checkout-consulta.component';
 
 @Component({
@@ -25,6 +26,7 @@ export class ReceptionComponent implements OnInit {
   public clinicaService = inject(ClinicaService);
   public consultaService = inject(ConsultaService);
   public faturamentoService = inject(FaturamentoService);
+  private toastService = inject(ToastService);
 
   public telaAtual = signal<'busca' | 'perfil_tutor' | 'novo_cadastro' | 'agendamento'>('busca');
   public consultaCheckout = signal<ConsultaView | null>(null);
@@ -95,7 +97,7 @@ export class ReceptionComponent implements OnInit {
 
   public onPagamentoConcluido(): void {
     this.consultaCheckout.set(null);
-    alert('✅ Pagamento registrado com sucesso! A consulta foi finalizada.');
+    this.toastService.showSuccess('Pagamento registrado com sucesso! A consulta foi finalizada.');
   }
 
   public buscarTutor(termo: string): void {
@@ -162,11 +164,11 @@ export class ReceptionComponent implements OnInit {
       await this.authService.criarCadastroExpresso(valores);
       await this.tutorService.getTutoresComPets(true);
 
-      alert('🎉 Cadastro e ficha do pet criados com sucesso!');
+      this.toastService.showSuccess('Cadastro e ficha do pet criados com sucesso!');
       this.voltarParaBusca();
     } catch (error: any) {
       console.error('Erro no cadastro expresso:', error);
-      alert('Erro: ' + (error.message || 'Falha ao processar cadastro'));
+      this.toastService.showError(error.message || 'Falha ao processar cadastro');
     } finally {
       this.isSubmitting.set(false);
     }
@@ -194,11 +196,13 @@ export class ReceptionComponent implements OnInit {
         status: 'aguardando',
       });
 
-      alert(`✅ Consulta agendada com sucesso para ${this.petSelecionadoParaConsulta().nome}!`);
+      this.toastService.showSuccess(
+        `Consulta agendada com sucesso para ${this.petSelecionadoParaConsulta().nome}!`,
+      );
       this.telaAtual.set('perfil_tutor');
     } catch (error: any) {
       console.error('Erro ao agendar consulta:', error);
-      alert('Erro: Não foi possível agendar a consulta.');
+      this.toastService.showError('Não foi possível agendar a consulta.');
     } finally {
       this.isSubmitting.set(false);
     }
