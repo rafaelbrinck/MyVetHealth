@@ -1,0 +1,198 @@
+<div class="max-w-7xl mx-auto min-h-screen pb-8">
+
+  <!-- Header & Filtros -->
+  <div class="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0da193] dark:text-emerald-400">
+        Análise Financeira
+      </h1>
+      <p class="text-neutral-600 dark:text-neutral-300 mt-2 font-medium text-sm sm:text-base">
+        Faturamento da clínica com métodos de pagamento e pendências.
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 p-4 sm:p-5 w-full lg:w-auto">
+      <div class="flex items-center gap-2 mb-3">
+        <lucide-icon [img]="lucideCalendar" [size]="18" class="text-[#0da193] dark:text-emerald-400" />
+        <span class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+          Período de faturamento
+        </span>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <select
+          [ngModel]="periodoMes()"
+          (ngModelChange)="periodoMes.set($event); onPeriodoChange()"
+          class="flex-1 bg-neutral-50 dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-neutral-800 dark:text-neutral-100 focus:ring-2 focus:ring-teal-200 outline-none"
+        >
+          @for (mes of meses; track mes.valor) {
+            <option [ngValue]="mes.valor">{{ mes.label }}</option>
+          }
+        </select>
+
+        <select
+          [ngModel]="periodoAno()"
+          (ngModelChange)="periodoAno.set($event); onPeriodoChange()"
+          class="sm:w-32 bg-neutral-50 dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-neutral-800 dark:text-neutral-100 focus:ring-2 focus:ring-teal-200 outline-none"
+        >
+          @for (ano of anos(); track ano) {
+            <option [ngValue]="ano">{{ ano }}</option>
+          }
+        </select>
+      </div>
+
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-3 font-medium">
+        Exibindo: <span class="font-bold text-neutral-700 dark:text-neutral-200">{{ periodoLabel() }}</span>
+      </p>
+    </div>
+  </div>
+
+  @if (erro()) {
+    <div class="mb-6 flex items-start gap-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/50 rounded-2xl p-4">
+      <lucide-icon [img]="lucideAlertCircle" [size]="20" class="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+      <p class="text-sm font-bold text-rose-700 dark:text-rose-400">{{ erro() }}</p>
+    </div>
+  }
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
+    @if (isLoading()) {
+      @for (item of [1, 2, 3, 4]; track item) {
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 p-6 animate-pulse">
+          <div class="h-10 w-10 bg-neutral-200 dark:bg-slate-700 rounded-2xl mb-4"></div>
+          <div class="h-4 w-24 bg-neutral-200 dark:bg-slate-700 rounded mb-2"></div>
+          <div class="h-8 w-32 bg-neutral-200 dark:bg-slate-700 rounded"></div>
+        </div>
+      }
+    } @else {
+      <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 p-6">
+        <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/50 flex items-center justify-center mb-4">
+          <lucide-icon [img]="lucideDollarSign" [size]="22" class="text-[#0da193] dark:text-emerald-400" />
+        </div>
+        <p class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Faturamento Total</p>
+        <p class="text-2xl font-extrabold text-neutral-900 dark:text-neutral-50 mt-1 tabular-nums">
+          {{ kpis().faturamentoTotalFormatado }}
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 p-6">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center mb-4">
+          <lucide-icon [img]="lucideTrendingUp" [size]="22" class="text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <p class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Consultas / Serviços</p>
+        <p class="text-2xl font-extrabold text-neutral-900 dark:text-neutral-50 mt-1 tabular-nums">
+          {{ kpis().servicosRealizados }}
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-amber-200/80 dark:border-amber-800/40 p-6">
+        <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center mb-4">
+          <lucide-icon [img]="lucideAlertCircle" [size]="22" class="text-amber-600 dark:text-amber-400" />
+        </div>
+        <p class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Valores Pendentes</p>
+        <p class="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 tabular-nums">
+          {{ kpis().valoresPendentesFormatado }}
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 p-6">
+        <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+          <lucide-icon [img]="lucideCreditCard" [size]="22" class="text-[#0da193] dark:text-emerald-400" />
+        </div>
+        <p class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Método Mais Usado</p>
+        <p class="text-xl font-extrabold text-neutral-900 dark:text-neutral-50 mt-1 leading-tight">
+          {{ kpis().metodoMaisUsado }}
+        </p>
+      </div>
+    }
+  </div>
+
+  <!-- Tabela de Faturamento -->
+  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-neutral-100 dark:border-slate-800 overflow-hidden">
+    <div class="p-5 sm:p-6 border-b border-neutral-100 dark:border-slate-800">
+      <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-50">Faturamentos do Período</h2>
+      <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1 font-medium">
+        Registros de cobrança com status e formas de pagamento associadas.
+      </p>
+    </div>
+
+    @if (isLoading()) {
+      <div class="p-6 space-y-4">
+        @for (item of [1, 2, 3, 4, 5]; track item) {
+          <div class="animate-pulse flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-2xl bg-neutral-50 dark:bg-slate-800/50">
+            <div class="h-4 w-24 bg-neutral-200 dark:bg-slate-700 rounded"></div>
+            <div class="h-4 flex-1 bg-neutral-200 dark:bg-slate-700 rounded"></div>
+            <div class="h-6 w-20 bg-neutral-200 dark:bg-slate-700 rounded-full"></div>
+            <div class="h-4 w-28 bg-neutral-200 dark:bg-slate-700 rounded"></div>
+            <div class="h-4 w-24 bg-neutral-200 dark:bg-slate-700 rounded"></div>
+          </div>
+        }
+      </div>
+    } @else {
+      <!-- Desktop -->
+      <div class="hidden lg:block overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[900px]">
+          <thead>
+            <tr class="bg-neutral-50 dark:bg-slate-800/90 text-neutral-600 dark:text-neutral-300 text-xs sm:text-sm">
+              <th class="py-4 px-6 font-semibold">Data</th>
+              <th class="py-4 px-6 font-semibold">Serviço</th>
+              <th class="py-4 px-6 font-semibold">Status</th>
+              <th class="py-4 px-6 font-semibold">Forma de Pagamento</th>
+              <th class="py-4 px-6 font-semibold text-right">Valor</th>
+            </tr>
+          </thead>
+          <tbody class="text-neutral-800 dark:text-neutral-200">
+            @for (item of faturamentos(); track trackFaturamento($index, item)) {
+              <tr class="border-b border-neutral-100 dark:border-slate-800 hover:bg-neutral-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="py-4 px-6 font-semibold whitespace-nowrap">{{ item.dataFaturamento }}</td>
+                <td class="py-4 px-6 font-medium">{{ item.descricao }}</td>
+                <td class="py-4 px-6">
+                  <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold border" [class]="badgeStatusClasses(item.status)">
+                    {{ item.statusLabel }}
+                  </span>
+                </td>
+                <td class="py-4 px-6 text-sm font-medium text-neutral-600 dark:text-neutral-300">
+                  {{ item.metodosPagamento }}
+                </td>
+                <td class="py-4 px-6 text-right font-extrabold tabular-nums text-emerald-600 dark:text-emerald-400">
+                  {{ item.valorTotalFormatado }}
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="py-16 px-6 text-center text-neutral-500 dark:text-neutral-400 font-medium">
+                  Nenhum faturamento encontrado para este período.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile / Tablet Cards -->
+      <div class="lg:hidden p-4 space-y-4">
+        @for (item of faturamentos(); track trackFaturamento($index, item)) {
+          <div class="rounded-2xl border border-neutral-100 dark:border-slate-800 p-4 bg-neutral-50/50 dark:bg-slate-800/30">
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <p class="text-xs font-bold text-neutral-500 dark:text-neutral-400">{{ item.dataFaturamento }}</p>
+                <p class="font-bold text-neutral-900 dark:text-neutral-50 mt-1">{{ item.descricao }}</p>
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-2">{{ item.metodosPagamento }}</p>
+              </div>
+              <p class="font-extrabold tabular-nums shrink-0 text-emerald-600 dark:text-emerald-400">
+                {{ item.valorTotalFormatado }}
+              </p>
+            </div>
+            <span class="inline-flex px-3 py-1 rounded-full text-[10px] font-bold border" [class]="badgeStatusClasses(item.status)">
+              {{ item.statusLabel }}
+            </span>
+          </div>
+        } @empty {
+          <div class="text-center py-12 text-neutral-500 dark:text-neutral-400 font-medium">
+            Nenhum faturamento encontrado para este período.
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

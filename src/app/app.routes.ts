@@ -127,6 +127,13 @@ export const routes: Routes = [
           import('./features/admin/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
       {
+        path: 'faturamento',
+        loadComponent: () =>
+          import('./features/admin/faturamento/faturamento').then((m) => m.FaturamentoComponent),
+        canActivate: [roleGuard],
+        data: { roles: ['admin_clinica'] },
+      },
+      {
         path: 'prontuarios',
         loadComponent: () =>
           import('./features/admin/historico-prontuarios/historico-prontuarios').then(

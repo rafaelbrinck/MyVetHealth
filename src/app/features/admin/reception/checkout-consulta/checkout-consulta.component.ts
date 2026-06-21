@@ -19,10 +19,7 @@ import {
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ConsultaView } from '../../../../core/services/consulta.service';
-import {
-  FaturamentoService,
-  MetodoPagamento,
-} from '../../../../core/services/faturamento.service';
+import { FaturamentoService, MetodoPagamento } from '../../../../core/services/faturamento.service';
 
 const METODOS_PAGAMENTO: { valor: MetodoPagamento; label: string }[] = [
   { valor: 'pix', label: 'PIX' },
@@ -118,8 +115,10 @@ export class CheckoutConsultaComponent implements OnInit {
 
     try {
       await this.faturamentoService.processarPagamento({
+        tipo: 'receita',
         consultaId: this.consulta().id,
         valorTotal: this.valorTotal(),
+        descricao: this.consulta().servico || 'Consulta veterinária',
         metodos,
       });
 
