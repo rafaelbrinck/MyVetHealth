@@ -4,12 +4,23 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Auth } from '../../../core/services/auth';
 import { TutorService } from '../../../core/services/tutor.service';
 import { ClinicaService } from '../../../core/services/clinica.service';
-import { ConsultaService, ConsultaView } from '../../../core/services/consulta.service';
+import { ConsultaService, ConsultaView, StatusConsulta } from '../../../core/services/consulta.service';
 import { Tutor } from '../../../core/models/tutor.model';
 import { ServicosService } from '../../../core/services/servicos-clinica';
 import { FaturamentoService } from '../../../core/services/faturamento.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CheckoutConsultaComponent } from './checkout-consulta/checkout-consulta.component';
+
+type TipoEntradaConsulta = Extract<StatusConsulta, 'aguardando' | 'agendada'>;
+
+interface AgendamentoFormValue {
+  veterinarioId: string;
+  data: string;
+  hora: string;
+  servicoId: string;
+  sintomas: string;
+  status: TipoEntradaConsulta;
+}
 
 @Component({
   selector: 'app-reception',
@@ -64,13 +75,22 @@ export class ReceptionComponent implements OnInit {
       genero: ['', Validators.required],
     });
 
-    this.agendamentoForm = this.fb.group({
+    this.agendamentoForm = this.fb.nonNullable.group({
       veterinarioId: [''],
       data: ['', Validators.required],
       hora: ['', Validators.required],
       servicoId: ['', Validators.required],
       sintomas: [''],
+      status: ['aguardando' as TipoEntradaConsulta, Validators.required],
     });
+  }
+
+  public definirTipoEntrada(status: TipoEntradaConsulta): void {
+    this.agendamentoForm.patchValue({ status });
+  }
+
+  public tipoEntradaSelecionado(): TipoEntradaConsulta {
+    return this.agendamentoForm.get('status')?.value ?? 'aguardando';
   }
 
   async ngOnInit() {
@@ -134,6 +154,7 @@ export class ReceptionComponent implements OnInit {
     this.agendamentoForm.patchValue({
       data: agora.toISOString().split('T')[0],
       hora: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      status: 'aguardando',
     });
 
     this.telaAtual.set('agendamento');
@@ -183,9 +204,10 @@ export class ReceptionComponent implements OnInit {
     this.isSubmitting.set(true);
 
     try {
-      const valores = this.agendamentoForm.value;
+      const valores = this.agendamentoForm.getRawValue() as AgendamentoFormValue;
       const petId = this.petSelecionadoParaConsulta().id;
       const dataHoraCompleta = new Date(`${valores.data}T${valores.hora}:00`).toISOString();
+      const petNome = this.petSelecionadoParaConsulta().nome;
 
       await this.consultaService.agendarConsulta({
         petId: petId,
@@ -193,12 +215,14 @@ export class ReceptionComponent implements OnInit {
         dataHora: dataHoraCompleta,
         sintomas: valores.sintomas,
         servicoId: valores.servicoId,
-        status: 'aguardando',
+        status: valores.status,
       });
 
-      this.toastService.showSuccess(
-        `Consulta agendada com sucesso para ${this.petSelecionadoParaConsulta().nome}!`,
-      );
+      if (valores.status === 'aguardando') {
+        this.toastService.showSuccess(`${petNome} entrou na fila de encaixe!`);
+      } else {
+        this.toastService.showSuccess(`Horário marcado com sucesso para ${petNome}!`);
+      }
       this.telaAtual.set('perfil_tutor');
     } catch (error: any) {
       console.error('Erro ao agendar consulta:', error);

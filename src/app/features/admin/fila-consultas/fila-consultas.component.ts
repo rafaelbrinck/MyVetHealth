@@ -22,6 +22,8 @@ import {
   RefreshCw,
   Calendar,
   FileText,
+  UserCheck,
+  ChevronDown,
 } from 'lucide-angular';
 import { Auth } from '../../../core/services/auth';
 import {
@@ -29,6 +31,7 @@ import {
   FilaService,
   UrgenciaAgendamento,
 } from '../../../core/services/fila.service';
+import { StatusConsulta } from '../../../core/services/consulta.service';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
@@ -55,14 +58,18 @@ export class FilaConsultasComponent implements OnInit {
   protected readonly lucideRefreshCw = RefreshCw;
   protected readonly lucideCalendar = Calendar;
   protected readonly lucideFileText = FileText;
+  protected readonly lucideUserCheck = UserCheck;
+  protected readonly lucideChevronDown = ChevronDown;
 
   private agora = signal(Date.now());
   private acaoConsultaId = signal<string | null>(null);
+  public horariosMarcadosAbertos = signal(false);
 
   public carregando = this.filaService.carregando;
   public erro = this.filaService.erro;
   public metricas = this.filaService.metricas;
   public consultasAtivas = this.filaService.consultasAtivas;
+  public consultasAgendadas = this.filaService.consultasAgendadas;
 
   public filaComEspera = computed(() => {
     const referencia = new Date(this.agora());
@@ -75,6 +82,11 @@ export class FilaConsultasComponent implements OnInit {
   public podeGerenciarAtendimento = computed(() => {
     const papel = this.auth.getUserRoleValue();
     return papel === 'veterinario' || papel === 'admin_clinica';
+  });
+
+  public podeConfirmarChegada = computed(() => {
+    const papel = this.auth.getUserRoleValue();
+    return papel === 'veterinario' || papel === 'admin_clinica' || papel === 'recepcionista';
   });
 
   async ngOnInit(): Promise<void> {
@@ -90,7 +102,9 @@ export class FilaConsultasComponent implements OnInit {
   }
 
   async iniciarAtendimento(item: FilaConsultaItem): Promise<void> {
-    if (!this.podeGerenciarAtendimento() || this.acaoConsultaId()) return;
+    if (!this.podeGerenciarAtendimento() || this.acaoConsultaId() || item.status !== 'aguardando') {
+      return;
+    }
 
     this.acaoConsultaId.set(item.id);
 
@@ -101,6 +115,24 @@ export class FilaConsultasComponent implements OnInit {
     } catch (error) {
       console.error('Falha ao iniciar atendimento', error);
       this.toastService.showError('Não foi possível iniciar o atendimento. Tente novamente.');
+    } finally {
+      this.acaoConsultaId.set(null);
+    }
+  }
+
+  async confirmarChegadaNaFila(item: FilaConsultaItem): Promise<void> {
+    if (!this.podeConfirmarChegada() || this.acaoConsultaId() || item.status !== 'agendada') {
+      return;
+    }
+
+    this.acaoConsultaId.set(item.id);
+
+    try {
+      await this.filaService.confirmarChegadaNaFila(item.id);
+      this.toastService.showSuccess(`${item.petNome} entrou na fila de atendimento.`);
+    } catch (error) {
+      console.error('Falha ao confirmar chegada', error);
+      this.toastService.showError('Não foi possível enviar o paciente para a fila. Tente novamente.');
     } finally {
       this.acaoConsultaId.set(null);
     }
@@ -117,6 +149,10 @@ export class FilaConsultasComponent implements OnInit {
 
   verAgendaCompleta(): void {
     this.router.navigate(['/clinica/calendario']);
+  }
+
+  alternarHorariosMarcados(): void {
+    this.horariosMarcadosAbertos.update((aberto) => !aberto);
   }
 
   formatarTempoEspera(minutos: number): string {
@@ -136,6 +172,38 @@ export class FilaConsultasComponent implements OnInit {
       default:
         return 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600';
     }
+  }
+
+  badgeStatusClasses(status: StatusConsulta): string {
+    switch (status) {
+      case 'agendada':
+        return 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-700/60';
+      case 'aguardando':
+        return 'bg-teal-50/80 text-teal-800 border-2 border-teal-300 dark:bg-teal-950/30 dark:text-teal-300 dark:border-teal-600/70';
+      default:
+        return 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600';
+    }
+  }
+
+  labelStatusEntrada(item: FilaConsultaItem): string {
+    if (item.status === 'agendada') {
+      return `Agendado · ${item.horarioAgendado}`;
+    }
+    return 'Fila / Encaixe';
+  }
+
+  cardEntradaClasses(status: StatusConsulta): string {
+    if (status === 'agendada') {
+      return 'border-sky-200 dark:border-sky-800/50 bg-sky-50/25 dark:bg-sky-950/10';
+    }
+    return 'border-teal-200 dark:border-teal-800/40 bg-teal-50/20 dark:bg-teal-950/10';
+  }
+
+  rotuloHorarioContextual(item: FilaConsultaItem): string {
+    if (item.status === 'agendada') {
+      return `Horário marcado: ${item.horarioAgendado}`;
+    }
+    return `Chegou às ${item.horarioAgendado}`;
   }
 
   labelUrgencia(urgencia: UrgenciaAgendamento): string {

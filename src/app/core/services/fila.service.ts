@@ -23,6 +23,7 @@ export interface FilaConsultaItem {
 
 export interface FilaMetricas {
   totalAguardando: number;
+  totalAgendados: number;
   tempoMedioEsperaMinutos: number;
   consultasAtivas: number;
 }
@@ -76,8 +77,14 @@ export class FilaService {
 
   public filaAguardando = computed(() =>
     this.consultasVisiveis()
-      .filter((item) => item.status === 'aguardando' || item.status === 'agendada')
+      .filter((item) => item.status === 'aguardando')
       .sort((a, b) => this.ordenarFila(a, b)),
+  );
+
+  public consultasAgendadas = computed(() =>
+    this.consultasVisiveis()
+      .filter((item) => item.status === 'agendada')
+      .sort((a, b) => a.dataAgendamento.getTime() - b.dataAgendamento.getTime()),
   );
 
   public consultasAtivas = computed(() =>
@@ -85,15 +92,16 @@ export class FilaService {
   );
 
   public metricas = computed<FilaMetricas>(() => {
-    const aguardando = this.filaAguardando();
+    const naFila = this.filaAguardando();
     const referencia = new Date();
-    const tempos = aguardando.map((item) => this.calcularMinutosEspera(item, referencia));
+    const tempos = naFila.map((item) => this.calcularMinutosEspera(item, referencia));
 
     const tempoMedio =
       tempos.length > 0 ? Math.round(tempos.reduce((acc, min) => acc + min, 0) / tempos.length) : 0;
 
     return {
-      totalAguardando: aguardando.length,
+      totalAguardando: naFila.length,
+      totalAgendados: this.consultasAgendadas().length,
       tempoMedioEsperaMinutos: tempoMedio,
       consultasAtivas: this.consultasAtivas().length,
     };
@@ -135,6 +143,10 @@ export class FilaService {
 
   async iniciarAtendimento(consultaId: string): Promise<void> {
     await this.consultaService.atualizarStatus(consultaId, 'em_andamento');
+  }
+
+  async confirmarChegadaNaFila(consultaId: string): Promise<void> {
+    await this.consultaService.confirmarChegadaNaFila(consultaId);
   }
 
   private mapearConsultaParaFila(consulta: ConsultaView): FilaConsultaItem {

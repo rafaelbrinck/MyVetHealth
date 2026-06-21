@@ -327,6 +327,39 @@ export class ConsultaService {
     }
   }
 
+  async confirmarChegadaNaFila(consultaId: string): Promise<void> {
+    const consulta = this._consultas().find((c) => c.id === consultaId);
+    if (!consulta || consulta.status !== 'agendada') {
+      throw new Error('Consulta não está agendada.');
+    }
+
+    const statusAnterior = consulta.status;
+    const atualizadoAnterior = consulta.atualizado_em;
+    const agora = new Date();
+
+    this._consultas.update((consultas) =>
+      consultas.map((c) =>
+        c.id === consultaId ? { ...c, status: 'aguardando', atualizado_em: agora } : c,
+      ),
+    );
+
+    const { error } = await this.supabase
+      .from('consultas')
+      .update({ status: 'aguardando', atualizado_em: agora.toISOString() })
+      .eq('id', consultaId);
+
+    if (error) {
+      this._consultas.update((consultas) =>
+        consultas.map((c) =>
+          c.id === consultaId
+            ? { ...c, status: statusAnterior, atualizado_em: atualizadoAnterior }
+            : c,
+        ),
+      );
+      throw error;
+    }
+  }
+
   public async salvarProntuario(payload: any): Promise<void> {
     const { error } = await this.supabase.rpc('finalizar_atendimento', {
       p_consulta_id: payload.idConsulta,
