@@ -28,6 +28,28 @@ export interface ConsultaView {
   valor_servico?: number; // NOVO: Valor numérico do serviço vindo do banco
 }
 
+export interface ConsultaTutorView {
+  id: string;
+  status: string;
+  sintomas: string;
+  resumo_publico: string | null;
+  data: string;
+  hora: string;
+  pet: string;
+  vet: string;
+}
+
+interface ConsultaTutorRow {
+  id: string;
+  status: string;
+  sintomas: string | null;
+  resumo_publico: string | null;
+  data: string;
+  hora: string;
+  pet: string;
+  vet: string | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -41,6 +63,10 @@ export class ConsultaService {
   public consultas = this._consultas.asReadonly();
 
   private realtimeChannel!: RealtimeChannel; // Referência do canal WebSocket
+  private _consultasTutor = signal<ConsultaTutorView[]>([]);
+  private _consultasTutorLoaded = signal(false);
+
+  public consultasTutor = this._consultasTutor.asReadonly();
 
   // Fila do Dashboard
   public filaHoje = computed(() => {
@@ -305,6 +331,70 @@ export class ConsultaService {
     });
 
     if (error) throw error;
+  }
+
+  async carregarConsultasTutor(forceReload = false): Promise<void> {
+    if (!forceReload && this._consultasTutorLoaded()) {
+      return;
+    }
+
+    const { data, error } = await this.supabase
+      .from('vw_minhas_consultas_tutor')
+      .select('id, status, sintomas, resumo_publico, data, hora, pet, vet');
+
+    if (error) throw error;
+
+    const consultas = (data ?? []).map((row) =>
+      this.normalizarConsultaTutor(row as ConsultaTutorRow),
+    );
+    this._consultasTutor.set(consultas);
+    this._consultasTutorLoaded.set(true);
+  }
+
+  private normalizarConsultaTutor(row: ConsultaTutorRow): ConsultaTutorView {
+    return {
+      id: row.id,
+      status: this.rotuloStatusTutor(row.status),
+      sintomas: row.sintomas?.trim() || 'Não informado',
+      resumo_publico: row.resumo_publico,
+      data: this.formatarDataConsulta(row.data),
+      hora: this.formatarHoraConsulta(row.hora),
+      pet: row.pet,
+      vet: row.vet?.trim() || 'Veterinário não informado',
+    };
+  }
+
+  private rotuloStatusTutor(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'agendada':
+      case 'aguardando':
+        return 'Agendada';
+      case 'finalizada':
+        return 'Concluída';
+      case 'em_andamento':
+        return 'Em Andamento';
+      case 'aguardando_pagamento':
+        return 'Aguardando Pagamento';
+      case 'cancelada':
+        return 'Cancelada';
+      default:
+        return status;
+    }
+  }
+
+  private formatarDataConsulta(valor: string): string {
+    const dataObj = new Date(valor);
+    if (Number.isNaN(dataObj.getTime())) return valor;
+    return dataObj.toLocaleDateString('pt-BR');
+  }
+
+  private formatarHoraConsulta(valor: string): string {
+    if (/^\d{2}:\d{2}$/.test(valor)) return valor;
+
+    const dataObj = new Date(valor);
+    if (Number.isNaN(dataObj.getTime())) return valor;
+
+    return dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
 
   private definirCorPorStatus(status: StatusConsulta) {
