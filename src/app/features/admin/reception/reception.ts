@@ -120,31 +120,62 @@ export class ReceptionComponent implements OnInit {
     this.toastService.showSuccess('Pagamento registrado com sucesso! A consulta foi finalizada.');
   }
 
-  public buscarTutor(termo: string): void {
-    if (!termo.trim()) return;
+  public async buscarTutor(termo: string): Promise<void> {
+    const busca = termo.trim();
+    if (!busca) return;
+
     this.statusBusca.set('buscando');
 
-    setTimeout(() => {
-      const busca = termo.toLowerCase().trim();
+    try {
+      const buscaLower = busca.toLowerCase();
+      const cpfNormalizado = busca.replace(/\D/g, '');
 
-      const encontrado = this.tutorService
-        .tutores()
-        .find(
-          (t) =>
-            t.cpf.replace(/\D/g, '').includes(busca.replace(/\D/g, '')) ||
-            t.nome.toLowerCase().includes(busca) ||
-            t.email.toLowerCase().includes(busca),
-        );
+      const encontradoLocal = this.tutorService.tutores().find(
+        (t) =>
+          t.cpf.replace(/\D/g, '').includes(cpfNormalizado) ||
+          t.nome.toLowerCase().includes(buscaLower) ||
+          t.email.toLowerCase().includes(buscaLower),
+      );
 
-      if (encontrado) {
-        this.tutorAtivo.set(encontrado);
-        this.petsTutor.set(encontrado.pets || []);
-        this.statusBusca.set('ocioso');
-        this.telaAtual.set('perfil_tutor');
-      } else {
-        this.statusBusca.set('nao_encontrado');
+      if (encontradoLocal) {
+        this.selecionarTutor(encontradoLocal);
+        return;
       }
-    }, 600);
+
+      if (cpfNormalizado.length >= 11) {
+        const tutorGlobal = await this.tutorService.buscarTutorGlobalPorCPF(cpfNormalizado);
+
+        if (tutorGlobal) {
+          await this.tutorService.vincularTutorAClinica(tutorGlobal.id);
+          this.toastService.showSuccess('Tutor encontrado na rede e vinculado à clínica com sucesso!');
+
+          await this.tutorService.getTutoresComPets(true);
+
+          const tutorVinculado =
+            this.tutorService.tutores().find((t) => t.id === tutorGlobal.id) ??
+            ({
+              ...tutorGlobal,
+              pets: [],
+            } satisfies Tutor);
+
+          this.selecionarTutor(tutorVinculado);
+          return;
+        }
+      }
+
+      this.statusBusca.set('nao_encontrado');
+    } catch (error) {
+      console.error('Erro ao buscar tutor:', error);
+      this.toastService.showError('Não foi possível buscar o tutor. Tente novamente.');
+      this.statusBusca.set('ocioso');
+    }
+  }
+
+  private selecionarTutor(tutor: Tutor): void {
+    this.tutorAtivo.set(tutor);
+    this.petsTutor.set(tutor.pets ?? []);
+    this.statusBusca.set('ocioso');
+    this.telaAtual.set('perfil_tutor');
   }
 
   public iniciarConsulta(pet: any): void {

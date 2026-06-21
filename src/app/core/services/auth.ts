@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { User } from '@supabase/supabase-js';
 import { ClinicaService } from './clinica.service';
 import { PapelEquipe } from '../models/clinica.model';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +13,7 @@ export class Auth {
   private clinicaService = inject(ClinicaService);
   private supabaseService = inject(SupabaseService);
   private supabase = this.supabaseService.client;
+  private router = inject(Router);
 
   private currentUser = new BehaviorSubject<User | null>(null);
   private userRole = new BehaviorSubject<string | null>(null);
@@ -240,6 +242,7 @@ export class Auth {
       this.userRole.next(null);
       this.roleClinicaIdCache = null;
       this.invalidateCaches();
+      this.router.navigate(['/login']);
     }
   }
 }
