@@ -1,20 +1,37 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, ActivatedRouteSnapshot, Router } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
 import { Auth } from '../services/auth';
+import { PapelEquipe } from '../models/clinica.model';
 
-export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
+const PAPEIS_CLINICA: PapelEquipe[] = ['admin_clinica', 'veterinario', 'recepcionista'];
+
+export const roleGuard: CanActivateFn = async (route: ActivatedRouteSnapshot) => {
+  const auth = inject(Auth);
   const router = inject(Router);
-  const role = inject(Auth).getUserRoleValue();
 
-  const papeisPermitidos = route.data['roles'] as Array<string>;
+  const autenticado = await auth.ensureAuthenticated();
+  if (!autenticado) {
+    return router.createUrlTree(['/login']);
+  }
 
-  if (!papeisPermitidos || papeisPermitidos.length === 0) {
+  const papeisPermitidos = route.data['roles'] as PapelEquipe[] | undefined;
+  if (!papeisPermitidos?.length) {
     return true;
   }
 
-  if (role && papeisPermitidos.includes(role)) {
+  const papel = await auth.ensureRoleForActiveClinic();
+
+  if (papel && papeisPermitidos.includes(papel as PapelEquipe)) {
     return true;
   }
 
-  return router.createUrlTree(['/clinica/dashboard']);
+  if (papel && PAPEIS_CLINICA.includes(papel as PapelEquipe)) {
+    return router.createUrlTree(['/clinica/dashboard']);
+  }
+
+  if (papel === 'tutor') {
+    return router.createUrlTree(['/tutor/dashboard']);
+  }
+
+  return router.createUrlTree(['/hub']);
 };

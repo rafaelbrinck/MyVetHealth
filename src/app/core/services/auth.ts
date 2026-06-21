@@ -1,11 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase';
-import { BehaviorSubject, map } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { User } from '@supabase/supabase-js';
-import { Tutor } from '../models/tutor.model';
-import { Pet } from '../models/pet.model';
-import { PetService } from './pet.service';
 import { ClinicaService } from './clinica.service';
+import { PapelEquipe } from '../models/clinica.model';
 
 @Injectable({
   providedIn: 'root',
@@ -18,15 +16,86 @@ export class Auth {
   private currentUser = new BehaviorSubject<User | null>(null);
   private userRole = new BehaviorSubject<string | null>(null);
 
+  private sessionPromise: Promise<boolean> | null = null;
+  private rolePromise: Promise<string | null> | null = null;
+  private roleClinicaIdCache: string | null = null;
+
   constructor() {
-    this.carregarSessao();
+    this.supabase.auth.onAuthStateChange((_event, session) => {
+      this.currentUser.next(session?.user ?? null);
+      if (!session?.user) {
+        this.userRole.next(null);
+        this.roleClinicaIdCache = null;
+        this.invalidateCaches();
+      }
+    });
+
+    void this.ensureAuthenticated();
+  }
+
+  async ensureAuthenticated(): Promise<boolean> {
+    if (this.currentUser.value) {
+      return true;
+    }
+
+    if (!this.sessionPromise) {
+      this.sessionPromise = this.bootstrapSession();
+    }
+
+    return this.sessionPromise;
+  }
+
+  async ensureRoleForActiveClinic(): Promise<string | null> {
+    const autenticado = await this.ensureAuthenticated();
+    if (!autenticado) {
+      return null;
+    }
+
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      return null;
+    }
+
+    const clinicaId = this.clinicaService.clinicaAtivaId;
+    if (!clinicaId) {
+      await this.carregarRoleGlobal(userId);
+      return this.userRole.value;
+    }
+
+    if (this.userRole.value && this.roleClinicaIdCache === clinicaId) {
+      return this.userRole.value;
+    }
+
+    if (!this.rolePromise) {
+      this.rolePromise = this.carregarRoleParaClinica(userId, clinicaId).finally(() => {
+        this.rolePromise = null;
+      });
+    }
+
+    return this.rolePromise;
+  }
+
+  setPapelWorkspace(papel: PapelEquipe, clinicaId: string): void {
+    this.userRole.next(papel);
+    this.roleClinicaIdCache = clinicaId;
+    this.rolePromise = null;
+  }
+
+  setPapelTutor(): void {
+    this.userRole.next('tutor');
+    this.roleClinicaIdCache = null;
+    this.rolePromise = null;
+  }
+
+  invalidateCaches(): void {
+    this.sessionPromise = null;
+    this.rolePromise = null;
   }
 
   async criarCadastroExpresso(dados: any): Promise<void> {
     const clinicaId = this.clinicaService.clinicaAtivaId;
     if (!clinicaId) throw new Error('Nenhuma clínica ativa no sistema.');
 
-    // Preparamos o pacote de dados (Payload)
     const payload = {
       clinicaId: clinicaId,
       email: dados.email,
@@ -41,12 +110,10 @@ export class Auth {
       telefone: dados.telefone,
     };
 
-    // Chamamos a Edge Function que está rodando segura na nuvem do Supabase
     const { data, error } = await this.supabase.functions.invoke('cadastrar-tutor', {
       body: payload,
     });
 
-    // Tratamento de erros vindo da Function
     if (error) {
       console.error('Erro na Edge Function:', error);
       throw new Error('Falha de comunicação com o servidor seguro.');
@@ -58,21 +125,47 @@ export class Auth {
       }
       throw new Error(data.error);
     }
-
-    // Sucesso! O usuário foi criado, a sessão da recepcionista continua ativa e o banco foi atualizado.
   }
 
-  private async carregarSessao() {
+  private async bootstrapSession(): Promise<boolean> {
     const {
       data: { session },
     } = await this.supabase.auth.getSession();
+
     if (session?.user) {
       this.currentUser.next(session.user);
-      await this.carregarRole(session.user.id);
+      return true;
     }
+
+    this.currentUser.next(null);
+    return false;
   }
 
-  private async carregarRole(userId: string) {
+  private async carregarRoleParaClinica(userId: string, clinicaId: string): Promise<string | null> {
+    const { data, error } = await this.supabase
+      .from('equipe_clinica')
+      .select('papel')
+      .eq('perfil_id', userId)
+      .eq('clinica_id', clinicaId)
+      .eq('ativo', true)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[Auth] Erro ao carregar papel da clínica ativa:', error);
+      throw error;
+    }
+
+    if (data?.papel) {
+      this.userRole.next(data.papel);
+      this.roleClinicaIdCache = clinicaId;
+      return data.papel;
+    }
+
+    await this.carregarRoleGlobal(userId);
+    return this.userRole.value;
+  }
+
+  private async carregarRoleGlobal(userId: string): Promise<void> {
     const [perfilData, equipeData, validConvite] = await Promise.all([
       this.supabase.from('perfis').select('papel').eq('id', userId).maybeSingle(),
       this.supabase
@@ -82,14 +175,9 @@ export class Auth {
         .eq('ativo', true)
         .limit(1)
         .maybeSingle(),
-
       this.supabase
         .from('convites_clinica')
-        .select(
-          `
-          id, papel
-        `,
-        )
+        .select('id, papel')
         .eq('perfil_id', userId)
         .eq('status', 'pendente')
         .maybeSingle(),
@@ -100,16 +188,16 @@ export class Auth {
     if (validConvite.error) throw validConvite.error;
 
     if (perfilData.data) {
-      this.userRole.next(perfilData.data.papel); // Se achou o perfil, é admin (o primeiro usuário de cada clínica é admin)
+      this.userRole.next(perfilData.data.papel);
     } else if (equipeData.data) {
-      // Se achou, o usuário já está vinculado a uma clínica (é admin, vet ou recepcionista)
       this.userRole.next(equipeData.data.papel);
     } else if (validConvite.data) {
-      // Se não achou na equipe, ele é um usuário recém-cadastrado (sem clínica) ou um Tutor
       this.userRole.next(validConvite.data.papel);
     } else {
       this.userRole.next('tutor');
     }
+
+    this.roleClinicaIdCache = null;
   }
 
   getCurrentUser() {
@@ -120,7 +208,6 @@ export class Auth {
     return this.userRole.asObservable();
   }
 
-  // Novo método para pegar o valor atual instantaneamente sem Observables
   getUserRoleValue(): string | null {
     return this.userRole.value;
   }
@@ -133,13 +220,13 @@ export class Auth {
     const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      throw error; // Joga o erro para o catch() do login.ts interceptar
+      throw error;
     }
 
-    // Se logou com sucesso, já atualiza as variáveis e busca a role aguardando terminar
     if (data.session?.user) {
       this.currentUser.next(data.session.user);
-      await this.carregarRole(data.session.user.id);
+      this.invalidateCaches();
+      await this.carregarRoleGlobal(data.session.user.id);
     }
   }
 
@@ -148,9 +235,11 @@ export class Auth {
     if (error) {
       console.error('Erro ao fazer logout:', error);
     } else {
-      this.clinicaService.limparClinicaAtiva(); // Limpa a clínica ativa e equipe da memória
+      this.clinicaService.limparClinicaAtiva();
       this.currentUser.next(null);
       this.userRole.next(null);
+      this.roleClinicaIdCache = null;
+      this.invalidateCaches();
     }
   }
 }

@@ -1,30 +1,30 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { SupabaseService } from '../../../core/services/supabase';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Auth } from '../../../core/services/auth';
 import { ClinicaService } from '../../../core/services/clinica.service';
-import { CriarClinicaDTO } from '../../../core/models/clinica.model';
+import { CriarClinicaDTO, PapelEquipe, WorkspaceClinica } from '../../../core/models/clinica.model';
 
 @Component({
   selector: 'app-workspace-clinicas',
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './workspace-clinicas.html',
   styleUrl: './workspace-clinicas.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkspaceClinicas implements OnInit {
-  private supabase = inject(SupabaseService).client;
-  private clinicaService = inject(ClinicaService); // Injetando o service
+  private authService = inject(Auth);
+  private clinicaService = inject(ClinicaService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
-  clinicas = signal<any[]>([]);
+  clinicas = signal<WorkspaceClinica[]>([]);
   isLoading = signal(true);
   isSubmitting = signal(false);
   modoAcao = signal<'nenhum' | 'convite' | 'nova_clinica'>('nenhum');
   errorMessage = signal('');
 
-  // Guardamos o ID do usuário para não ter que buscar toda hora
   private userId: string | null = null;
 
   novaClinicaForm = this.fb.group({
@@ -37,26 +37,28 @@ export class WorkspaceClinicas implements OnInit {
     uf: [''],
   });
 
-  async ngOnInit() {
-    // 1. Pegamos a identidade do usuário primeiro
-    const {
-      data: { user },
-    } = await this.supabase.auth.getUser();
-    if (!user) {
-      this.router.navigate(['/login']);
+  async ngOnInit(): Promise<void> {
+    const autenticado = await this.authService.ensureAuthenticated();
+    if (!autenticado) {
+      await this.router.navigateByUrl('/login');
       return;
     }
-    this.userId = user.id;
 
-    // 2. Disparamos a busca
+    this.userId = this.authService.getCurrentUserId();
+    if (!this.userId) {
+      await this.router.navigateByUrl('/login');
+      return;
+    }
+
     await this.carregarClinicas();
   }
 
-  async carregarClinicas() {
+  async carregarClinicas(): Promise<void> {
+    if (!this.userId) return;
+
     this.isLoading.set(true);
     try {
-      // O componente apenas consome a lista limpa que o Service devolve
-      const clinicasDoUsuario = await this.clinicaService.getClinicasDoUsuario(this.userId!);
+      const clinicasDoUsuario = await this.clinicaService.getClinicasDoUsuario(this.userId);
       this.clinicas.set(clinicasDoUsuario);
     } catch (error) {
       console.error('Erro ao carregar clínicas:', error);
@@ -65,22 +67,37 @@ export class WorkspaceClinicas implements OnInit {
     }
   }
 
-  async acessarClinica(clinicaId: string) {
-    localStorage.setItem('clinica_ativa', clinicaId);
-    await this.clinicaService.setarClinicaAtiva(clinicaId);
-    this.router.navigate(['/clinica/dashboard']);
+  async acessarClinica(clinica: WorkspaceClinica): Promise<void> {
+    if (this.isSubmitting()) return;
+
+    this.isSubmitting.set(true);
+    this.errorMessage.set('');
+
+    try {
+      localStorage.setItem('clinica_ativa', clinica.id);
+      this.authService.setPapelWorkspace(clinica.papel, clinica.id);
+      await this.clinicaService.setarClinicaAtiva(clinica.id);
+      await this.authService.ensureRoleForActiveClinic();
+      await this.router.navigateByUrl('/clinica/dashboard');
+    } catch (error) {
+      console.error('Erro ao acessar clínica:', error);
+      this.errorMessage.set('Não foi possível entrar na clínica. Tente novamente.');
+      localStorage.removeItem('clinica_ativa');
+    } finally {
+      this.isSubmitting.set(false);
+    }
   }
 
-  abrirModo(modo: 'convite' | 'nova_clinica') {
+  abrirModo(modo: 'convite' | 'nova_clinica'): void {
     this.modoAcao.set(modo);
   }
 
-  voltar() {
+  voltar(): void {
     this.modoAcao.set('nenhum');
   }
 
-  async salvarNovaClinica() {
-    if (this.novaClinicaForm.invalid) {
+  async salvarNovaClinica(): Promise<void> {
+    if (this.novaClinicaForm.invalid || !this.userId) {
       this.novaClinicaForm.markAllAsTouched();
       return;
     }
@@ -90,14 +107,14 @@ export class WorkspaceClinicas implements OnInit {
 
     try {
       const valores = this.novaClinicaForm.value as CriarClinicaDTO;
+      const novaClinicaId = await this.clinicaService.criarClinicaEVincular(this.userId, valores);
 
-      // Toda a lógica suja de banco de dados foi delegada para o Service
-      const novaClinicaId = await this.clinicaService.criarClinicaEVincular(this.userId!, valores);
-
-      // Se deu tudo certo, seta no storage e vai pro Dashboard!
       localStorage.setItem('clinica_ativa', novaClinicaId);
-      this.router.navigate(['/clinica/dashboard']);
-    } catch (error: any) {
+      this.authService.setPapelWorkspace('admin_clinica', novaClinicaId);
+      await this.clinicaService.setarClinicaAtiva(novaClinicaId);
+      await this.authService.ensureRoleForActiveClinic();
+      await this.router.navigateByUrl('/clinica/dashboard');
+    } catch (error: unknown) {
       console.error('Erro ao criar clínica:', error);
       this.errorMessage.set(
         'Não foi possível criar a clínica. Verifique os dados (o CNPJ pode já estar em uso).',
@@ -107,13 +124,14 @@ export class WorkspaceClinicas implements OnInit {
     }
   }
 
-  isFieldInvalid(field: string) {
+  isFieldInvalid(field: string): boolean {
     const control = this.novaClinicaForm.get(field);
-    return control?.invalid && control?.touched;
+    return !!(control?.invalid && control?.touched);
   }
 
-  async validarConvite(tokenOriginal: string) {
-    // Limpa espaços e deixa tudo maiúsculo para evitar erros de digitação do usuário
+  async validarConvite(tokenOriginal: string): Promise<void> {
+    if (!this.userId) return;
+
     const tokenFormatado = tokenOriginal.trim().toUpperCase();
 
     if (!tokenFormatado) {
@@ -125,22 +143,24 @@ export class WorkspaceClinicas implements OnInit {
     this.errorMessage.set('');
 
     try {
-      // Chama o nosso Service passando o ID do usuário e o token
-      const clinicaId = await this.clinicaService.aceitarConvite(this.userId!, tokenFormatado);
+      const clinicaId = await this.clinicaService.aceitarConvite(this.userId, tokenFormatado);
 
-      // Se deu tudo certo, seta no storage e vai pro Dashboard!
       localStorage.setItem('clinica_ativa', clinicaId);
-      this.router.navigate(['/clinica/dashboard']);
-    } catch (error: any) {
+      await this.clinicaService.setarClinicaAtiva(clinicaId);
+      await this.authService.ensureRoleForActiveClinic();
+      await this.router.navigateByUrl('/clinica/dashboard');
+    } catch (error: unknown) {
       console.error('Erro ao validar convite:', error);
-      // Pega a mensagem de erro que disparamos lá no Service
-      this.errorMessage.set(error.message || 'Erro ao validar o código. Tente novamente.');
+      const mensagem = error instanceof Error ? error.message : 'Erro ao validar o código. Tente novamente.';
+      this.errorMessage.set(mensagem);
     } finally {
       this.isSubmitting.set(false);
     }
   }
 
-  acessarAreaTutor() {
-    this.router.navigate(['/tutor/dashboard']);
+  async acessarAreaTutor(): Promise<void> {
+    this.clinicaService.limparClinicaAtiva();
+    this.authService.setPapelTutor();
+    await this.router.navigateByUrl('/tutor/dashboard');
   }
 }

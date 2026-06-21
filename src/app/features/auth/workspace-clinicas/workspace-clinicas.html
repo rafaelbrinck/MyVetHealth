@@ -18,7 +18,8 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button 
             *ngFor="let clinica of clinicas()" 
-            (click)="acessarClinica(clinica.id)"
+            (click)="acessarClinica(clinica)"
+            [disabled]="isSubmitting()"
             class="bg-white p-8 rounded-3xl shadow-sm border border-neutral-100 hover:border-teal-300 hover:shadow-md transition-all text-left group flex items-center gap-5">
             
             <div class="w-14 h-14 bg-teal-50 text-[#0da193] rounded-2xl flex items-center justify-center text-2xl font-bold group-hover:bg-[#0da193] group-hover:text-white transition-colors">
