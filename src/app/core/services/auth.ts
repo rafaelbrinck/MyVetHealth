@@ -189,12 +189,12 @@ export class Auth {
     if (equipeData.error) throw equipeData.error;
     if (validConvite.error) throw validConvite.error;
 
-    if (perfilData.data) {
-      this.userRole.next(perfilData.data.papel);
+    if (validConvite.data) {
+      this.userRole.next(validConvite.data.papel);
     } else if (equipeData.data) {
       this.userRole.next(equipeData.data.papel);
-    } else if (validConvite.data) {
-      this.userRole.next(validConvite.data.papel);
+    } else if (perfilData.data) {
+      this.userRole.next(perfilData.data.papel);
     } else {
       this.userRole.next('tutor');
     }
