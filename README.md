@@ -1,62 +1,183 @@
-# 🐾 MyVetHealth: O Futuro da Gestão Veterinária
+# 🐾 MyVetHealth
 
-Bem-vindo ao repositório oficial do MyVetHealth (também conhecido como My Pet Health). O MyVetHealth é um sistema de gestão (SaaS) completo e Multi-tenant focado exclusivamente em Clínicas Veterinárias. Projetado desde o primeiro dia com uma arquitetura moderna, nossas respostas de design e engenharia focam em alta performance, Clean Code, segurança robusta e uma excelente UX (User Experience). Nós entendemos que, em um ambiente clínico, agilidade e confiabilidade salvam vidas. Por isso, abandonamos o peso dos ERPs legados e construímos uma plataforma ultrarrápida, escalável e incrivelmente intuitiva.
+> Plataforma SaaS B2B2C Multi-Tenant para gerenciamento clínico
+> veterinário e prontuário digital veterinário.
 
----
+## Sobre
 
-## 🚀 O Diferencial Arquitetural
+O **MyVetHealth** é uma plataforma desenvolvida para integrar clínicas
+veterinárias e tutores em um único ecossistema digital, eliminando a
+fragmentação dos dados clínicos e oferecendo acesso seguro ao histórico
+médico dos animais.
 
-Não somos apenas "codificadores"; nós construímos o MyVetHealth com a visão de verdadeiros "engenheiros de produto". Nossa plataforma unifica o atendimento médico e a gestão de clientes em um ecossistema coeso, utilizando padrões de desenvolvimento de nível Sênior:
+### Instituição
 
-- **Camada Anticorrupção (Frontend):** Todos os Services do Angular que se comunicam com o banco de dados mapeiam os retornos sujos (Nested JSON) para Interfaces limpas antes de atualizar o estado visual.
-- **Cache Inteligente e Reatividade:** Utilizamos Signals para guardar dados em memória (como o TutorService e ClinicaService), evitando requisições redundantes e garantindo carregamentos instantâneos ao trocar de telas.
-- **Segurança de Nível Hospitalar (RBAC & RLS):** O sistema é multi-tenant e possui papéis definidos (`admin_clinica`, `veterinario`, `recepcionista`). O acesso é blindado no Front-end por Guards funcionais e no Back-end pelo Row Level Security (RLS) "Secure by Default" do Supabase.
-- **Proteção Anti-Race Condition:** Utilizamos estratégias de espera inteligente e `Promise.all` para queries paralelas, garantindo integridade e sincronia em operações complexas.
+-   **Centro Universitário Senac-RS**
+-   Curso: Análise e Desenvolvimento de Sistemas
+-   Disciplina: Projeto de Desenvolvimento II
+-   Professor: Luciano Zanuz
 
----
+### Equipe
 
-## 🛠️ Stack Tecnológica de Ponta
+-   **Pedro Brum** --- Frontend e UI/UX
+-   **Rafael Brinckmann** --- Backend, Banco de Dados e DevOps
 
-Nossa escolha de tecnologias foi cirúrgica para bater de frente com sistemas líderes de mercado:
+------------------------------------------------------------------------
 
-### Front-end
+# Resumo
 
-- **Framework:** Angular 17+.
-- **Estrutura:** Standalone Components e o novo Control Flow (`@if`, `@for`).
-- **Gerência de Estado:** Reatividade pura utilizando Angular Signals para uma UI sem engasgos.
-- **UI/UX & Estilização:** Tailwind CSS.
-  - Design limpo com foco no conceito de Mobile First.
-  - Paleta de cores sofisticada utilizando tons de branco, neutros, nosso "Teal" da marca (`#0da193`) e emerald.
-  - **Ícones:** Lucide-Angular, garantindo identidade visual profissional, traços consistentes e alta performance através de Tree-Shaking nativo.
-  - **Dark Mode:** Suporte nativo e persistente gerenciado via Signals e estratégia de classes do Tailwind.
+O gerenciamento de dados veterinários ainda é altamente fragmentado.
+Informações importantes permanecem armazenadas apenas na clínica onde o
+atendimento foi realizado, dificultando consultas futuras e atendimentos
+de emergência.
 
-### Back-end & Infraestrutura
+O MyVetHealth resolve esse problema através de uma plataforma SaaS B2B2C
+Multi-Tenant composta por:
 
-- **BaaS Principal:** Supabase.
-- **Banco de Dados:** PostgreSQL com arquitetura relacional profunda (Tabelas essenciais como `perfis`, `clinicas`, `equipe_clinica`, `pets`, e `consultas`).
-- **Serverless:** Supabase Edge Functions (Deno/TypeScript) perfeitas para construir lógicas isoladas, integrações e fluxos privilegiados (como o Cadastro Expresso de tutores).
-- **Transações Atômicas:** Database Functions (RPCs) com `SECURITY DEFINER` para fluxos complexos como gestão de convites de equipe.
+-   ERP para clínicas;
+-   Prontuário Eletrônico do Paciente (PEP);
+-   Web App para tutores;
+-   Compartilhamento seguro de informações clínicas.
 
----
+Entre seus diferenciais estão:
 
-## 💡 Principais Módulos e Funcionalidades
+-   Sincronização automática entre clínica e tutor;
+-   Laudos médicos imutáveis;
+-   Tokens temporários para acesso emergencial;
+-   Histórico clínico centralizado;
+-   Segurança baseada em PostgreSQL + Row Level Security (RLS).
 
-- **Agenda Inteligente Profissional:** Integração com o Angular Calendar para uma visão completa de agendamentos. Consultas mapeadas nativamente com queries otimizadas (`.gte` e `.lte`) para buscar apenas eventos do período visível, poupando processamento.
-- **Prontuário e Pacientes (Master-Detail):** Interface de alta performance para listar tutores. Ao interagir, a tela exibe os cards da família e permite adicionar novos pets instantaneamente com atualização otimista (UI reativa sem necessidade de recarregar a página).
-- **Onboarding & Gestão de Equipe:** Fluxo contínuo misturando membros ativos e convites pendentes, garantindo ao Admin controle total sobre o acesso dos colaboradores.
-- **Cadastro Expresso:** Funcionalidade ágil na Recepção permitindo criação de perfis de Tutores e vinculação automática à clínica via Edge Functions.
-- **Configurações e UI Dinâmica:** Menu lateral e dropdowns que reagem ao cargo logado, ocultando opções não permitidas utilizando `podeAcessar()`.
+# Problema
 
----
+Os principais problemas identificados foram:
 
-## 👨‍💻 Como iniciar o projeto
+1.  Fragmentação das informações clínicas.
+2.  Dependência de processos manuais no pós-consulta.
+3.  Falta de acesso ao histórico durante emergências.
 
-1. Clone o repositório.
-2. Certifique-se de estar rodando uma versão recente do Node.js.
-3. Instale as dependências executando: `npm install`.
-4. Configure suas variáveis de ambiente do Supabase no arquivo de environment do Angular.
-5. Inicie o servidor de desenvolvimento: `ng serve`.
-6. Acesse a aplicação no seu navegador localmente.
+# Objetivo Geral
 
-> _"Analisar o mercado é o que nos diferencia de sermos apenas codificadores para nos tornarmos verdadeiros engenheiros de produto."_
-> — Equipe MyVetHealth
+Desenvolver uma plataforma ecossistêmica Multi-Tenant capaz de unificar
+o gerenciamento clínico veterinário com um prontuário digital seguro e
+acessível aos tutores.
+
+# Objetivos Específicos
+
+-   Modelar banco de dados PostgreSQL no Supabase.
+-   Desenvolver frontend em Angular Standalone com Signals.
+-   Automatizar regras de negócio utilizando Triggers e PL/pgSQL.
+-   Implementar interface responsiva utilizando Tailwind CSS v4.
+-   Garantir imutabilidade dos laudos médicos.
+-   Implementar compartilhamento seguro por tokens temporários.
+
+# Stack Tecnológica
+
+  Tecnologia        Utilização
+  ----------------- ----------------------
+  Angular 17+       Frontend
+  TypeScript        Linguagem principal
+  Tailwind CSS v4   Interface
+  Supabase          Backend as a Service
+  PostgreSQL        Banco de Dados
+  PL/pgSQL          Automação
+  Vercel            Deploy
+
+# Arquitetura
+
+O sistema foi desenvolvido utilizando arquitetura SaaS B2B2C
+Multi-Tenant, separando completamente os dados de cada clínica através
+de políticas RLS.
+
+O frontend comunica-se diretamente com o Supabase, responsável por
+autenticação, banco de dados e execução das regras de negócio.
+
+# Funcionalidades
+
+-   Cadastro de clínicas
+-   Cadastro de tutores
+-   Cadastro de pets
+-   Prontuário eletrônico
+-   Histórico médico
+-   Evolução de peso
+-   Receitas
+-   Laudos médicos
+-   Impressão em PDF
+-   Dashboard responsivo
+-   Dark Mode
+-   Compartilhamento por Token
+
+# Triggers
+
+## Atualização automática do peso
+
+``` sql
+CREATE TRIGGER trigger_atualizar_peso_pet
+AFTER INSERT OR UPDATE OF peso_momento
+ON consultas;
+```
+
+Atualiza automaticamente o peso atual do animal após cada consulta.
+
+## Vinculação Tutor x Clínica
+
+``` sql
+CREATE TRIGGER trigger_vincular_tutor_clinica
+AFTER INSERT
+ON consultas;
+```
+
+Cria automaticamente o relacionamento entre clínica e tutor.
+
+## Sincronização Auth
+
+``` sql
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT
+ON auth.users;
+```
+
+Replica automaticamente usuários autenticados para a tabela pública de
+perfis.
+
+# Validação
+
+Foram realizados testes de usabilidade utilizando a escala SUS com 15
+usuários.
+
+Resultado médio:
+
+**84,5 pontos (Excellent)**
+
+Também foram executados testes de carga simulando 1.000 consultas
+simultâneas em aproximadamente 10 segundos.
+
+Resultado:
+
+-   média de 42 ms por transação;
+-   sem deadlocks;
+-   sem perda de integridade referencial.
+
+# Conclusão
+
+O projeto atingiu os objetivos propostos ao desenvolver uma plataforma
+moderna, segura e escalável para clínicas veterinárias e tutores.
+
+O uso de Angular, Supabase, PostgreSQL, Triggers e Row Level Security
+permitiu construir uma solução robusta, alinhada às necessidades do
+mercado veterinário.
+
+## Melhorias Futuras
+
+-   Leitura de QR Code para identificação dos pacientes;
+-   Notificações automáticas de vacinação;
+-   Integração com serviços de mensageria;
+-   Evolução dos gráficos biométricos.
+
+# Referências
+
+-   Angular Documentation
+-   PostgreSQL Documentation
+-   Supabase Documentation
+-   Tailwind CSS Documentation
+-   Wazlawick --- Engenharia de Software
+-   Wazlawick --- Metodologia de Pesquisa
